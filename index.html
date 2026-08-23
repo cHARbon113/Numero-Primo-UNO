@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>素数UNO</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #14231d;
+    --bg-line: rgba(255,255,255,0.05);
+    --panel: #1f352b;
+    --panel-2: #2a4235;
+    --ink: #f5f9f4;
+    --ink-dim: #b9cabd;
+    --hundreds: #f0bc5c;
+    --tens: #ea7267;
+    --ones: #5ed1ab;
+    --skip: #ea7267;
+    --reverse: #5ed1ab;
+    --draw2: #7fb0ec;
+    --draw4: #d79ce6;
+    --danger: #ea7267;
+    --radius: 10px;
+    --shadow: 0 12px 34px rgba(0,0,0,0.4);
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    font-family:'Zen Kaku Gothic New', sans-serif;
+    color:var(--ink);
+    font-size:16px;
+    background:
+      repeating-linear-gradient(0deg, var(--bg-line) 0px, var(--bg-line) 1px, transparent 1px, transparent 34px),
+      repeating-linear-gradient(90deg, var(--bg-line) 0px, var(--bg-line) 1px, transparent 1px, transparent 34px),
+      radial-gradient(ellipse at 50% -10%, #24402f 0%, var(--bg) 60%);
+    min-height:100vh;
+    display:flex; flex-direction:column; align-items:center;
+    padding:12px 14px 16px;
+  }
+  .mono{ font-family:'Space Mono', monospace; }
+
+  header{ text-align:center; margin-bottom:8px; }
+  header h1{ font-size:clamp(24px, 4.5vw, 34px); margin:0; letter-spacing:0.02em; font-weight:900; }
+  header h1 .accent{ color: var(--hundreds); }
+  header p{ margin:4px 0 0; color:var(--ink-dim); font-size:13px; letter-spacing:0.03em; }
+
+  #startScreen{
+    background:var(--panel); border-radius:16px; box-shadow:var(--shadow);
+    padding:32px 28px; max-width:520px; width:100%; text-align:center;
+    border:1px solid rgba(255,255,255,0.07);
+  }
+  #startScreen h2{ margin-top:0; font-size:20px; }
+  #startScreen .rules{
+    text-align:left; font-size:14.5px; line-height:2.15; color:var(--ink-dim);
+    background:rgba(0,0,0,0.2); border-radius:10px; padding:16px 18px; margin:18px 0;
+  }
+  #startScreen .rules b{ color:var(--ink); }
+  .eff-tag{ display:inline-block; font-family:'Space Mono', monospace; font-weight:700; padding:1px 7px; border-radius:5px; font-size:13px;}
+  .tag-skip{ background:rgba(234,114,103,0.22); color:var(--skip); }
+  .tag-rev{ background:rgba(94,209,171,0.22); color:var(--reverse); }
+  .tag-d2{ background:rgba(127,176,236,0.22); color:var(--draw2); }
+  .tag-d4{ background:rgba(215,156,230,0.24); color:var(--draw4); }
+
+  .cpu-select{ display:flex; gap:10px; justify-content:center; margin:16px 0; }
+  .cpu-btn{
+    flex:1; padding:12px 6px; border-radius:10px; border:1px solid rgba(255,255,255,0.14);
+    background:var(--panel-2); color:var(--ink); cursor:pointer; font-size:14.5px; font-family:inherit;
+  }
+  .cpu-btn.selected{ background:var(--hundreds); color:#241a06; border-color:var(--hundreds); font-weight:700;}
+
+  button.primary{
+    background:var(--hundreds); color:#241a06; border:none; font-weight:700; font-size:16.5px;
+    padding:14px 32px; border-radius:999px; cursor:pointer; font-family:inherit;
+    box-shadow:0 8px 22px rgba(240,188,92,0.28);
+  }
+  button.primary:active{ transform:translateY(1px); }
+
+  .layout{
+    display:none; width:100%; max-width:1280px; gap:16px;
+    grid-template-columns: 1fr 320px; align-items:start;
+  }
+  .layout.active{ display:grid; }
+
+  #game{ display:flex; flex-direction:column; align-items:center; gap:10px; min-width:0; }
+
+  /* ---- circular table with seats + flow arrows ---- */
+  .tableWrap{ position:relative; width:min(320px, 62vw); aspect-ratio:1; margin:0 auto; }
+  .circleGuide{
+    position:absolute; inset:9%; border:2px dashed rgba(255,255,255,0.13); border-radius:50%;
+  }
+  .tableCenter{
+    position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+    display:flex; align-items:center; gap:12px;
+    background:radial-gradient(ellipse at center, #223a2c 0%, #14231d 80%);
+    border-radius:14px; padding:10px 12px; border:1px solid rgba(255,255,255,0.08);
+  }
+  .tableCenter .card{ width:52px; height:74px; }
+  .tableCenter .digits{ font-size:15px; margin-top:3px; }
+  .pile{ display:flex; flex-direction:column; align-items:center; gap:6px; }
+  .pile-label{ font-size:11.5px; color:var(--ink-dim); letter-spacing:.05em;}
+
+  .seatChip{
+    position:absolute; transform:translate(-50%,-50%);
+    background:var(--panel); border:2px solid rgba(255,255,255,0.1); border-radius:999px;
+    padding:5px 11px; text-align:center; white-space:nowrap; font-size:11.5px; z-index:2;
+  }
+  .seatChip.active{
+    border-color:var(--hundreds); box-shadow:0 0 0 3px rgba(240,188,92,0.35); color:var(--hundreds);
+    font-weight:700; background:rgba(240,188,92,0.14);
+  }
+  .seatChip .seatCount{ font-family:'Space Mono',monospace; font-size:13px; font-weight:700; }
+  .seatChip .seatReach{
+    position:absolute; top:-10px; right:-10px; background:var(--danger); color:#fff;
+    font-size:9px; border-radius:999px; padding:2px 6px; font-weight:700;
+  }
+  .flowArrow{ position:absolute; font-size:17px; color:var(--hundreds); z-index:1; opacity:0.85; }
+
+  .pendingBanner{
+    display:none; width:100%; background:linear-gradient(90deg, rgba(215,156,230,0.18), rgba(127,176,236,0.18));
+    border:1px solid var(--draw4); border-radius:10px; padding:8px 16px;
+    align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;
+  }
+  .pendingBanner.show{ display:flex; }
+  .pendingBanner .msg{ font-weight:700; font-size:15.5px; }
+  .pendingBanner .msg b{ color:var(--draw4); font-family:'Space Mono',monospace; font-size:20px; }
+  button.accept{
+    background:var(--draw4); color:#2a1830; border:none; font-weight:700; font-size:14.5px;
+    padding:10px 20px; border-radius:999px; cursor:pointer; font-family:inherit;
+  }
+
+  .card{
+    width:66px; height:94px; background:var(--panel-2); border-radius:var(--radius);
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    box-shadow:0 5px 12px rgba(0,0,0,0.4); position:relative;
+    border:1px solid rgba(255,255,255,0.09); user-select:none; flex-shrink:0;
+    overflow:hidden;
+  }
+  .card.back{
+    background: repeating-linear-gradient(45deg, #33513f 0, #33513f 7px, #2a4335 7px, #2a4335 14px);
+    border:1px solid rgba(255,255,255,0.12);
+  }
+  .card .digits{ display:flex; font-family:'Space Mono',monospace; font-weight:700; font-size:20px; margin-top:5px;}
+  .card .digits span{ padding:0 2px; border-bottom:3px solid transparent; }
+  .card .d-h{ color:var(--hundreds); border-color:var(--hundreds); }
+  .card .d-t{ color:var(--tens); border-color:var(--tens); }
+  .card .d-o{ color:var(--ones); border-color:var(--ones); }
+
+  .card .strip{
+    position:absolute; top:0; left:0; right:0; height:19px;
+    display:flex; align-items:center; justify-content:center;
+    font-size:9.5px; font-weight:700; letter-spacing:0.03em; color:#1a1a1a;
+  }
+  .strip-skip{ background:var(--skip); }
+  .strip-reverse{ background:var(--reverse); }
+  .strip-draw2{ background:var(--draw2); }
+  .strip-draw4{ background:var(--draw4); }
+  .strip-both{ background:linear-gradient(90deg, var(--reverse), var(--draw2)); }
+
+  .card.playable{ cursor:pointer; transition:transform .12s, box-shadow .12s; }
+  .card.playable:hover{ transform:translateY(-8px); box-shadow:0 14px 22px rgba(0,0,0,0.5); }
+  .card.disabled{ filter:grayscale(0.6) brightness(0.65); cursor:default; }
+  .card.stackable{ box-shadow:0 0 0 3px var(--draw4), 0 5px 12px rgba(0,0,0,0.4); cursor:pointer; }
+  .draw-pile .card{ cursor:pointer; }
+  .draw-pile.locked .card{ cursor:default; filter:grayscale(0.5) brightness(0.7); }
+
+  .hand-wrap{ width:100%; display:flex; flex-direction:column; align-items:center; gap:5px; }
+  .hand-label{ font-size:12.5px; color:var(--ink-dim); }
+  .hand{ display:flex; gap:8px; flex-wrap:wrap; justify-content:center; padding:4px 2px 2px; width:100%; }
+
+  .logPanel{
+    background:rgba(0,0,0,0.28); border-radius:12px; padding:14px 16px;
+    border:1px solid rgba(255,255,255,0.06); display:flex; flex-direction:column;
+    height:min(60vh, 460px);
+  }
+  .logPanel h3{ margin:0 0 10px; font-size:13.5px; color:var(--ink-dim); letter-spacing:0.05em; font-weight:700; }
+  #log{ flex:1; overflow-y:auto; font-size:14.5px; color:var(--ink-dim); line-height:1.95; }
+  #log b{ color:var(--ink); }
+  #log .fx{ font-weight:700; }
+  #log .fx-skip{ color:var(--skip); }
+  #log .fx-reverse{ color:var(--reverse); }
+  #log .fx-draw2{ color:var(--draw2); }
+  #log .fx-draw4{ color:var(--draw4); }
+
+  .controls{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; justify-content:center; }
+  button.ghost{
+    background:transparent; border:1.5px solid rgba(255,255,255,0.25); color:var(--ink);
+    padding:8px 18px; border-radius:999px; font-family:inherit; cursor:pointer; font-size:13.5px;
+  }
+  button.ghost:disabled{ opacity:0.35; cursor:default; }
+  button.ghost:not(:disabled):hover{ border-color:var(--hundreds); color:var(--hundreds); }
+
+  .winbox{
+    position:fixed; inset:0; background:rgba(0,0,0,0.7); display:none; align-items:center; justify-content:center; z-index:30;
+  }
+  .winbox.show{ display:flex; }
+  .wincard{
+    background:var(--panel); padding:40px 34px; border-radius:18px; text-align:center; box-shadow:var(--shadow);
+    border:1px solid rgba(255,255,255,0.09);
+  }
+  .wincard h2{ font-size:30px; margin:0 0 10px; color:var(--hundreds); }
+  .wincard p{ color:var(--ink-dim); margin-bottom:20px; font-size:14px; }
+
+  @media (max-width:980px){
+    .layout{ grid-template-columns: 1fr; }
+    .logPanel{ height:220px; max-height:none; }
+  }
+  @media (max-width:560px){
+    body{ font-size:15px; }
+    .card{ width:60px; height:88px; }
+    .card .digits{ font-size:17px; }
+    .card .strip{ height:18px; font-size:9px; }
+    .tableCenter .card{ width:50px; height:72px; }
+    .tableCenter .digits{ font-size:14px; }
+    .seatChip{ font-size:11px; padding:6px 10px; }
+    .flowArrow{ font-size:17px; }
+  }
+  @media (prefers-reduced-motion: reduce){
+    .card.playable:hover{ transform:none; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>素数<span class="accent">UNO</span></h1>
+  <p>1〜3桁の素数168枚 ・ どこかの位の数字が揃えば出せる</p>
+</header>
+
+<div id="startScreen">
+  <h2>ルール</h2>
+  <div class="rules">
+    ・カードは1〜3桁の素数(3桁表記でゼロ埋め。例: 2→002, 11→011)。全168枚、重複なし。<br>
+    ・場のカードと<b>いずれか同じ位に同じ数字</b>があれば出せます。<br>
+    ・出せるカードがあっても、あえて山札から引くことができます。<br>
+    ・<span class="eff-tag tag-skip">スキップ</span> 回文素数(131, 373など)<br>
+    ・<span class="eff-tag tag-rev">リバース</span> エミレル素数(逆から読むと別の素数。107→701など)<br>
+    ・<span class="eff-tag tag-d2">ドロー2</span> 隣接する位が同じ数字(113, 599など)<br>
+    ・<span class="eff-tag tag-d4">ドロー4</span> 002・003・005・007(1桁素数)<br>
+    ・ドロー2/ドロー4は<b>積み可能</b>。同じ位が揃っていなくても重ねられ、枚数は加算されます(+2の上に+4で6枚)。積まずに引き受けると番が終わります。<br>
+    ・リバースとドロー2が両方該当するカードは同時発動します。<br>
+    ・<b>最後の1枚は「通常カード」でしか上がれません</b>(特殊カードでは勝てません)。<br>
+    ・出せる手がなく、引いたカードも出せなければパスします(1ターンに最低1回はアクションが必要)。
+  </div>
+  <div>
+    <p style="font-size:13px;color:var(--ink-dim);margin-bottom:8px;">対戦相手の人数</p>
+    <div class="cpu-select" id="cpuSelect">
+      <div class="cpu-btn" data-n="1">CPU × 1</div>
+      <div class="cpu-btn selected" data-n="2">CPU × 2</div>
+      <div class="cpu-btn" data-n="3">CPU × 3</div>
+    </div>
+  </div>
+  <button class="primary" id="startBtn">ゲーム開始</button>
+</div>
+
+<div class="layout" id="layout">
+  <div id="game">
+    <div class="tableWrap" id="tableWrap">
+      <div class="circleGuide"></div>
+      <div class="tableCenter">
+        <div class="pile draw-pile" id="drawPileWrap">
+          <div class="pile-label">山札 (<span id="drawCount">0</span>)</div>
+          <div class="card back" id="drawPile"></div>
+        </div>
+        <div class="pile">
+          <div class="pile-label">場</div>
+          <div id="discardTop"></div>
+        </div>
+      </div>
+      <!-- seat chips + flow arrows injected here -->
+    </div>
+
+    <div class="pendingBanner" id="pendingBanner">
+      <div class="msg">積み上げ中: <b id="pendingCount">0</b>枚 押し付けられています</div>
+      <button class="accept" id="acceptBtn">引き受ける</button>
+    </div>
+
+    <div class="controls">
+      <button class="ghost" id="drawBtn">山札から引く</button>
+      <button class="ghost" id="passBtn" disabled>パスする</button>
+    </div>
+
+    <div class="hand-wrap">
+      <div class="hand-label">あなたの手札 <span id="reachBadge" style="display:none;color:var(--danger);font-weight:700;">残り1枚!</span></div>
+      <div class="hand" id="hand"></div>
+    </div>
+  </div>
+
+  <div class="logPanel">
+    <h3>ログ</h3>
+    <div id="log"></div>
+  </div>
+</div>
+
+<div class="winbox" id="winBox">
+  <div class="wincard">
+    <h2 id="winText">勝者</h2>
+    <p>もう一度遊ぶ場合はリセットしてください</p>
+    <button class="primary" id="resetBtn">もう一度</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  function isPrime(n){
+    if(n<2) return false;
+    for(let i=2;i*i<=n;i++) if(n%i===0) return false;
+    return true;
+  }
+  const allPrimes = [];
+  for(let n=2;n<=997;n++) if(isPrime(n)) allPrimes.push(n);
+
+  function pad3(n){ return String(n).padStart(3,'0'); }
+  function digitsOf(n){ return pad3(n).split('').map(Number); }
+
+  function classify(n){
+    const s = pad3(n);
+    if(s[0]==='0' && s[1]==='0') return 'draw4';
+    const isPal = s === s.split('').reverse().join('');
+    const revN = Number(s.split('').reverse().join(''));
+    const isEmirp = isPrime(revN) && revN !== n;
+    const isAdj = s[0]===s[1] || s[1]===s[2];
+    if(isPal) return 'skip';
+    if(isEmirp && isAdj) return 'both';
+    if(isEmirp) return 'reverse';
+    if(isAdj) return 'draw2';
+    return 'plain';
+  }
+
+  const EFFECT_LABEL = { skip:'スキップ', reverse:'リバース', draw2:'ドロー2', draw4:'ドロー4', both:'リバース+ドロー2' };
+  const EFFECT_STRIP = {
+    skip:'<div class="strip strip-skip">SKIP</div>',
+    reverse:'<div class="strip strip-reverse">REV</div>',
+    draw2:'<div class="strip strip-draw2">+2</div>',
+    draw4:'<div class="strip strip-draw4">+4</div>',
+    both:'<div class="strip strip-both">REV+2</div>'
+  };
+  const DRAW_AMOUNT = { draw2:2, draw4:4, both:2 };
+  const HAS_REVERSE = { reverse:true, both:true };
+  const IS_STACK_TYPE = t => t==='draw2' || t==='draw4' || t==='both';
+
+  function buildDeck(){
+    const deck = allPrimes.map(n=>({
+      id: Math.random().toString(36).slice(2), value:n, digits:digitsOf(n), effect:classify(n)
+    }));
+    return shuffle(deck);
+  }
+  function shuffle(arr){
+    for(let i=arr.length-1;i>0;i--){
+      const j = Math.floor(Math.random()*(i+1));
+      [arr[i],arr[j]]=[arr[j],arr[i]];
+    }
+    return arr;
+  }
+
+  let state = null;
+
+  function newGame(numCpu){
+    const deck = buildDeck();
+    const players = [{name:'あなた', human:true, hand:[]}];
+    for(let i=0;i<numCpu;i++) players.push({name:'CPU'+(i+1), human:false, hand:[]});
+    for(let r=0;r<7;r++) players.forEach(p=> p.hand.push(deck.pop()));
+    let startIdx = deck.findIndex(c=>c.effect==='plain');
+    if(startIdx<0) startIdx = deck.length-1;
+    const start = deck.splice(startIdx,1)[0];
+
+    state = {
+      players, drawPile: deck, discardPile: [start],
+      current: 0, direction: 1, over:false,
+      turnDrawn:false, pendingDraw:0
+    };
+    log(`ゲーム開始。場札は <b>${pad3(start.value)}</b>`);
+    render();
+    maybeCpuTurn();
+  }
+
+  function matches(card, top){ return card.digits.some((d,i)=> d===top.digits[i]); }
+
+  function canPlay(card, hand, top){
+    const wouldWin = hand.length===1;
+    if(wouldWin && card.effect!=='plain') return false;
+    if(state.pendingDraw>0) return IS_STACK_TYPE(card.effect);
+    return matches(card, top);
+  }
+
+  function log(msg){
+    const el = document.getElementById('log');
+    const line = document.createElement('div');
+    line.innerHTML = msg;
+    el.appendChild(line);
+    el.scrollTop = el.scrollHeight;
+  }
+  function fxSpan(effect){
+    if(effect==='plain') return '';
+    return ` <span class="fx fx-${effect==='both'?'reverse':effect}">[${EFFECT_LABEL[effect]}]</span>`;
+  }
+
+  function nextIndexFrom(idx){
+    const n = state.players.length;
+    return (idx + state.direction + n) % n;
+  }
+
+  function reshuffleIfNeeded(){
+    if(state.drawPile.length===0){
+      if(state.discardPile.length<=1) return;
+      const top = state.discardPile.pop();
+      state.drawPile = shuffle(state.discardPile);
+      state.discardPile = [top];
+      log('山札が尽きたため捨て札をシャッフルしました。');
+    }
+  }
+  function drawCards(playerIdx, count){
+    const drawn = [];
+    for(let k=0;k<count;k++){
+      reshuffleIfNeeded();
+      if(state.drawPile.length===0) break;
+      const c = state.drawPile.pop();
+      state.players[playerIdx].hand.push(c);
+      drawn.push(c);
+    }
+    return drawn;
+  }
+
+  function playCard(playerIdx, card){
+    const p = state.players[playerIdx];
+    p.hand = p.hand.filter(c=>c.id!==card.id);
+    state.discardPile.push(card);
+    log(`${p.name} が <b>${pad3(card.value)}</b> を出しました。${fxSpan(card.effect)}`);
+
+    if(p.hand.length===0){
+      state.over = true; render(); showWin(p.name); return;
+    }
+    if(p.hand.length===1) log(`${p.name} 残り1枚!`);
+
+    if(IS_STACK_TYPE(card.effect)){
+      if(HAS_REVERSE[card.effect]){ state.direction *= -1; log('順番が逆になりました。'); }
+      state.pendingDraw += DRAW_AMOUNT[card.effect];
+      state.current = nextIndexFrom(playerIdx);
+    } else if(card.effect==='skip'){
+      const skipped = nextIndexFrom(playerIdx);
+      log(`${state.players[skipped].name} はスキップされました。`);
+      state.current = (function(){ const save=state.current; state.current=skipped; const n2=nextIndexFrom(skipped); state.current=save; return n2; })();
+    } else if(card.effect==='reverse'){
+      state.direction *= -1; log('順番が逆になりました。');
+      state.current = nextIndexFrom(playerIdx);
+    } else {
+      state.current = nextIndexFrom(playerIdx);
+    }
+    state.turnDrawn = false;
+    render();
+    maybeCpuTurn();
+  }
+
+  function stackCard(playerIdx, card){
+    const p = state.players[playerIdx];
+    p.hand = p.hand.filter(c=>c.id!==card.id);
+    state.discardPile.push(card);
+    log(`${p.name} が <b>${pad3(card.value)}</b> を重ねました。${fxSpan(card.effect)}`);
+
+    if(p.hand.length===0){ state.over = true; render(); showWin(p.name); return; }
+    if(p.hand.length===1) log(`${p.name} 残り1枚!`);
+
+    if(HAS_REVERSE[card.effect]){ state.direction *= -1; log('順番が逆になりました。'); }
+    state.pendingDraw += DRAW_AMOUNT[card.effect];
+    state.current = nextIndexFrom(playerIdx);
+    state.turnDrawn = false;
+    render();
+    maybeCpuTurn();
+  }
+
+  function acceptPending(playerIdx){
+    const p = state.players[playerIdx];
+    const n = state.pendingDraw;
+    drawCards(playerIdx, n);
+    log(`${p.name} は積み上げられた${n}枚を引き受けました。`);
+    state.pendingDraw = 0;
+    state.current = nextIndexFrom(playerIdx);
+    state.turnDrawn = false;
+    render();
+    maybeCpuTurn();
+  }
+
+  function passTurn(playerIdx){
+    log(`${state.players[playerIdx].name} はパスしました。`);
+    state.current = nextIndexFrom(playerIdx);
+    state.turnDrawn = false;
+    render();
+    maybeCpuTurn();
+  }
+
+  function voluntaryDraw(playerIdx){
+    const drawn = drawCards(playerIdx, 1);
+    state.turnDrawn = true;
+    if(drawn.length){
+      const who = state.players[playerIdx].human ? 'あなた' : state.players[playerIdx].name;
+      log(`${who}は山札から1枚引きました: <b>${pad3(drawn[0].value)}</b>`);
+    }
+    render();
+  }
+
+  function maybeCpuTurn(){
+    if(state.over) return;
+    const p = state.players[state.current];
+    if(p.human) return;
+    setTimeout(()=>{
+      if(state.over) return;
+      const idx = state.current;
+      const pl = state.players[idx];
+      if(state.pendingDraw>0){
+        const stackOpt = pl.hand.filter(c=> canPlay(c, pl.hand, null));
+        if(stackOpt.length>0){
+          stackCard(idx, stackOpt[Math.floor(Math.random()*stackOpt.length)]);
+        } else {
+          acceptPending(idx);
+        }
+        return;
+      }
+      const top = state.discardPile[state.discardPile.length-1];
+      const options = pl.hand.filter(c=> canPlay(c, pl.hand, top));
+      if(options.length>0){
+        playCard(idx, options[Math.floor(Math.random()*options.length)]);
+      } else {
+        const drawn = drawCards(idx, 1);
+        render();
+        const top2 = state.discardPile[state.discardPile.length-1];
+        if(drawn.length && canPlay(drawn[0], pl.hand, top2)){
+          setTimeout(()=> playCard(idx, drawn[0]), 500);
+        } else {
+          setTimeout(()=> passTurn(idx), 500);
+        }
+      }
+    }, 750);
+  }
+
+  function cardEl(card, opts){
+    opts = opts || {};
+    const div = document.createElement('div');
+    let cls = 'card';
+    if(opts.playable) cls += ' playable';
+    if(opts.disabled) cls += ' disabled';
+    if(opts.stackable) cls += ' stackable';
+    div.className = cls;
+    const [h,t,o] = card.digits;
+    div.innerHTML = (card.effect!=='plain' ? EFFECT_STRIP[card.effect] : '') +
+      `<div class="digits">
+        <span class="d-h">${h}</span><span class="d-t">${t}</span><span class="d-o">${o}</span>
+      </div>`;
+    return div;
+  }
+
+  // ---- circular seating + flow arrows ----
+  function renderTableCircle(){
+    const wrap = document.getElementById('tableWrap');
+    wrap.querySelectorAll('.seatChip, .flowArrow').forEach(el=>el.remove());
+    const rect = wrap.getBoundingClientRect();
+    const cx = rect.width/2, cy = rect.height/2;
+    const chipR = rect.width*0.42;
+    const arrowR = rect.width*0.29;
+    const n = state.players.length;
+    const angleOf = i => 180 + i*(360/n); // 0deg=top, clockwise; player0(human)=180=bottom
+
+    state.players.forEach((p, i)=>{
+      const a = angleOf(i) * Math.PI/180;
+      const x = cx + chipR*Math.sin(a);
+      const y = cy - chipR*Math.cos(a);
+      const chip = document.createElement('div');
+      chip.className = 'seatChip' + (state.current===i ? ' active' : '');
+      chip.style.left = x+'px'; chip.style.top = y+'px';
+      chip.innerHTML = `<div>${p.name}</div>` +
+        (p.human ? '' : `<div class="seatCount">${p.hand.length}</div>`) +
+        (p.hand.length===1 ? '<div class="seatReach">残1</div>' : '');
+      wrap.appendChild(chip);
+    });
+
+    for(let i=0;i<n;i++){
+      const a1 = angleOf(i);
+      let a2 = angleOf((i+1)%n);
+      if(a2 <= a1) a2 += 360;
+      const mid = (a1+a2)/2;
+      const midRad = mid*Math.PI/180;
+      const x = cx + arrowR*Math.sin(midRad);
+      const y = cy - arrowR*Math.cos(midRad);
+      const rotation = mid + (state.direction===1 ? 0 : 180);
+      const arrow = document.createElement('div');
+      arrow.className = 'flowArrow';
+      arrow.style.left = x+'px'; arrow.style.top = y+'px';
+      arrow.style.transform = `translate(-50%,-50%) rotate(${rotation}deg)`;
+      arrow.textContent = '➤';
+      wrap.appendChild(arrow);
+    }
+  }
+
+  function render(){
+    if(!state) return;
+
+    document.getElementById('drawCount').textContent = state.drawPile.length;
+
+    const top = state.discardPile[state.discardPile.length-1];
+    const discardTop = document.getElementById('discardTop');
+    discardTop.innerHTML='';
+    discardTop.appendChild(cardEl(top));
+
+    renderTableCircle();
+
+    const pendingBanner = document.getElementById('pendingBanner');
+    pendingBanner.classList.toggle('show', state.pendingDraw>0);
+    document.getElementById('pendingCount').textContent = state.pendingDraw;
+
+    const human = state.players[0];
+    const handWrap = document.getElementById('hand');
+    handWrap.innerHTML='';
+    const myTurn = state.current===0 && !state.over;
+    human.hand.forEach(card=>{
+      const playable = myTurn && canPlay(card, human.hand, top);
+      const el = cardEl(card, {
+        playable, disabled: myTurn && !playable,
+        stackable: myTurn && state.pendingDraw>0 && playable
+      });
+      if(playable){
+        el.addEventListener('click', ()=>{
+          if(state.pendingDraw>0) stackCard(0, card); else playCard(0, card);
+        });
+      }
+      handWrap.appendChild(el);
+    });
+
+    document.getElementById('reachBadge').style.display = human.hand.length===1 ? 'inline' : 'none';
+
+    document.getElementById('acceptBtn').disabled = !(myTurn && state.pendingDraw>0);
+    document.getElementById('acceptBtn').style.visibility = (myTurn && state.pendingDraw>0) ? 'visible' : 'hidden';
+
+    const drawWrap = document.getElementById('drawPileWrap');
+    drawWrap.classList.toggle('locked', !(myTurn && state.pendingDraw===0));
+    document.getElementById('drawBtn').disabled = !(myTurn && state.pendingDraw===0);
+
+    const anyPlayable = human.hand.some(c=> canPlay(c, human.hand, top));
+    document.getElementById('passBtn').disabled = !(myTurn && state.pendingDraw===0 && state.turnDrawn && !anyPlayable);
+  }
+
+  document.getElementById('drawBtn').addEventListener('click', ()=>{
+    if(!state || state.over || state.current!==0 || state.pendingDraw>0) return;
+    voluntaryDraw(0);
+  });
+  document.getElementById('drawPile').addEventListener('click', ()=>{
+    if(!state || state.over || state.current!==0 || state.pendingDraw>0) return;
+    voluntaryDraw(0);
+  });
+  document.getElementById('acceptBtn').addEventListener('click', ()=>{
+    if(!state || state.over || state.current!==0 || state.pendingDraw<=0) return;
+    acceptPending(0);
+  });
+  document.getElementById('passBtn').addEventListener('click', ()=>{
+    if(!state || state.over || state.current!==0) return;
+    passTurn(0);
+  });
+
+  function showWin(name){
+    document.getElementById('winText').textContent = `${name} の勝ち!`;
+    document.getElementById('winBox').classList.add('show');
+  }
+  document.getElementById('resetBtn').addEventListener('click', ()=>{
+    document.getElementById('winBox').classList.remove('show');
+    document.getElementById('layout').classList.remove('active');
+    document.getElementById('startScreen').style.display='block';
+    document.getElementById('log').innerHTML='';
+  });
+
+  let numCpu = 2;
+  document.querySelectorAll('.cpu-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      document.querySelectorAll('.cpu-btn').forEach(b=>b.classList.remove('selected'));
+      btn.classList.add('selected');
+      numCpu = Number(btn.dataset.n);
+    });
+  });
+  document.getElementById('startBtn').addEventListener('click', ()=>{
+    document.getElementById('startScreen').style.display='none';
+    document.getElementById('layout').classList.add('active');
+    newGame(numCpu);
+  });
+  window.addEventListener('resize', ()=>{ if(state) renderTableCircle(); });
+})();
+</script>
+</body>
+</html>
