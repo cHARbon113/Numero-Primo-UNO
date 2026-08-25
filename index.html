@@ -123,6 +123,7 @@
     align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;
   }
   .pendingBanner.show{ display:flex; }
+  .interruptBanner{ border-color:var(--reverse); background:linear-gradient(90deg, rgba(94,209,171,0.18), rgba(94,209,171,0.06)); }
   .pendingBanner .msg{ font-weight:700; font-size:15.5px; }
   .pendingBanner .msg b{ color:var(--draw4); font-family:'Space Mono',monospace; font-size:20px; }
   button.accept{
@@ -201,6 +202,21 @@
   }
   .wincard h2{ font-size:30px; margin:0 0 10px; color:var(--hundreds); }
   .wincard p{ color:var(--ink-dim); margin-bottom:20px; font-size:14px; }
+  .wincard.rankingCard{ max-width:420px; width:92vw; }
+
+  .ratingSetup{ display:flex; flex-direction:column; gap:10px; margin:16px 0; text-align:left; }
+  .ratingSetup input[type=text]{
+    background:var(--panel-2); border:1px solid rgba(255,255,255,0.14); border-radius:8px;
+    padding:10px 12px; color:var(--ink); font-family:inherit; font-size:14.5px;
+  }
+  .publishToggle{ display:flex; align-items:center; gap:8px; font-size:13px; color:var(--ink-dim); cursor:pointer; }
+  .publishToggle input{ width:16px; height:16px; }
+
+  .rankRow{ display:flex; justify-content:space-between; gap:10px; padding:8px 4px; border-bottom:1px solid rgba(255,255,255,0.06); }
+  .rankRow .rk{ color:var(--ink-dim); width:24px; }
+  .rankRow .nm{ flex:1; }
+  .rankRow .st{ color:var(--ink-dim); font-size:12px; }
+  .rankRow .rt{ font-family:'Space Mono',monospace; font-weight:700; color:var(--hundreds); }
 
   @media (max-width:980px){
     .layout{ grid-template-columns: 1fr; }
@@ -235,7 +251,7 @@
     ・<span class="eff-tag tag-rev">リバース</span> エミレル素数(逆から読むと別の素数。107→701など)<br>
     ・<span class="eff-tag tag-d2">ドロー2</span> 隣接する位が同じ数字(113, 599など)<br>
     ・<span class="eff-tag tag-d4">ドロー4</span> 002・003・005・007(1桁素数)<br>
-    ・ドロー2/ドロー4は<b>積み可能</b>。同じ位が揃っていなくても重ねられ、枚数は加算されます(+2の上に+4で6枚)。積まずに引き受けると番が終わります。<br>
+    ・ドロー2/ドロー4は<b>積み可能</b>。同じ位が揃っていなくても重ねられ、枚数は加算されます(+2の上に+4で6枚)。<b>ただしドロー4にはドロー4でしか対抗できません</b>(ドロー2では返せません)。積まずに引き受けると番が終わります。<br>
     ・リバースとドロー2が両方該当するカードは同時発動します。<br>
     ・<b>最後の1枚は「通常カード」でしか上がれません</b>(特殊カードでは勝てません)。
   </div>
@@ -247,7 +263,17 @@
       <div class="cpu-btn" data-n="3">CPU × 3</div>
     </div>
   </div>
+
+  <div class="ratingSetup">
+    <input type="text" id="nameInput" placeholder="プレイヤー名" maxlength="16">
+    <label class="publishToggle">
+      <input type="checkbox" id="publishToggle">
+      対戦結果を公開ランキングに送信する
+    </label>
+  </div>
+
   <button class="primary" id="startBtn">ゲーム開始</button>
+  <div><button class="ghost" id="rankingBtn" style="margin-top:12px;">ランキングを見る</button></div>
 </div>
 
 <div class="layout" id="layout">
@@ -267,8 +293,16 @@
     </div>
 
     <div class="pendingBanner" id="pendingBanner">
-      <div class="msg">積み上げ中: <b id="pendingCount">0</b>枚 押し付けられています</div>
+      <div class="msg">積み上げ中: <b id="pendingCount">0</b>枚 押し付けられています <span id="pendingLevelNote" style="color:var(--draw4);"></span></div>
       <button class="accept" id="acceptBtn">引き受ける</button>
+    </div>
+
+    <div class="pendingBanner interruptBanner" id="interruptBanner">
+      <div class="msg">リバースでスキップされそうです。1枚引いて番を取り戻しますか?</div>
+      <div style="display:flex; gap:8px;">
+        <button class="accept" id="interruptBtn">引いて割り込む</button>
+        <button class="ghost" id="acceptSkipBtn">受け入れる</button>
+      </div>
     </div>
 
     <div class="controls">
@@ -291,8 +325,17 @@
 <div class="winbox" id="winBox">
   <div class="wincard">
     <h2 id="winText">勝者</h2>
+    <p id="ratingText" style="display:none;"></p>
     <p>もう一度遊ぶ場合はリセットしてください</p>
     <button class="primary" id="resetBtn">もう一度</button>
+  </div>
+</div>
+
+<div class="winbox" id="rankingBox">
+  <div class="wincard rankingCard">
+    <h2>ランキング</h2>
+    <div id="rankingBody" style="text-align:left; font-size:14px; max-height:50vh; overflow-y:auto;">読み込み中...</div>
+    <button class="ghost" id="closeRankingBtn" style="margin-top:16px;">閉じる</button>
   </div>
 </div>
 
@@ -332,6 +375,7 @@
     both:'<div class="strip strip-both">REV+2</div>'
   };
   const DRAW_AMOUNT = { draw2:2, draw4:4, both:2 };
+  const STACK_LEVEL = { draw2:2, draw4:4, both:2 };
   const HAS_REVERSE = { reverse:true, both:true };
   const IS_STACK_TYPE = t => t==='draw2' || t==='draw4' || t==='both';
 
@@ -363,7 +407,7 @@
     state = {
       players, drawPile: deck, discardPile: [start],
       current: 0, direction: 1, over:false,
-      turnDrawn:false, pendingDraw:0
+      turnDrawn:false, pendingDraw:0, pendingLevel:0, skipInterrupt:null
     };
     log(`ゲーム開始。場札は <b>${pad3(start.value)}</b>`);
     render();
@@ -376,7 +420,7 @@
   function canPlay(card, hand, top){
     const wouldWin = hand.length===1;
     if(wouldWin && card.effect!=='plain') return false;
-    if(state.pendingDraw>0) return IS_STACK_TYPE(card.effect);
+    if(state.pendingDraw>0) return IS_STACK_TYPE(card.effect) && STACK_LEVEL[card.effect] >= state.pendingLevel;
     return matches(card, top);
   }
 
@@ -425,7 +469,7 @@
     log(`${p.name} が <b>${pad3(card.value)}</b> を出しました。${fxSpan(card.effect)}`);
 
     if(p.hand.length===0){
-      state.over = true; render(); showWin(p.name); return;
+      state.over = true; render(); showWin(playerIdx); return;
     }
     if(p.hand.length===1) log(`${p.name} 残り1枚!`);
 
@@ -437,6 +481,7 @@
       const applyReverse = HAS_REVERSE[card.effect] && !isDuel;
       if(applyReverse){ state.direction *= -1; log('順番が逆になりました。'); }
       state.pendingDraw += DRAW_AMOUNT[card.effect];
+      state.pendingLevel = STACK_LEVEL[card.effect];
       state.current = nextIndexFrom(playerIdx);
     } else if(card.effect==='skip'){
       const skipped = nextIndexFrom(playerIdx);
@@ -444,10 +489,11 @@
       state.current = nextIndexFrom(skipped);
     } else if(card.effect==='reverse'){
       if(isDuel){
-        // reverse has no effect with only 2 players, so it acts as a skip instead
+        // reverse has no effect with only 2 players, so it acts as a skip instead.
+        // but unlike a real skip card, the victim can pay 1 draw to cancel it.
         const skipped = nextIndexFrom(playerIdx);
-        log(`${state.players[skipped].name} はスキップされました。`);
-        state.current = nextIndexFrom(skipped);
+        offerSkipInterrupt(skipped, playerIdx);
+        return;
       } else {
         state.direction *= -1; log('順番が逆になりました。');
         state.current = nextIndexFrom(playerIdx);
@@ -460,18 +506,50 @@
     maybeCpuTurn();
   }
 
+  // ---- 1v1 only: a reverse-as-skip can be cancelled by the victim drawing 1 card ----
+  function offerSkipInterrupt(victimIdx, originIdx){
+    state.skipInterrupt = { victim: victimIdx, origin: originIdx };
+    log(`${state.players[victimIdx].name} はリバースでスキップされそうです。`);
+    render();
+    const victim = state.players[victimIdx];
+    if(!victim.human){
+      setTimeout(()=>{
+        if(Math.random() < 0.5) interruptSkip(victimIdx); else acceptSkip(victimIdx);
+      }, 700);
+    }
+  }
+  function interruptSkip(victimIdx){
+    const drawn = drawCards(victimIdx, 1);
+    const who = state.players[victimIdx].human ? 'あなた' : state.players[victimIdx].name;
+    if(drawn.length) log(`${who}は1枚引いて割り込み、番を取り戻しました。`);
+    state.skipInterrupt = null;
+    state.current = victimIdx;
+    state.turnDrawn = true;
+    render();
+    maybeCpuTurn();
+  }
+  function acceptSkip(victimIdx){
+    log(`${state.players[victimIdx].name} はスキップを受け入れました。`);
+    state.skipInterrupt = null;
+    state.current = nextIndexFrom(victimIdx);
+    state.turnDrawn = false;
+    render();
+    maybeCpuTurn();
+  }
+
   function stackCard(playerIdx, card){
     const p = state.players[playerIdx];
     p.hand = p.hand.filter(c=>c.id!==card.id);
     state.discardPile.push(card);
     log(`${p.name} が <b>${pad3(card.value)}</b> を重ねました。${fxSpan(card.effect)}`);
 
-    if(p.hand.length===0){ state.over = true; render(); showWin(p.name); return; }
+    if(p.hand.length===0){ state.over = true; render(); showWin(playerIdx); return; }
     if(p.hand.length===1) log(`${p.name} 残り1枚!`);
 
     const applyReverse = HAS_REVERSE[card.effect] && state.players.length!==2;
     if(applyReverse){ state.direction *= -1; log('順番が逆になりました。'); }
     state.pendingDraw += DRAW_AMOUNT[card.effect];
+    state.pendingLevel = STACK_LEVEL[card.effect];
     state.current = nextIndexFrom(playerIdx);
     state.turnDrawn = false;
     render();
@@ -484,6 +562,7 @@
     drawCards(playerIdx, n);
     log(`${p.name} は積み上げられた${n}枚を引き受けました。`);
     state.pendingDraw = 0;
+    state.pendingLevel = 0;
     state.current = nextIndexFrom(playerIdx);
     state.turnDrawn = false;
     render();
@@ -614,11 +693,17 @@
     const pendingBanner = document.getElementById('pendingBanner');
     pendingBanner.classList.toggle('show', state.pendingDraw>0);
     document.getElementById('pendingCount').textContent = state.pendingDraw;
+    document.getElementById('pendingLevelNote').textContent =
+      state.pendingLevel>=4 ? '(ドロー4でしか重ねられません)' : '';
+
+    const interruptBanner = document.getElementById('interruptBanner');
+    const iAmVictim = state.skipInterrupt && state.skipInterrupt.victim===0;
+    interruptBanner.classList.toggle('show', !!iAmVictim);
 
     const human = state.players[0];
     const handWrap = document.getElementById('hand');
     handWrap.innerHTML='';
-    const myTurn = state.current===0 && !state.over;
+    const myTurn = state.current===0 && !state.over && !state.skipInterrupt;
     human.hand.forEach(card=>{
       const playable = myTurn && canPlay(card, human.hand, top);
       const el = cardEl(card, {
@@ -659,13 +744,32 @@
     if(!state || state.over || state.current!==0 || state.pendingDraw<=0) return;
     acceptPending(0);
   });
+  document.getElementById('interruptBtn').addEventListener('click', ()=>{
+    if(!state || state.over || !state.skipInterrupt || state.skipInterrupt.victim!==0) return;
+    interruptSkip(0);
+  });
+  document.getElementById('acceptSkipBtn').addEventListener('click', ()=>{
+    if(!state || state.over || !state.skipInterrupt || state.skipInterrupt.victim!==0) return;
+    acceptSkip(0);
+  });
   document.getElementById('passBtn').addEventListener('click', ()=>{
     if(!state || state.over || state.current!==0) return;
     passTurn(0);
   });
 
-  function showWin(name){
+  function showWin(winnerIdx){
+    const name = state.players[winnerIdx].name;
+    const won = winnerIdx===0;
     document.getElementById('winText').textContent = `${name} の勝ち!`;
+    const ratingText = document.getElementById('ratingText');
+    ratingText.style.display = 'none';
+    if(window.PrimeUnoRating){
+      window.PrimeUnoRating.recordResult(won, lastNumCpu).then(res=>{
+        const sign = res.delta>=0 ? '+' : '';
+        ratingText.textContent = `レート ${res.rating} (${sign}${res.delta}) ・ ${res.games}戦 ${res.wins}勝`;
+        ratingText.style.display = 'block';
+      }).catch(()=>{});
+    }
     document.getElementById('winBox').classList.add('show');
   }
   document.getElementById('resetBtn').addEventListener('click', ()=>{
@@ -676,6 +780,7 @@
   });
 
   let numCpu = 2;
+  let lastNumCpu = 2;
   document.querySelectorAll('.cpu-btn').forEach(btn=>{
     btn.addEventListener('click', ()=>{
       document.querySelectorAll('.cpu-btn').forEach(b=>b.classList.remove('selected'));
@@ -684,12 +789,167 @@
     });
   });
   document.getElementById('startBtn').addEventListener('click', ()=>{
+    if(window.PrimeUnoRating){
+      const profile = window.PrimeUnoRating.getProfile();
+      profile.name = document.getElementById('nameInput').value.trim() || profile.name;
+      profile.publish = document.getElementById('publishToggle').checked;
+      window.PrimeUnoRating.saveProfile(profile);
+    }
+    lastNumCpu = numCpu;
     document.getElementById('startScreen').style.display='none';
     document.getElementById('layout').classList.add('active');
     newGame(numCpu);
   });
   window.addEventListener('resize', ()=>{ if(state) renderTableCircle(); });
+
+  window.addEventListener('DOMContentLoaded', ()=>{
+    if(window.PrimeUnoRating){
+      const profile = window.PrimeUnoRating.getProfile();
+      document.getElementById('nameInput').value = profile.name || '';
+      document.getElementById('publishToggle').checked = profile.publish;
+    }
+  });
+  window.addEventListener('prime-uno-rating-ready', ()=>{
+    const profile = window.PrimeUnoRating.getProfile();
+    if(!document.getElementById('nameInput').value){
+      document.getElementById('nameInput').value = profile.name || '';
+    }
+    document.getElementById('publishToggle').checked = profile.publish;
+  });
+
+  document.getElementById('rankingBtn').addEventListener('click', ()=>{
+    const box = document.getElementById('rankingBox');
+    const body = document.getElementById('rankingBody');
+    body.textContent = '読み込み中...';
+    box.classList.add('show');
+    if(!window.PrimeUnoRating){ body.textContent = 'ランキング機能を準備中です。'; return; }
+    if(!window.PrimeUnoRating.isConfigured()){
+      body.textContent = 'Firebaseが未設定のため、公開ランキングはまだ使えません。';
+      return;
+    }
+    window.PrimeUnoRating.fetchLeaderboard().then(rows=>{
+      if(!rows || rows.length===0){ body.textContent = 'まだ記録がありません。'; return; }
+      body.innerHTML = rows.map((r,i)=>{
+        const winRate = r.games>0 ? Math.round(r.wins/r.games*100) : 0;
+        return `<div class="rankRow">
+          <span class="rk">${i+1}</span>
+          <span class="nm">${(r.name||'名無し')}</span>
+          <span class="st">${r.games}戦 ${winRate}%</span>
+          <span class="rt">${r.rating}</span>
+        </div>`;
+      }).join('');
+    }).catch(()=>{ body.textContent = '取得に失敗しました。'; });
+  });
+  document.getElementById('closeRankingBtn').addEventListener('click', ()=>{
+    document.getElementById('rankingBox').classList.remove('show');
+  });
 })();
+</script>
+
+<!-- =====================================================================
+     Rating / leaderboard module.
+     Fill in firebaseConfig below with the values from your Firebase
+     console (Project settings > General > Your apps > SDK setup and
+     configuration). Until it's filled in, everything still works except
+     the public leaderboard (personal stats are always saved locally).
+     ===================================================================== -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
+  import {
+    getFirestore, doc, getDoc, setDoc, collection, query, orderBy, limit, getDocs, serverTimestamp
+  } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+
+  // ---- TODO: paste your firebaseConfig object from the Firebase console here ----
+  const firebaseConfig = {
+    apiKey: "AIzaSyBKzte4zvkpNoChcTfgP-cMohhWyrxdMHY",
+    authDomain: "primeuno-a6b14.firebaseapp.com",
+    projectId: "primeuno-a6b14",
+    storageBucket: "primeuno-a6b14.firebasestorage.app",
+    messagingSenderId: "684107148295",
+    appId: "1:684107148295:web:96a983194e181e54e40ea2"
+  };
+
+  let db = null;
+  try{
+    if(firebaseConfig.apiKey && firebaseConfig.apiKey !== 'YOUR_API_KEY'){
+      const app = initializeApp(firebaseConfig);
+      db = getFirestore(app);
+    }
+  } catch(e){ console.warn('Firebase init failed:', e); db = null; }
+
+  const K = 24;
+  const OPPONENT_RATING = { 1: 1000, 2: 1100, 3: 1200 };
+
+  function loadProfile(){
+    let id = localStorage.getItem('primeUnoPlayerId');
+    if(!id){
+      id = 'p_' + Math.random().toString(36).slice(2) + Date.now().toString(36);
+      localStorage.setItem('primeUnoPlayerId', id);
+    }
+    return {
+      id,
+      name: localStorage.getItem('primeUnoPlayerName') || '',
+      publish: localStorage.getItem('primeUnoPublish') === '1',
+      rating: Number(localStorage.getItem('primeUnoRating') || 1000),
+      games: Number(localStorage.getItem('primeUnoGames') || 0),
+      wins: Number(localStorage.getItem('primeUnoWins') || 0)
+    };
+  }
+  function saveProfile(p){
+    localStorage.setItem('primeUnoPlayerName', p.name);
+    localStorage.setItem('primeUnoPublish', p.publish ? '1' : '0');
+    localStorage.setItem('primeUnoRating', String(p.rating));
+    localStorage.setItem('primeUnoGames', String(p.games));
+    localStorage.setItem('primeUnoWins', String(p.wins));
+  }
+
+  function eloDelta(rating, opponentRating, won){
+    const expected = 1/(1+Math.pow(10,(opponentRating-rating)/400));
+    return Math.round(K*((won?1:0)-expected));
+  }
+
+  async function recordResult(won, numCpuOpponents){
+    const p = loadProfile();
+    const oppRating = OPPONENT_RATING[numCpuOpponents] || 1000;
+    const delta = eloDelta(p.rating, oppRating, won);
+    const newRating = Math.max(100, p.rating + delta);
+    p.games += 1;
+    if(won) p.wins += 1;
+    p.rating = newRating;
+    saveProfile(p);
+
+    if(p.publish && db){
+      try{
+        await setDoc(doc(db, 'players', p.id), {
+          name: p.name || '名無し',
+          rating: p.rating, games: p.games, wins: p.wins,
+          updatedAt: serverTimestamp()
+        });
+      } catch(e){ console.warn('leaderboard write failed:', e); }
+    }
+    return { rating: p.rating, delta, games: p.games, wins: p.wins };
+  }
+
+  async function fetchLeaderboard(){
+    if(!db) return null; // not configured
+    try{
+      const q = query(collection(db,'players'), orderBy('rating','desc'), limit(50));
+      const snap = await getDocs(q);
+      const rows = [];
+      snap.forEach(d=> rows.push(d.data()));
+      return rows;
+    } catch(e){ console.warn('leaderboard fetch failed:', e); return null; }
+  }
+
+  window.PrimeUnoRating = {
+    getProfile: loadProfile,
+    saveProfile,
+    recordResult,
+    fetchLeaderboard,
+    isConfigured: ()=> !!db
+  };
+
+  window.dispatchEvent(new Event('prime-uno-rating-ready'));
 </script>
 </body>
 </html>
