@@ -211,6 +211,8 @@
   }
   .publishToggle{ display:flex; align-items:center; gap:8px; font-size:13px; color:var(--ink-dim); cursor:pointer; }
   .publishToggle input{ width:16px; height:16px; }
+  .resetHold{ width:100%; }
+  .resetFill{ position:absolute; left:0; top:0; bottom:0; width:0%; background:rgba(234,114,103,0.4); }
 
   .rankRow{ display:flex; justify-content:space-between; gap:10px; padding:8px 4px; border-bottom:1px solid rgba(255,255,255,0.06); }
   .rankRow .rk{ color:var(--ink-dim); width:24px; }
@@ -242,8 +244,8 @@
 </header>
 
 <div id="startScreen">
-  <h2>ルール</h2>
-  <div class="rules">
+  <h2>ルール <button class="ghost" id="rulesToggleBtn" style="padding:4px 12px; font-size:12px; margin-left:6px;">表示</button></h2>
+  <div class="rules" id="rulesBody" style="display:none;">
     ・カードは1〜3桁の素数(3桁表記でゼロ埋め。例: 2→002, 11→011)。全168枚、重複なし。<br>
     ・場のカードと<b>いずれか同じ位に同じ数字</b>があれば出せます。<br>
     ・出せるカードがあっても、あえて山札から引くことができます。引いた後は、出せるカードがあっても出さずにパスできます(1ターンに最低1回、引くか出すかのアクションが必要です)。<br>
@@ -251,8 +253,8 @@
     ・<span class="eff-tag tag-rev">リバース</span> エミレル素数(逆から読むと別の素数。107→701など)<br>
     ・<span class="eff-tag tag-d2">ドロー2</span> 隣接する位が同じ数字(113, 599など)<br>
     ・<span class="eff-tag tag-d4">ドロー4</span> 002・003・005・007(1桁素数)<br>
-    ・ドロー2/ドロー4は<b>積み可能</b>。同じ位が揃っていなくても重ねられ、枚数は加算されます(+2の上に+4で6枚)。<b>ただしドロー4にはドロー4でしか対抗できません</b>(ドロー2では返せません)。積まずに引き受けると番が終わります。<br>
-    ・リバースとドロー2が両方該当するカードは同時発動します。<br>
+    ・ドロー2/ドロー4は<b>積み可能</b>。同じ位が揃っていなくても重ねられ、枚数は加算されます(+2の上に+4で6枚)。強さは <b>ドロー4 &gt; リバース+ドロー2 &gt; ドロー2</b> の順で、格下では対抗できません(1v1限定でこの3段階、3人以上ではドロー2とリバース+ドロー2は同格です)。積まずに引き受けると番が終わります。<br>
+    ・リバースとドロー2が両方該当するカードは同時発動します(1v1ではドローのみ発動します)。<br>
     ・<b>最後の1枚は「通常カード」でしか上がれません</b>(特殊カードでは勝てません)。
   </div>
   <div>
@@ -270,6 +272,11 @@
       <input type="checkbox" id="publishToggle">
       対戦結果を公開ランキングに送信する
     </label>
+    <div id="statsRow" style="font-size:12.5px; color:var(--ink-dim);"></div>
+    <button class="ghost resetHold" id="resetHoldBtn" style="position:relative; overflow:hidden;">
+      <span class="resetFill" id="resetFill"></span>
+      <span style="position:relative;">レート情報をリセット(10秒長押し)</span>
+    </button>
   </div>
 
   <button class="primary" id="startBtn">ゲーム開始</button>
@@ -326,8 +333,10 @@
   <div class="wincard">
     <h2 id="winText">勝者</h2>
     <p id="ratingText" style="display:none;"></p>
-    <p>もう一度遊ぶ場合はリセットしてください</p>
-    <button class="primary" id="resetBtn">もう一度</button>
+    <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
+      <button class="primary" id="rematchBtn">もう一度</button>
+      <button class="ghost" id="homeBtn">ホームに戻る</button>
+    </div>
   </div>
 </div>
 
@@ -335,7 +344,10 @@
   <div class="wincard rankingCard">
     <h2>ランキング</h2>
     <div id="rankingBody" style="text-align:left; font-size:14px; max-height:50vh; overflow-y:auto;">読み込み中...</div>
-    <button class="ghost" id="closeRankingBtn" style="margin-top:16px;">閉じる</button>
+    <div style="display:flex; gap:8px; justify-content:center; margin-top:16px; flex-wrap:wrap;">
+      <button class="ghost" id="tweetBtn">Xでシェア</button>
+      <button class="ghost" id="closeRankingBtn">閉じる</button>
+    </div>
   </div>
 </div>
 
@@ -375,9 +387,17 @@
     both:'<div class="strip strip-both">REV+2</div>'
   };
   const DRAW_AMOUNT = { draw2:2, draw4:4, both:2 };
-  const STACK_LEVEL = { draw2:2, draw4:4, both:2 };
   const HAS_REVERSE = { reverse:true, both:true };
   const IS_STACK_TYPE = t => t==='draw2' || t==='draw4' || t==='both';
+  // stacking strength: draw4 beats everything, draw2 is weakest.
+  // in a 1v1 duel only, "both" (reverse+draw2) sits between them: a draw2
+  // alone can't counter a pending "both", but "both" can counter a draw2.
+  // with 3+ players "both" and draw2 are equal strength (both are level 2).
+  function stackLevel(effect){
+    if(effect==='draw4') return 4;
+    if(effect==='both') return state.players.length===2 ? 3 : 2;
+    return 2; // draw2
+  }
 
   function buildDeck(){
     const deck = allPrimes.map(n=>({
@@ -420,7 +440,9 @@
   function canPlay(card, hand, top){
     const wouldWin = hand.length===1;
     if(wouldWin && card.effect!=='plain') return false;
-    if(state.pendingDraw>0) return IS_STACK_TYPE(card.effect) && STACK_LEVEL[card.effect] >= state.pendingLevel;
+    if(state.pendingDraw>0){
+      return IS_STACK_TYPE(card.effect) && stackLevel(card.effect) >= state.pendingLevel;
+    }
     return matches(card, top);
   }
 
@@ -481,7 +503,7 @@
       const applyReverse = HAS_REVERSE[card.effect] && !isDuel;
       if(applyReverse){ state.direction *= -1; log('順番が逆になりました。'); }
       state.pendingDraw += DRAW_AMOUNT[card.effect];
-      state.pendingLevel = STACK_LEVEL[card.effect];
+      state.pendingLevel = stackLevel(card.effect);
       state.current = nextIndexFrom(playerIdx);
     } else if(card.effect==='skip'){
       const skipped = nextIndexFrom(playerIdx);
@@ -549,7 +571,7 @@
     const applyReverse = HAS_REVERSE[card.effect] && state.players.length!==2;
     if(applyReverse){ state.direction *= -1; log('順番が逆になりました。'); }
     state.pendingDraw += DRAW_AMOUNT[card.effect];
-    state.pendingLevel = STACK_LEVEL[card.effect];
+    state.pendingLevel = stackLevel(card.effect);
     state.current = nextIndexFrom(playerIdx);
     state.turnDrawn = false;
     render();
@@ -694,7 +716,8 @@
     pendingBanner.classList.toggle('show', state.pendingDraw>0);
     document.getElementById('pendingCount').textContent = state.pendingDraw;
     document.getElementById('pendingLevelNote').textContent =
-      state.pendingLevel>=4 ? '(ドロー4でしか重ねられません)' : '';
+      state.pendingLevel>=4 ? '(ドロー4でしか重ねられません)' :
+      state.pendingLevel>=3 ? '(ドロー2では重ねられません)' : '';
 
     const interruptBanner = document.getElementById('interruptBanner');
     const iAmVictim = state.skipInterrupt && state.skipInterrupt.victim===0;
@@ -766,17 +789,23 @@
     if(window.PrimeUnoRating){
       window.PrimeUnoRating.recordResult(won, lastNumCpu).then(res=>{
         const sign = res.delta>=0 ? '+' : '';
-        ratingText.textContent = `レート ${res.rating} (${sign}${res.delta}) ・ ${res.games}戦 ${res.wins}勝`;
+        ratingText.textContent = `レート ${res.rating} (${sign}${res.delta}, 最高 ${res.maxRating}) ・ ${res.games}戦 ${res.wins}勝`;
         ratingText.style.display = 'block';
       }).catch(()=>{});
     }
     document.getElementById('winBox').classList.add('show');
   }
-  document.getElementById('resetBtn').addEventListener('click', ()=>{
+  document.getElementById('rematchBtn').addEventListener('click', ()=>{
+    document.getElementById('winBox').classList.remove('show');
+    document.getElementById('log').innerHTML='';
+    newGame(lastNumCpu);
+  });
+  document.getElementById('homeBtn').addEventListener('click', ()=>{
     document.getElementById('winBox').classList.remove('show');
     document.getElementById('layout').classList.remove('active');
     document.getElementById('startScreen').style.display='block';
     document.getElementById('log').innerHTML='';
+    refreshStatsDisplay();
   });
 
   let numCpu = 2;
@@ -802,11 +831,20 @@
   });
   window.addEventListener('resize', ()=>{ if(state) renderTableCircle(); });
 
+  function refreshStatsDisplay(){
+    if(!window.PrimeUnoRating) return;
+    const profile = window.PrimeUnoRating.getProfile();
+    const winRate = profile.games>0 ? Math.round(profile.wins/profile.games*100) : 0;
+    document.getElementById('statsRow').textContent =
+      `レート ${profile.rating}(最高 ${profile.maxRating}) ・ ${profile.games}戦 ${profile.wins}勝(${winRate}%)`;
+  }
+
   window.addEventListener('DOMContentLoaded', ()=>{
     if(window.PrimeUnoRating){
       const profile = window.PrimeUnoRating.getProfile();
       document.getElementById('nameInput').value = profile.name || '';
       document.getElementById('publishToggle').checked = profile.publish;
+      refreshStatsDisplay();
     }
   });
   window.addEventListener('prime-uno-rating-ready', ()=>{
@@ -815,8 +853,46 @@
       document.getElementById('nameInput').value = profile.name || '';
     }
     document.getElementById('publishToggle').checked = profile.publish;
+    refreshStatsDisplay();
   });
 
+  // ---- reset stats: hold the button for 10 seconds ----
+  let resetHoldTimer = null;
+  function startResetHold(){
+    if(resetHoldTimer) return;
+    const fill = document.getElementById('resetFill');
+    fill.style.transition = 'none';
+    fill.style.width = '0%';
+    requestAnimationFrame(()=>{
+      fill.style.transition = 'width 10s linear';
+      fill.style.width = '100%';
+    });
+    resetHoldTimer = setTimeout(()=>{
+      if(window.PrimeUnoRating){
+        window.PrimeUnoRating.resetStats();
+        refreshStatsDisplay();
+      }
+      cancelResetHold();
+    }, 10000);
+  }
+  function cancelResetHold(){
+    clearTimeout(resetHoldTimer);
+    resetHoldTimer = null;
+    const fill = document.getElementById('resetFill');
+    fill.style.transition = 'none';
+    fill.style.width = '0%';
+  }
+  const resetHoldBtn = document.getElementById('resetHoldBtn');
+  ['mousedown','touchstart'].forEach(ev=> resetHoldBtn.addEventListener(ev, (e)=>{ e.preventDefault(); startResetHold(); }));
+  ['mouseup','mouseleave','touchend','touchcancel'].forEach(ev=> resetHoldBtn.addEventListener(ev, cancelResetHold));
+
+  document.getElementById('rulesToggleBtn').addEventListener('click', ()=>{
+    const body = document.getElementById('rulesBody');
+    const btn = document.getElementById('rulesToggleBtn');
+    const show = body.style.display==='none';
+    body.style.display = show ? 'block' : 'none';
+    btn.textContent = show ? '隠す' : '表示';
+  });
   document.getElementById('rankingBtn').addEventListener('click', ()=>{
     const box = document.getElementById('rankingBox');
     const body = document.getElementById('rankingBody');
@@ -839,6 +915,14 @@
         </div>`;
       }).join('');
     }).catch(()=>{ body.textContent = '取得に失敗しました。'; });
+  });
+  document.getElementById('tweetBtn').addEventListener('click', ()=>{
+    if(!window.PrimeUnoRating) return;
+    const profile = window.PrimeUnoRating.getProfile();
+    const winRate = profile.games>0 ? Math.round(profile.wins/profile.games*100) : 0;
+    const text = `素数UNOで${profile.games}戦${profile.wins}勝(勝率${winRate}%)、レート${profile.rating}(最高${profile.maxRating})です!`;
+    const url = 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(text);
+    window.open(url, '_blank');
   });
   document.getElementById('closeRankingBtn').addEventListener('click', ()=>{
     document.getElementById('rankingBox').classList.remove('show');
@@ -877,8 +961,11 @@
     }
   } catch(e){ console.warn('Firebase init failed:', e); db = null; }
 
-  const K = 24;
-  const OPPONENT_RATING = { 1: 1000, 2: 1100, 3: 1200 };
+  // fixed point table, independent of the player's own current rating.
+  // wins are worth a bit more than losses cost, so an even 1-1 record
+  // against the same opponent count nets a small gain.
+  const WIN_POINTS  = { 1: 15, 2: 20, 3: 25 };
+  const LOSS_POINTS = { 1: 10, 2: 13, 3: 16 };
 
   function loadProfile(){
     let id = localStorage.getItem('primeUnoPlayerId');
@@ -886,11 +973,13 @@
       id = 'p_' + Math.random().toString(36).slice(2) + Date.now().toString(36);
       localStorage.setItem('primeUnoPlayerId', id);
     }
+    const rating = Number(localStorage.getItem('primeUnoRating') || 1000);
     return {
       id,
       name: localStorage.getItem('primeUnoPlayerName') || '',
       publish: localStorage.getItem('primeUnoPublish') === '1',
-      rating: Number(localStorage.getItem('primeUnoRating') || 1000),
+      rating,
+      maxRating: Number(localStorage.getItem('primeUnoMaxRating') || rating),
       games: Number(localStorage.getItem('primeUnoGames') || 0),
       wins: Number(localStorage.getItem('primeUnoWins') || 0)
     };
@@ -899,35 +988,43 @@
     localStorage.setItem('primeUnoPlayerName', p.name);
     localStorage.setItem('primeUnoPublish', p.publish ? '1' : '0');
     localStorage.setItem('primeUnoRating', String(p.rating));
+    localStorage.setItem('primeUnoMaxRating', String(p.maxRating));
     localStorage.setItem('primeUnoGames', String(p.games));
     localStorage.setItem('primeUnoWins', String(p.wins));
   }
-
-  function eloDelta(rating, opponentRating, won){
-    const expected = 1/(1+Math.pow(10,(opponentRating-rating)/400));
-    return Math.round(K*((won?1:0)-expected));
+  function resetStats(){
+    const p = loadProfile();
+    p.rating = 1000; p.maxRating = 1000; p.games = 0; p.wins = 0;
+    saveProfile(p);
+    if(p.publish && db){
+      setDoc(doc(db, 'players', p.id), {
+        name: p.name || '名無し', rating: p.rating, maxRating: p.maxRating,
+        games: p.games, wins: p.wins, updatedAt: serverTimestamp()
+      }).catch(e=> console.warn('leaderboard reset failed:', e));
+    }
+    return p;
   }
 
   async function recordResult(won, numCpuOpponents){
     const p = loadProfile();
-    const oppRating = OPPONENT_RATING[numCpuOpponents] || 1000;
-    const delta = eloDelta(p.rating, oppRating, won);
-    const newRating = Math.max(100, p.rating + delta);
+    const delta = won ? (WIN_POINTS[numCpuOpponents]||15) : -(LOSS_POINTS[numCpuOpponents]||10);
+    const newRating = Math.max(0, p.rating + delta);
     p.games += 1;
     if(won) p.wins += 1;
     p.rating = newRating;
+    if(p.rating > p.maxRating) p.maxRating = p.rating;
     saveProfile(p);
 
     if(p.publish && db){
       try{
         await setDoc(doc(db, 'players', p.id), {
           name: p.name || '名無し',
-          rating: p.rating, games: p.games, wins: p.wins,
+          rating: p.rating, maxRating: p.maxRating, games: p.games, wins: p.wins,
           updatedAt: serverTimestamp()
         });
       } catch(e){ console.warn('leaderboard write failed:', e); }
     }
-    return { rating: p.rating, delta, games: p.games, wins: p.wins };
+    return { rating: p.rating, maxRating: p.maxRating, delta, games: p.games, wins: p.wins };
   }
 
   async function fetchLeaderboard(){
@@ -945,6 +1042,7 @@
     getProfile: loadProfile,
     saveProfile,
     recordResult,
+    resetStats,
     fetchLeaderboard,
     isConfigured: ()=> !!db
   };
