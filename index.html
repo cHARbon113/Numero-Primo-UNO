@@ -253,18 +253,20 @@
     ・<span class="eff-tag tag-rev">リバース</span> エミレル素数(逆から読むと別の素数。107→701など)<br>
     ・<span class="eff-tag tag-d2">ドロー2</span> 隣接する位が同じ数字(113, 599など)<br>
     ・<span class="eff-tag tag-d4">ドロー4</span> 002・003・005・007(1桁素数)<br>
-    ・ドロー2/ドロー4は<b>積み可能</b>。同じ位が揃っていなくても重ねられ、枚数は加算されます(+2の上に+4で6枚)。強さは <b>ドロー4 &gt; リバース+ドロー2 &gt; ドロー2</b> の順で、格下では対抗できません(1v1限定でこの3段階、3人以上ではドロー2とリバース+ドロー2は同格です)。積まずに引き受けると番が終わります。<br>
-    ・リバースとドロー2が両方該当するカードは同時発動します(1v1ではドローのみ発動します)。<br>
+    ・ドロー2/ドロー4は<b>積み可能</b>。同じ位が揃っていなくても重ねられ、枚数は加算されます(+2の上に+4で6枚)。強さは <b>ドロー4 &gt; リバース+ドロー2 &gt; ドロー2</b> の順で、格下では対抗できません(2人対戦限定でこの3段階、3人以上ではドロー2とリバース+ドロー2は同格です)。積まずに引き受けると番が終わります。<br>
+    ・リバースとドロー2が両方該当するカードは同時発動します(2人対戦ではドローのみ発動します)。<br>
     ・<b>最後の1枚は「通常カード」でしか上がれません</b>(特殊カードでは勝てません)。
   </div>
   <div>
     <p style="font-size:13px;color:var(--ink-dim);margin-bottom:8px;">対戦相手の人数</p>
     <div class="cpu-select" id="cpuSelect">
-      <div class="cpu-btn" data-n="1">CPU × 1</div>
-      <div class="cpu-btn selected" data-n="2">CPU × 2</div>
-      <div class="cpu-btn" data-n="3">CPU × 3</div>
+      <div class="cpu-btn" data-n="1">CPU × 1<br><span style="font-size:10.5px;opacity:0.7;">2人対戦</span></div>
+      <div class="cpu-btn selected" data-n="2">CPU × 2<br><span style="font-size:10.5px;opacity:0.7;">3人対戦</span></div>
+      <div class="cpu-btn" data-n="3">CPU × 3<br><span style="font-size:10.5px;opacity:0.7;">4人対戦</span></div>
     </div>
   </div>
+
+  <button class="primary" id="startBtn" style="margin:14px 0;">ゲーム開始</button>
 
   <div class="ratingSetup">
     <input type="text" id="nameInput" placeholder="プレイヤー名" maxlength="16">
@@ -279,7 +281,6 @@
     </button>
   </div>
 
-  <button class="primary" id="startBtn">ゲーム開始</button>
   <div><button class="ghost" id="rankingBtn" style="margin-top:12px;">ランキングを見る</button></div>
 </div>
 
@@ -337,6 +338,7 @@
       <button class="primary" id="rematchBtn">もう一度</button>
       <button class="ghost" id="homeBtn">ホームに戻る</button>
     </div>
+    <button class="ghost" id="resultTweetBtn" style="display:none; margin-top:10px;">Xでシェア</button>
   </div>
 </div>
 
@@ -780,21 +782,36 @@
     passTurn(0);
   });
 
+  const MODE_NAME = { 1:'2人対戦', 2:'3人対戦', 3:'4人対戦' };
+  let lastResult = null;
+
   function showWin(winnerIdx){
     const name = state.players[winnerIdx].name;
     const won = winnerIdx===0;
     document.getElementById('winText').textContent = `${name} の勝ち!`;
     const ratingText = document.getElementById('ratingText');
+    const resultTweetBtn = document.getElementById('resultTweetBtn');
     ratingText.style.display = 'none';
+    resultTweetBtn.style.display = 'none';
+    lastResult = null;
     if(window.PrimeUnoRating){
       window.PrimeUnoRating.recordResult(won, lastNumCpu).then(res=>{
         const sign = res.delta>=0 ? '+' : '';
         ratingText.textContent = `レート ${res.rating} (${sign}${res.delta}, 最高 ${res.maxRating}) ・ ${res.games}戦 ${res.wins}勝`;
         ratingText.style.display = 'block';
+        lastResult = { won, rating: res.rating, delta: res.delta, mode: MODE_NAME[lastNumCpu] || '対戦' };
+        resultTweetBtn.style.display = 'inline-block';
       }).catch(()=>{});
     }
     document.getElementById('winBox').classList.add('show');
   }
+  document.getElementById('resultTweetBtn').addEventListener('click', ()=>{
+    if(!lastResult) return;
+    const sign = lastResult.delta>=0 ? '+' : '';
+    const outcome = lastResult.won ? '勝利!🎉' : '敗北...💧';
+    const text = `素数UNOの${lastResult.mode}モードで${outcome}\nレート${lastResult.rating}(${sign}${lastResult.delta})\n${location.href}`;
+    window.open('https://twitter.com/intent/tweet?text=' + encodeURIComponent(text), '_blank');
+  });
   document.getElementById('rematchBtn').addEventListener('click', ()=>{
     document.getElementById('winBox').classList.remove('show');
     document.getElementById('log').innerHTML='';
@@ -910,7 +927,7 @@
         return `<div class="rankRow">
           <span class="rk">${i+1}</span>
           <span class="nm">${(r.name||'名無し')}</span>
-          <span class="st">${r.games}戦 ${winRate}%</span>
+          <span class="st">${r.games}戦 ${winRate}% ・ 最高${r.maxRating!=null ? r.maxRating : r.rating}</span>
           <span class="rt">${r.rating}</span>
         </div>`;
       }).join('');
@@ -920,7 +937,7 @@
     if(!window.PrimeUnoRating) return;
     const profile = window.PrimeUnoRating.getProfile();
     const winRate = profile.games>0 ? Math.round(profile.wins/profile.games*100) : 0;
-    const text = `素数UNOで${profile.games}戦${profile.wins}勝(勝率${winRate}%)、レート${profile.rating}(最高${profile.maxRating})です!`;
+    const text = `素数UNOでの${profile.name||'名無し'}の成績\n${profile.games}戦${profile.wins}勝\n勝率${winRate}%\nレート${profile.rating}(最高${profile.maxRating})です!\n${location.href}`;
     const url = 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(text);
     window.open(url, '_blank');
   });
