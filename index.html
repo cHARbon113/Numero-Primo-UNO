@@ -164,6 +164,9 @@
   .card.playable:hover{ transform:translateY(-8px); box-shadow:0 14px 22px rgba(0,0,0,0.5); }
   .card.disabled{ filter:grayscale(0.6) brightness(0.65); cursor:default; }
   .card.stackable{ box-shadow:0 0 0 3px var(--draw4), 0 5px 12px rgba(0,0,0,0.4); cursor:pointer; }
+  .card.multiPickable{ cursor:pointer; }
+  .card.multiSelected{ box-shadow:0 0 0 3px var(--reverse), 0 5px 12px rgba(0,0,0,0.4); transform:translateY(-8px); }
+  .card.multiFaded{ opacity:0.35; cursor:default; }
   .draw-pile .card{ cursor:pointer; }
   .draw-pile.locked .card{ cursor:default; filter:grayscale(0.5) brightness(0.7); }
 
@@ -184,6 +187,17 @@
   #log .fx-reverse{ color:var(--reverse); }
   #log .fx-draw2{ color:var(--draw2); }
   #log .fx-draw4{ color:var(--draw4); }
+  #log .log-latest{ color:var(--ink); font-weight:700; }
+  #log .log-uno{ color:var(--danger); font-weight:900; }
+
+  .unoToast{
+    position:fixed; top:16px; left:50%; transform:translateX(-50%) scale(0.85);
+    background:var(--danger); color:#fff; font-weight:900; font-size:20px;
+    padding:10px 26px; border-radius:999px; opacity:0; pointer-events:none;
+    transition:opacity .2s ease, transform .2s ease; z-index:60;
+    box-shadow:0 10px 26px rgba(0,0,0,0.45); letter-spacing:0.04em;
+  }
+  .unoToast.show{ opacity:1; transform:translateX(-50%) scale(1); }
 
   .controls{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; justify-content:center; }
   button.ghost{
@@ -225,12 +239,13 @@
     padding:10px 12px; color:var(--ink); font-family:'Space Mono',monospace; font-size:14px;
   }
 
-  .rankRow{ display:flex; justify-content:space-between; gap:10px; padding:8px 4px; border-bottom:1px solid rgba(255,255,255,0.06); }
-  .rankRow .rk{ color:var(--ink-dim); width:24px; }
+  .rankRow{ display:flex; justify-content:space-between; gap:6px; padding:8px 4px; border-bottom:1px solid rgba(255,255,255,0.06); }
+  .rankRow .rk{ color:var(--ink-dim); width:18px; }
   .rankRow .nm{ flex:1; }
-  .rankRow .st{ color:var(--ink-dim); font-size:12px; }
+  .rankRow .st{ color:var(--ink-dim); font-family:'Space Mono',monospace; font-weight:700; font-size:16px; }
   .rankRow .rt{ font-family:'Space Mono',monospace; font-weight:700; color:var(--hundreds); font-size:16px; }
   .rateHighlight{ font-family:'Space Mono',monospace; font-weight:700; color:var(--hundreds); font-size:1.15em; }
+  .statNumber{ font-family:'Space Mono',monospace; font-weight:700; font-size:1.15em; }
 
   @media (max-width:980px){
     .layout{ grid-template-columns: 1fr; }
@@ -250,6 +265,7 @@
 </head>
 <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 <body>
+<div class="unoToast" id="unoToast"></div>
 
 <header>
   <h1>素数<span class="accent">UNO</span></h1>
@@ -264,20 +280,22 @@
     ・場のカードと<b>いずれか同じ位に同じ数字</b>があれば出せます。<br>
     ・出せるカードがあっても、あえて山札から引くことができます。引いた後は、出せるカードがあっても出さずにパスできます(1ターンに最低1回、引くか出すかのアクションが必要です)。<br>
     ・<span class="eff-tag tag-skip">スキップ</span> 回文素数(131, 373など)<br>
-    ・<span class="eff-tag tag-rev">リバース</span> エミレル素数(逆から読むと別の素数。107→701など)<br>
+    ・<span class="eff-tag tag-rev">リバース</span> エマープ/可逆素数(107→701など)<br>
     ・<span class="eff-tag tag-d2">ドロー2</span> 隣接する位が同じ数字(113, 599など)<br>
     ・<span class="eff-tag tag-d4">ドロー4</span> 002・003・005・007(1桁素数)<br>
-    ・ドロー2/ドロー4は<b>積み可能</b>。同じ位が揃っていなくても重ねられ、枚数は加算されます(+2の上に+4で6枚)。積まずに引き受けると番が終わります。<br>
-    ・リバースとドロー2が両方該当するカードは同時発動します。<br>
-    ・<b>最後の1枚は「通常カード」でしか上がれません</b>(特殊カードでは勝てません)。
+    ・ドロー2/ドロー4は<b>積み可能</b>。同じ位が揃っていなくても重ねられ、枚数は加算されます(+2の上に+4で6枚)。<b>ドロー4はドロー4でしか対抗できません</b>(ドロー2では返せません)。積まずに引き受けると番が終わります。<br>
+    ・リバースとドロー2が両方該当するカードがあります(エマープかつ隣接ペア)。効果の出方は人数によって異なります。<br>
+    ・<b>最後の1枚は「通常カード」でしか上がれません</b>(特殊カードでは勝てません)。<br>
+    ・(設定オンの場合)<b>誰か1人でも「残り1枚」の状態になっている間</b>、通常カードに限り、場のカードと<b>同じ位が一致している通常カードをまとめて</b>出せます(重ね出し)。選ぶカードは全て同じ位で一致している必要があります。ただし<b>通常カードは手札に最低1枚残す</b>必要があります。
 
     <p style="margin:14px 0 6px; font-weight:700; color:var(--ink);">2人対戦だけのルール</p>
     ・リバースはスキップとして扱われます(2人だと方向転換の意味が無いため)。ただし「リバース+ドロー2」の同時発動カードは<b>ドローのみ発動</b>し、スキップにはなりません。<br>
     ・スキップされる側は、山札から1枚引くことで割り込んで自分の番を取り戻せます(割り込み設定がオンの場合)。<br>
-    ・積みの強さは <b>ドロー4 &gt; リバース+ドロー2 &gt; ドロー2</b> の3段階になり、格下では対抗できません(階層設定がオンの場合)。
+    ・<b>リバース+ドロー2にはドロー2だけでは対抗できません</b>(リバース+ドロー2側からドロー2への対抗は可能。この設定はオンオフできます)。
 
     <p style="margin:14px 0 6px; font-weight:700; color:var(--ink);">3人以上だけのルール</p>
     ・リバースは通常通り順番の向きを変えます。<br>
+    ・リバースとドロー2が両方該当するカードは、<b>リバースとドロー2が同時に発動</b>します(方向転換+積み上げ)。<br>
     ・積みの強さはドロー2とリバース+ドロー2が同格(どちらでも重ねられる)で、ドロー4だけが別格です。
 
     <p style="margin:14px 0 6px; font-weight:700; color:var(--ink);">レートの変動幅</p>
@@ -294,10 +312,16 @@
     <p style="font-size:12px; color:var(--ink-dim); margin-top:6px;">人数が多いほど勝った時の増加が大きく、負けた時の減少は相対的に小さくなります。</p>
   </div>
   <div>
+    <p style="font-size:13px;color:var(--ink-dim);margin-bottom:8px;">共通ルール設定</p>
+    <div style="display:flex; flex-direction:column; gap:6px; align-items:flex-start; max-width:340px; margin:0 auto 14px; font-size:12.5px; color:var(--ink-dim);">
+      <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" id="multiDumpToggle" checked> 誰かが「残り1枚」の時、通常カードのみ重ね出しできるようにする</label>
+    </div>
+  </div>
+  <div>
     <p style="font-size:13px;color:var(--ink-dim);margin-bottom:8px;">2人対戦だけのルール設定</p>
     <div style="display:flex; flex-direction:column; gap:6px; align-items:flex-start; max-width:320px; margin:0 auto 14px; font-size:12.5px; color:var(--ink-dim);">
       <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" id="interruptToggle" checked> リバース割り込み(1枚引いて番を取り戻す)を有効にする</label>
-      <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" id="tieredStackToggle" checked> 積みの3段階(ドロー4&gt;リバース+ドロー2&gt;ドロー2)を有効にする</label>
+      <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" id="tieredStackToggle" checked> リバース+ドロー2にドロー2だけでは対抗できないようにする</label>
     </div>
   </div>
   <div>
@@ -387,6 +411,15 @@
     <div class="controls">
       <button class="ghost" id="drawBtn">山札から引く</button>
       <button class="ghost" id="passBtn" disabled>パスする</button>
+      <button class="ghost" id="multiDumpBtn" style="display:none;">まとめて出す</button>
+    </div>
+
+    <div class="pendingBanner" id="multiDumpBar" style="border-color:var(--reverse);">
+      <div class="msg"><span id="multiDumpCount">0</span>枚選択中(同じ位で揃った通常カードのみ)</div>
+      <div style="display:flex; gap:8px;">
+        <button class="accept" id="multiDumpConfirmBtn" style="background:var(--reverse); color:#0d241c;">出す</button>
+        <button class="ghost" id="multiDumpCancelBtn">キャンセル</button>
+      </div>
     </div>
 
     <div class="hand-wrap">
@@ -502,7 +535,10 @@
       current: 0, direction: 1, over:false,
       turnDrawn:false, pendingDraw:0, pendingLevel:0, skipInterrupt:null,
       interruptEnabled: document.getElementById('interruptToggle').checked,
-      tieredStackEnabled: document.getElementById('tieredStackToggle').checked
+      tieredStackEnabled: document.getElementById('tieredStackToggle').checked,
+      multiDumpEnabled: document.getElementById('multiDumpToggle').checked,
+      multiSelection: [],
+      multiMode: false
     };
     log(`ゲーム開始。場札は <b>${pad3(start.value)}</b>`);
     render();
@@ -521,12 +557,50 @@
     return matches(card, top);
   }
 
+  // ---- multi-card dump (only while someone is at 1 card, plain cards only) ----
+  function anyoneAtUno(){
+    return state.players.some(p=> p.hand.length===1);
+  }
+  function multiDumpEligible(){
+    return state.multiDumpEnabled && anyoneAtUno() && state.pendingDraw===0 &&
+      state.current===0 && !state.over && !state.skipInterrupt;
+  }
+  // positions (0=hundreds,1=tens,2=ones) where this plain card matches the top card
+  function comboPositionsFor(card, top){
+    return [0,1,2].filter(i=> card.digits[i]===top.digits[i]);
+  }
+  // given the cards already selected, which positions still line up if we add `card`?
+  function comboPositionsIfAdded(card, selected, top){
+    const base = selected.length===0
+      ? comboPositionsFor(card, top)
+      : selected[0].digits.map((_,i)=>i).filter(i=>
+          selected.every(c=> c.digits[i]===selected[0].digits[i]) && selected[0].digits[i]===top.digits[i]
+        );
+    if(selected.length===0) return card.effect==='plain' ? base : [];
+    if(card.effect!=='plain') return [];
+    return base.filter(i=> card.digits[i]===selected[0].digits[i]);
+  }
+
   function log(msg){
     const el = document.getElementById('log');
+    const prevTop = el.querySelector('.log-latest');
+    if(prevTop) prevTop.classList.remove('log-latest');
     const line = document.createElement('div');
+    line.className = 'log-latest';
     line.innerHTML = msg;
-    el.appendChild(line);
-    el.scrollTop = el.scrollHeight;
+    el.insertBefore(line, el.firstChild);
+    el.scrollTop = 0;
+  }
+  let unoToastTimer = null;
+  function announceUno(name){
+    log(`<span class="log-uno">${name} 残り1枚!</span>`);
+    const toast = document.getElementById('unoToast');
+    if(toast){
+      toast.textContent = `${name} リーチ!`;
+      toast.classList.add('show');
+      clearTimeout(unoToastTimer);
+      unoToastTimer = setTimeout(()=> toast.classList.remove('show'), 1400);
+    }
   }
   function fxSpan(effect){
     if(effect==='plain') return '';
@@ -568,7 +642,7 @@
     if(p.hand.length===0){
       state.over = true; render(); showWin(playerIdx); return;
     }
-    if(p.hand.length===1) log(`${p.name} 残り1枚!`);
+    if(p.hand.length===1) announceUno(p.name);
 
     const isDuel = state.players.length===2;
     if(IS_STACK_TYPE(card.effect)){
@@ -646,7 +720,7 @@
     log(`${p.name} が <b>${pad3(card.value)}</b> を重ねました。${fxSpan(card.effect)}`);
 
     if(p.hand.length===0){ state.over = true; render(); showWin(playerIdx); return; }
-    if(p.hand.length===1) log(`${p.name} 残り1枚!`);
+    if(p.hand.length===1) announceUno(p.name);
 
     const applyReverse = HAS_REVERSE[card.effect] && state.players.length!==2;
     if(applyReverse){ state.direction *= -1; log('順番が逆になりました。'); }
@@ -687,6 +761,31 @@
       log(`${who}は山札から1枚引きました: <b>${pad3(drawn[0].value)}</b>`);
     }
     render();
+  }
+
+  function playMultiDump(){
+    const human = state.players[0];
+    const selected = state.multiSelection;
+    if(selected.length===0) return;
+    const remaining = human.hand.filter(c=> !selected.includes(c));
+    if(remaining.length>0 && !remaining.some(c=>c.effect==='plain')){
+      log('<span class="log-uno">通常カードは手札に最低1枚残す必要があります。</span>');
+      return;
+    }
+    human.hand = remaining;
+    selected.forEach(c=> state.discardPile.push(c));
+    log(`あなたが <b>${selected.map(c=>pad3(c.value)).join(', ')}</b> をまとめて出しました。`);
+    state.multiMode = false;
+    state.multiSelection = [];
+
+    if(human.hand.length===0){
+      state.over = true; render(); showWin(0); return;
+    }
+    if(human.hand.length===1) announceUno(human.name);
+    state.current = nextIndexFrom(0);
+    state.turnDrawn = false;
+    render();
+    maybeCpuTurn();
   }
 
   function maybeCpuTurn(){
@@ -730,6 +829,9 @@
     if(opts.playable) cls += ' playable';
     if(opts.disabled) cls += ' disabled';
     if(opts.stackable) cls += ' stackable';
+    if(opts.multiSelected) cls += ' multiSelected';
+    else if(opts.playable && opts.multiFaded===false) cls += ' multiPickable';
+    if(opts.multiFaded) cls += ' multiFaded';
     div.className = cls;
     const [h,t,o] = card.digits;
     div.innerHTML = (card.effect!=='plain' ? EFFECT_STRIP[card.effect] : '') +
@@ -807,19 +909,48 @@
     const handWrap = document.getElementById('hand');
     handWrap.innerHTML='';
     const myTurn = state.current===0 && !state.over && !state.skipInterrupt;
-    human.hand.forEach(card=>{
-      const playable = myTurn && canPlay(card, human.hand, top);
-      const el = cardEl(card, {
-        playable, disabled: myTurn && !playable,
-        stackable: myTurn && state.pendingDraw>0 && playable
-      });
-      if(playable){
-        el.addEventListener('click', ()=>{
-          if(state.pendingDraw>0) stackCard(0, card); else playCard(0, card);
+
+    if(state.multiMode){
+      human.hand.forEach(card=>{
+        const isSelected = state.multiSelection.includes(card);
+        const wouldBeOk = isSelected || comboPositionsIfAdded(card, state.multiSelection, top).length>0;
+        const el = cardEl(card, {
+          playable: wouldBeOk,
+          multiSelected: isSelected,
+          multiFaded: !wouldBeOk
         });
-      }
-      handWrap.appendChild(el);
-    });
+        if(wouldBeOk){
+          el.addEventListener('click', ()=>{
+            if(isSelected){
+              state.multiSelection = state.multiSelection.filter(c=>c!==card);
+            } else {
+              state.multiSelection.push(card);
+            }
+            render();
+          });
+        }
+        handWrap.appendChild(el);
+      });
+    } else {
+      human.hand.forEach(card=>{
+        const playable = myTurn && canPlay(card, human.hand, top);
+        const el = cardEl(card, {
+          playable, disabled: myTurn && !playable,
+          stackable: myTurn && state.pendingDraw>0 && playable
+        });
+        if(playable){
+          el.addEventListener('click', ()=>{
+            if(state.pendingDraw>0) stackCard(0, card); else playCard(0, card);
+          });
+        }
+        handWrap.appendChild(el);
+      });
+    }
+
+    document.getElementById('multiDumpBtn').style.display = (!state.multiMode && multiDumpEligible()) ? 'inline-block' : 'none';
+    document.getElementById('multiDumpBar').classList.toggle('show', state.multiMode);
+    document.getElementById('multiDumpCount').textContent = state.multiSelection.length;
+    document.getElementById('multiDumpConfirmBtn').disabled = state.multiSelection.length===0;
 
     document.getElementById('reachBadge').style.display = human.hand.length===1 ? 'inline' : 'none';
 
@@ -827,12 +958,12 @@
     document.getElementById('acceptBtn').style.visibility = (myTurn && state.pendingDraw>0) ? 'visible' : 'hidden';
 
     const drawWrap = document.getElementById('drawPileWrap');
-    drawWrap.classList.toggle('locked', !(myTurn && state.pendingDraw===0 && !state.turnDrawn));
-    document.getElementById('drawBtn').disabled = !(myTurn && state.pendingDraw===0 && !state.turnDrawn);
+    drawWrap.classList.toggle('locked', !(myTurn && state.pendingDraw===0 && !state.turnDrawn && !state.multiMode));
+    document.getElementById('drawBtn').disabled = !(myTurn && state.pendingDraw===0 && !state.turnDrawn && !state.multiMode);
 
     // fixed: pass is allowed once at least one action (draw) was taken this turn,
     // regardless of whether a playable card remains in hand.
-    document.getElementById('passBtn').disabled = !(myTurn && state.pendingDraw===0 && state.turnDrawn);
+    document.getElementById('passBtn').disabled = !(myTurn && state.pendingDraw===0 && state.turnDrawn && !state.multiMode);
   }
 
   document.getElementById('drawBtn').addEventListener('click', ()=>{
@@ -859,6 +990,22 @@
     if(!state || state.over || state.current!==0) return;
     passTurn(0);
   });
+  document.getElementById('multiDumpBtn').addEventListener('click', ()=>{
+    if(!state || state.over) return;
+    state.multiMode = true;
+    state.multiSelection = [];
+    render();
+  });
+  document.getElementById('multiDumpConfirmBtn').addEventListener('click', ()=>{
+    if(!state || state.over) return;
+    playMultiDump();
+  });
+  document.getElementById('multiDumpCancelBtn').addEventListener('click', ()=>{
+    if(!state) return;
+    state.multiMode = false;
+    state.multiSelection = [];
+    render();
+  });
 
   const MODE_NAME = { 1:'2人対戦', 2:'3人対戦', 3:'4人対戦' };
   let lastResult = null;
@@ -875,7 +1022,7 @@
     if(window.PrimeUnoRating){
       window.PrimeUnoRating.recordResult(won, lastNumCpu).then(res=>{
         const sign = res.delta>=0 ? '+' : '';
-        ratingText.innerHTML = `レート <span class="rateHighlight">${res.rating}</span> (${sign}${res.delta}, 最高 ${res.maxRating}) ・ ${res.games}戦 ${res.wins}勝`;
+        ratingText.innerHTML = `レート <span class="rateHighlight">${res.rating}</span> (${sign}${res.delta}, 最高 <span class="statNumber">${res.maxRating}</span>) ・ <span class="statNumber">${res.games}</span>戦 <span class="statNumber">${res.wins}</span>勝`;
         ratingText.style.display = 'block';
         lastResult = { won, rating: res.rating, delta: res.delta, mode: MODE_NAME[lastNumCpu] || '対戦' };
         resultTweetBtn.style.display = 'inline-block';
@@ -931,12 +1078,13 @@
     const profile = window.PrimeUnoRating.getProfile();
     const winRate = profile.games>0 ? Math.round(profile.wins/profile.games*100) : 0;
     document.getElementById('statsRow').innerHTML =
-      `レート <span class="rateHighlight">${profile.rating}</span>(最高 ${profile.maxRating}) ・ ${profile.games}戦 ${profile.wins}勝(${winRate}%)`;
+      `レート <span class="rateHighlight">${profile.rating}</span>(最高 <span class="statNumber">${profile.maxRating}</span>) ・ <span class="statNumber">${profile.games}</span>戦 <span class="statNumber">${profile.wins}</span>勝(${winRate}%)`;
   }
 
   window.addEventListener('DOMContentLoaded', ()=>{
     document.getElementById('interruptToggle').checked = localStorage.getItem('primeUnoInterrupt') !== '0';
     document.getElementById('tieredStackToggle').checked = localStorage.getItem('primeUnoTieredStack') !== '0';
+    document.getElementById('multiDumpToggle').checked = localStorage.getItem('primeUnoMultiDump') !== '0';
     if(window.PrimeUnoRating){
       const profile = window.PrimeUnoRating.getProfile();
       document.getElementById('nameInput').value = profile.name || '';
@@ -950,6 +1098,9 @@
   });
   document.getElementById('tieredStackToggle').addEventListener('change', (e)=>{
     localStorage.setItem('primeUnoTieredStack', e.target.checked ? '1' : '0');
+  });
+  document.getElementById('multiDumpToggle').addEventListener('change', (e)=>{
+    localStorage.setItem('primeUnoMultiDump', e.target.checked ? '1' : '0');
   });
   window.addEventListener('prime-uno-rating-ready', ()=>{
     const profile = window.PrimeUnoRating.getProfile();
