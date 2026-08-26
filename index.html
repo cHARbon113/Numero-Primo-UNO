@@ -218,6 +218,8 @@
   .onlineBox{
     margin-top:18px; padding-top:16px; border-top:1px solid rgba(255,255,255,0.08); text-align:center;
   }
+  .softDisabled{ opacity:0.4; }
+  .softDisabled:hover{ opacity:0.4; }
   .onlineBox input[type=text]{
     background:var(--panel-2); border:1px solid rgba(255,255,255,0.14); border-radius:8px;
     padding:10px 12px; color:var(--ink); font-family:'Space Mono',monospace; font-size:14px;
@@ -257,6 +259,7 @@
 <div id="startScreen">
   <h2>ルール <button class="ghost" id="rulesToggleBtn" style="padding:4px 12px; font-size:12px; margin-left:6px;">表示</button></h2>
   <div class="rules" id="rulesBody" style="display:none;">
+    <p style="margin:0 0 6px; font-weight:700; color:var(--ink);">共通ルール</p>
     ・カードは1〜3桁の素数(3桁表記でゼロ埋め。例: 2→002, 11→011)。全168枚、重複なし。<br>
     ・場のカードと<b>いずれか同じ位に同じ数字</b>があれば出せます。<br>
     ・出せるカードがあっても、あえて山札から引くことができます。引いた後は、出せるカードがあっても出さずにパスできます(1ターンに最低1回、引くか出すかのアクションが必要です)。<br>
@@ -264,10 +267,38 @@
     ・<span class="eff-tag tag-rev">リバース</span> エミレル素数(逆から読むと別の素数。107→701など)<br>
     ・<span class="eff-tag tag-d2">ドロー2</span> 隣接する位が同じ数字(113, 599など)<br>
     ・<span class="eff-tag tag-d4">ドロー4</span> 002・003・005・007(1桁素数)<br>
-    ・ドロー2/ドロー4は<b>積み可能</b>。同じ位が揃っていなくても重ねられ、枚数は加算されます(+2の上に+4で6枚)。強さは <b>ドロー4 &gt; リバース+ドロー2 &gt; ドロー2</b> の順で、格下では対抗できません(2人対戦限定でこの3段階、3人以上ではドロー2とリバース+ドロー2は同格です)。積まずに引き受けると番が終わります。<br>
-    ・リバースとドロー2が両方該当するカードは同時発動します(2人対戦ではドローのみ発動します)。<br>
-    ・<b>最後の1枚は「通常カード」でしか上がれません</b>(特殊カードでは勝てません)。<br>
-    ・レートは対戦相手の人数で変動幅が変わります。勝ち: 2人対戦+15 / 3人対戦+20 / 4人対戦+25。負け: 2人対戦-10 / 3人対戦-13 / 4人対戦-16。人数が多いほど勝った時の増加が大きく、負けた時の減少は相対的に小さいです。
+    ・ドロー2/ドロー4は<b>積み可能</b>。同じ位が揃っていなくても重ねられ、枚数は加算されます(+2の上に+4で6枚)。積まずに引き受けると番が終わります。<br>
+    ・リバースとドロー2が両方該当するカードは同時発動します。<br>
+    ・<b>最後の1枚は「通常カード」でしか上がれません</b>(特殊カードでは勝てません)。
+
+    <p style="margin:14px 0 6px; font-weight:700; color:var(--ink);">2人対戦だけのルール</p>
+    ・リバースはスキップとして扱われます(2人だと方向転換の意味が無いため)。ただし「リバース+ドロー2」の同時発動カードは<b>ドローのみ発動</b>し、スキップにはなりません。<br>
+    ・スキップされる側は、山札から1枚引くことで割り込んで自分の番を取り戻せます(割り込み設定がオンの場合)。<br>
+    ・積みの強さは <b>ドロー4 &gt; リバース+ドロー2 &gt; ドロー2</b> の3段階になり、格下では対抗できません(階層設定がオンの場合)。
+
+    <p style="margin:14px 0 6px; font-weight:700; color:var(--ink);">3人以上だけのルール</p>
+    ・リバースは通常通り順番の向きを変えます。<br>
+    ・積みの強さはドロー2とリバース+ドロー2が同格(どちらでも重ねられる)で、ドロー4だけが別格です。
+
+    <p style="margin:14px 0 6px; font-weight:700; color:var(--ink);">レートの変動幅</p>
+    <table style="width:100%; border-collapse:collapse; font-size:13px;">
+      <tr style="border-bottom:1px solid rgba(255,255,255,0.12);">
+        <th style="text-align:left; padding:4px 6px;">対戦人数</th>
+        <th style="text-align:right; padding:4px 6px; color:var(--reverse);">勝ち</th>
+        <th style="text-align:right; padding:4px 6px; color:var(--skip);">負け</th>
+      </tr>
+      <tr><td style="padding:4px 6px;">2人対戦</td><td style="text-align:right; padding:4px 6px;">+15</td><td style="text-align:right; padding:4px 6px;">-10</td></tr>
+      <tr><td style="padding:4px 6px;">3人対戦</td><td style="text-align:right; padding:4px 6px;">+20</td><td style="text-align:right; padding:4px 6px;">-13</td></tr>
+      <tr><td style="padding:4px 6px;">4人対戦</td><td style="text-align:right; padding:4px 6px;">+25</td><td style="text-align:right; padding:4px 6px;">-16</td></tr>
+    </table>
+    <p style="font-size:12px; color:var(--ink-dim); margin-top:6px;">人数が多いほど勝った時の増加が大きく、負けた時の減少は相対的に小さくなります。</p>
+  </div>
+  <div>
+    <p style="font-size:13px;color:var(--ink-dim);margin-bottom:8px;">2人対戦だけのルール設定</p>
+    <div style="display:flex; flex-direction:column; gap:6px; align-items:flex-start; max-width:320px; margin:0 auto 14px; font-size:12.5px; color:var(--ink-dim);">
+      <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" id="interruptToggle" checked> リバース割り込み(1枚引いて番を取り戻す)を有効にする</label>
+      <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" id="tieredStackToggle" checked> 積みの3段階(ドロー4&gt;リバース+ドロー2&gt;ドロー2)を有効にする</label>
+    </div>
   </div>
   <div>
     <p style="font-size:13px;color:var(--ink-dim);margin-bottom:8px;">対戦相手の人数</p>
@@ -437,7 +468,7 @@
   // with 3+ players "both" and draw2 are equal strength (both are level 2).
   function stackLevel(effect){
     if(effect==='draw4') return 4;
-    if(effect==='both') return state.players.length===2 ? 3 : 2;
+    if(effect==='both') return (state.players.length===2 && state.tieredStackEnabled) ? 3 : 2;
     return 2; // draw2
   }
 
@@ -469,7 +500,9 @@
     state = {
       players, drawPile: deck, discardPile: [start],
       current: 0, direction: 1, over:false,
-      turnDrawn:false, pendingDraw:0, pendingLevel:0, skipInterrupt:null
+      turnDrawn:false, pendingDraw:0, pendingLevel:0, skipInterrupt:null,
+      interruptEnabled: document.getElementById('interruptToggle').checked,
+      tieredStackEnabled: document.getElementById('tieredStackToggle').checked
     };
     log(`ゲーム開始。場札は <b>${pad3(start.value)}</b>`);
     render();
@@ -554,10 +587,15 @@
     } else if(card.effect==='reverse'){
       if(isDuel){
         // reverse has no effect with only 2 players, so it acts as a skip instead.
-        // but unlike a real skip card, the victim can pay 1 draw to cancel it.
         const skipped = nextIndexFrom(playerIdx);
-        offerSkipInterrupt(skipped, playerIdx);
-        return;
+        if(state.interruptEnabled){
+          // the victim can pay 1 draw to cancel it, unlike a real skip card.
+          offerSkipInterrupt(skipped, playerIdx);
+          return;
+        } else {
+          log(`${state.players[skipped].name} はスキップされました。`);
+          state.current = nextIndexFrom(skipped);
+        }
       } else {
         state.direction *= -1; log('順番が逆になりました。');
         state.current = nextIndexFrom(playerIdx);
@@ -897,6 +935,8 @@
   }
 
   window.addEventListener('DOMContentLoaded', ()=>{
+    document.getElementById('interruptToggle').checked = localStorage.getItem('primeUnoInterrupt') !== '0';
+    document.getElementById('tieredStackToggle').checked = localStorage.getItem('primeUnoTieredStack') !== '0';
     if(window.PrimeUnoRating){
       const profile = window.PrimeUnoRating.getProfile();
       document.getElementById('nameInput').value = profile.name || '';
@@ -904,6 +944,12 @@
       refreshStatsDisplay();
       if(!profile.publish) window.PrimeUnoRating.removePublicEntry(profile.id);
     }
+  });
+  document.getElementById('interruptToggle').addEventListener('change', (e)=>{
+    localStorage.setItem('primeUnoInterrupt', e.target.checked ? '1' : '0');
+  });
+  document.getElementById('tieredStackToggle').addEventListener('change', (e)=>{
+    localStorage.setItem('primeUnoTieredStack', e.target.checked ? '1' : '0');
   });
   window.addEventListener('prime-uno-rating-ready', ()=>{
     const profile = window.PrimeUnoRating.getProfile();
@@ -919,7 +965,11 @@
     const profile = window.PrimeUnoRating.getProfile();
     profile.publish = e.target.checked;
     window.PrimeUnoRating.saveProfile(profile);
-    if(!profile.publish) window.PrimeUnoRating.removePublicEntry(profile.id);
+    if(profile.publish){
+      window.PrimeUnoRating.syncPublicEntry();
+    } else {
+      window.PrimeUnoRating.removePublicEntry(profile.id);
+    }
   });
 
   // ---- reset stats: hold the button for 10 seconds ----
@@ -964,7 +1014,12 @@
   let onlineRoomState = 'idle'; // 'idle' | 'hosting' | 'connected'
   let onlineConsentGiven = localStorage.getItem('primeUnoOnlineConsent') === '1';
 
-  function setOnlineStatus(msg){ document.getElementById('onlineStatus').textContent = msg; }
+  function setOnlineStatus(msg, warn){
+    const el = document.getElementById('onlineStatus');
+    el.textContent = msg;
+    el.style.color = warn ? 'var(--danger)' : 'var(--ink-dim)';
+    el.style.fontWeight = warn ? '700' : '500';
+  }
   function genRoomCode(){
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
     let s = '';
@@ -984,12 +1039,17 @@
     const joinBtn = document.getElementById('joinBtn');
     const joinInput = document.getElementById('joinCodeInput');
     updateConsentStatusUI();
+    const needsConsent = !onlineConsentGiven && onlineRoomState==='idle';
+    hostBtn.classList.toggle('softDisabled', needsConsent);
+    joinBtn.classList.toggle('softDisabled', needsConsent);
+    joinInput.classList.toggle('softDisabled', needsConsent);
+    joinInput.disabled = needsConsent;
     if(onlineRoomState==='idle'){
       hostBtn.textContent = '部屋を作る';
       hostBtn.disabled = false;
       joinBtn.textContent = '参加する';
       joinBtn.disabled = false;
-      joinInput.disabled = false;
+      if(!needsConsent) joinInput.disabled = false;
     } else if(onlineRoomState==='hosting'){
       hostBtn.textContent = '部屋を閉じる';
       hostBtn.disabled = false;
@@ -1110,6 +1170,8 @@
     onlineConsentGiven = true;
     localStorage.setItem('primeUnoOnlineConsent', '1');
     document.getElementById('onlineConsentModal').classList.remove('show');
+    setOnlineStatus('');
+    updateOnlineButtonsUI();
   });
   document.getElementById('onlineConsentRevokeBtn').addEventListener('click', ()=>{
     onlineConsentGiven = false;
@@ -1117,8 +1179,9 @@
     document.getElementById('onlineConsentModal').classList.remove('show');
     if(onlineRoomState !== 'idle'){
       teardownConnection();
-      setOnlineStatus('同意を取り消したため接続を終了しました。');
+      setOnlineStatus('同意を取り消したため接続を終了しました。', true);
     }
+    updateOnlineButtonsUI();
   });
   document.getElementById('onlineConsentCancelBtn').addEventListener('click', ()=>{
     document.getElementById('onlineConsentModal').classList.remove('show');
@@ -1126,12 +1189,12 @@
 
   document.getElementById('hostBtn').addEventListener('click', ()=>{
     if(onlineRoomState!=='idle'){ closeRoom(); return; }
-    if(!onlineConsentGiven){ setOnlineStatus('先に「P2P利用について」から同意してください。'); return; }
+    if(!onlineConsentGiven){ setOnlineStatus('先に「P2P利用について」から同意してください。', true); return; }
     doHost();
   });
   document.getElementById('joinBtn').addEventListener('click', ()=>{
     if(onlineRoomState!=='idle'){ leaveRoom(); return; }
-    if(!onlineConsentGiven){ setOnlineStatus('先に「P2P利用について」から同意してください。'); return; }
+    if(!onlineConsentGiven){ setOnlineStatus('先に「P2P利用について」から同意してください。', true); return; }
     doJoin();
   });
   updateOnlineButtonsUI();
@@ -1248,6 +1311,15 @@
     return p;
   }
 
+  async function writeEntry(p){
+    if(!db) return;
+    await setDoc(doc(db, 'players', p.id), {
+      name: p.name || '名無し',
+      rating: p.rating, maxRating: p.maxRating, games: p.games, wins: p.wins,
+      updatedAt: serverTimestamp()
+    });
+  }
+
   async function recordResult(won, numCpuOpponents){
     const p = loadProfile();
     const delta = won ? (WIN_POINTS[numCpuOpponents]||15) : -(LOSS_POINTS[numCpuOpponents]||10);
@@ -1259,15 +1331,15 @@
     saveProfile(p);
 
     if(p.publish && db){
-      try{
-        await setDoc(doc(db, 'players', p.id), {
-          name: p.name || '名無し',
-          rating: p.rating, maxRating: p.maxRating, games: p.games, wins: p.wins,
-          updatedAt: serverTimestamp()
-        });
-      } catch(e){ console.warn('leaderboard write failed:', e); }
+      try{ await writeEntry(p); } catch(e){ console.warn('leaderboard write failed:', e); }
     }
     return { rating: p.rating, maxRating: p.maxRating, delta, games: p.games, wins: p.wins };
+  }
+
+  async function syncPublicEntry(){
+    const p = loadProfile();
+    if(!p.publish || !db) return;
+    try{ await writeEntry(p); } catch(e){ console.warn('leaderboard sync failed:', e); }
   }
 
   async function fetchLeaderboard(){
@@ -1294,6 +1366,7 @@
     resetStats,
     fetchLeaderboard,
     removePublicEntry,
+    syncPublicEntry,
     isConfigured: ()=> !!db
   };
 
