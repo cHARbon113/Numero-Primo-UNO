@@ -297,16 +297,30 @@
 
   <div class="onlineBox">
     <p style="font-size:12.5px;color:var(--ink-dim);margin:0 0 8px;">オンライン対戦(2人・P2P、試験実装)</p>
-    <label class="publishToggle" style="text-align:left; font-size:12px; margin-bottom:10px;">
-      <input type="checkbox" id="onlineConsent">
-      相手にこちらのおおよそのIPアドレス(ネットワーク情報)が伝わること、サーバーによる不正操作の検証が無いことを理解した上で利用します
-    </label>
+    <button class="ghost" id="consentSettingsBtn" style="font-size:12px; padding:6px 14px; margin-bottom:10px;">P2P利用について(同意設定)</button>
     <div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:center;">
-      <button class="ghost" id="hostBtn" disabled>部屋を作る</button>
+      <button class="ghost" id="hostBtn">部屋を作る</button>
       <input type="text" id="joinCodeInput" placeholder="合言葉を入力" style="width:140px;">
-      <button class="ghost" id="joinBtn" disabled>参加する</button>
+      <button class="ghost" id="joinBtn">参加する</button>
     </div>
     <p id="onlineStatus" style="font-size:12.5px; color:var(--ink-dim); margin-top:8px; min-height:1.4em;"></p>
+  </div>
+</div>
+
+<div class="winbox" id="onlineConsentModal">
+  <div class="wincard" style="max-width:380px;">
+    <h2 style="font-size:19px;">P2Pオンライン対戦について</h2>
+    <p style="text-align:left; font-size:13.5px; line-height:1.85; color:var(--ink-dim);">
+      相手と直接つながる仕組みのため、接続すると<b style="color:var(--ink);">こちらのおおよそのIPアドレス(ネットワーク情報)が相手に伝わります</b>。<br><br>
+      また、動きを検証するサーバーが無いため、<b style="color:var(--ink);">不正な操作を防ぐ仕組みはありません</b>。<br><br>
+      内容を理解した上でご利用ください。
+    </p>
+    <p id="onlineConsentCurrentStatus" style="font-size:12.5px; color:var(--ink-dim); margin-bottom:14px;"></p>
+    <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
+      <button class="primary" id="onlineConsentAgreeBtn">同意する</button>
+      <button class="ghost" id="onlineConsentRevokeBtn" style="display:none;">同意を取り消す</button>
+      <button class="ghost" id="onlineConsentCancelBtn">閉じる</button>
+    </div>
   </div>
 </div>
 
@@ -947,6 +961,9 @@
   });
   // ---- P2P online connection foundation (PeerJS). Not yet wired to gameplay. ----
   let onlinePeer = null, onlineConn = null, isOnlineHost = false;
+  let onlineRoomState = 'idle'; // 'idle' | 'hosting' | 'connected'
+  let onlineConsentGiven = localStorage.getItem('primeUnoOnlineConsent') === '1';
+
   function setOnlineStatus(msg){ document.getElementById('onlineStatus').textContent = msg; }
   function genRoomCode(){
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -957,8 +974,61 @@
   function myDisplayName(){
     return (document.getElementById('nameInput').value||'').trim() || 'プレイヤー';
   }
+
+  function updateConsentStatusUI(){
+    const btn = document.getElementById('consentSettingsBtn');
+    btn.disabled = onlineRoomState !== 'idle';
+  }
+  function updateOnlineButtonsUI(){
+    const hostBtn = document.getElementById('hostBtn');
+    const joinBtn = document.getElementById('joinBtn');
+    const joinInput = document.getElementById('joinCodeInput');
+    updateConsentStatusUI();
+    if(onlineRoomState==='idle'){
+      hostBtn.textContent = '部屋を作る';
+      hostBtn.disabled = false;
+      joinBtn.textContent = '参加する';
+      joinBtn.disabled = false;
+      joinInput.disabled = false;
+    } else if(onlineRoomState==='hosting'){
+      hostBtn.textContent = '部屋を閉じる';
+      hostBtn.disabled = false;
+      joinBtn.disabled = true;
+      joinInput.disabled = true;
+    } else if(onlineRoomState==='connected'){
+      if(isOnlineHost){
+        hostBtn.textContent = '部屋を閉じる';
+        hostBtn.disabled = false;
+        joinBtn.disabled = true;
+        joinInput.disabled = true;
+      } else {
+        joinBtn.textContent = '抜ける';
+        joinBtn.disabled = false;
+        hostBtn.disabled = true;
+        joinInput.disabled = true;
+      }
+    }
+  }
+
+  function teardownConnection(){
+    if(onlineConn){ try{ onlineConn.close(); }catch(e){} onlineConn = null; }
+    if(onlinePeer){ try{ onlinePeer.destroy(); }catch(e){} onlinePeer = null; }
+    onlineRoomState = 'idle';
+    updateOnlineButtonsUI();
+  }
+  function closeRoom(){
+    teardownConnection();
+    setOnlineStatus('部屋を閉じました。');
+  }
+  function leaveRoom(){
+    teardownConnection();
+    setOnlineStatus('部屋から抜けました。');
+  }
+
   function setupOnlineConnection(){
     onlineConn.on('open', ()=>{
+      onlineRoomState = 'connected';
+      updateOnlineButtonsUI();
       setOnlineStatus('接続しました。あいさつを送っています...');
       onlineConn.send({ type:'hello', name: myDisplayName() });
     });
@@ -967,17 +1037,22 @@
         setOnlineStatus(`${msg.name} さんと接続できました!(対戦機能への接続は準備中です)`);
       }
     });
-    onlineConn.on('close', ()=>{ setOnlineStatus('接続が切れました。'); });
-    onlineConn.on('error', (e)=>{ console.warn('conn error', e); setOnlineStatus('接続エラーが発生しました。'); });
+    onlineConn.on('close', ()=>{
+      setOnlineStatus('相手との接続が切れました。');
+      teardownConnection();
+    });
+    onlineConn.on('error', (e)=>{
+      console.warn('conn error', e);
+      setOnlineStatus('接続エラーが発生しました。');
+      teardownConnection();
+    });
   }
-  document.getElementById('onlineConsent').addEventListener('change', (e)=>{
-    document.getElementById('hostBtn').disabled = !e.target.checked;
-    document.getElementById('joinBtn').disabled = !e.target.checked;
-  });
-  document.getElementById('hostBtn').addEventListener('click', ()=>{
-    if(!document.getElementById('onlineConsent').checked) return;
+
+  function doHost(){
     if(typeof Peer === 'undefined'){ setOnlineStatus('通信ライブラリの読み込みに失敗しました。'); return; }
     isOnlineHost = true;
+    onlineRoomState = 'hosting';
+    updateOnlineButtonsUI();
     const code = genRoomCode();
     setOnlineStatus('部屋を作成中...');
     onlinePeer = new Peer('primeuno-' + code);
@@ -988,10 +1063,13 @@
       onlineConn = c;
       setupOnlineConnection();
     });
-    onlinePeer.on('error', (e)=>{ console.warn('peer error', e); setOnlineStatus('接続エラーが発生しました。合言葉が重複している可能性があります。'); });
-  });
-  document.getElementById('joinBtn').addEventListener('click', ()=>{
-    if(!document.getElementById('onlineConsent').checked) return;
+    onlinePeer.on('error', (e)=>{
+      console.warn('peer error', e);
+      setOnlineStatus('接続エラーが発生しました。合言葉が重複している可能性があります。');
+      teardownConnection();
+    });
+  }
+  function doJoin(){
     if(typeof Peer === 'undefined'){ setOnlineStatus('通信ライブラリの読み込みに失敗しました。'); return; }
     const code = document.getElementById('joinCodeInput').value.trim().toUpperCase();
     if(!code){ setOnlineStatus('合言葉を入力してください。'); return; }
@@ -1002,8 +1080,61 @@
       onlineConn = onlinePeer.connect('primeuno-' + code);
       setupOnlineConnection();
     });
-    onlinePeer.on('error', (e)=>{ console.warn('peer error', e); setOnlineStatus('接続に失敗しました。合言葉を確認してください。'); });
+    onlinePeer.on('error', (e)=>{
+      console.warn('peer error', e);
+      setOnlineStatus('接続に失敗しました。合言葉を確認してください。');
+      teardownConnection();
+    });
+  }
+
+  function refreshConsentModalContent(){
+    const statusEl = document.getElementById('onlineConsentCurrentStatus');
+    const agreeBtn = document.getElementById('onlineConsentAgreeBtn');
+    const revokeBtn = document.getElementById('onlineConsentRevokeBtn');
+    if(onlineConsentGiven){
+      statusEl.textContent = '現在: 同意済みです。';
+      agreeBtn.style.display = 'none';
+      revokeBtn.style.display = 'inline-block';
+    } else {
+      statusEl.textContent = '現在: 同意していません。オンライン対戦を利用するには同意が必要です。';
+      agreeBtn.style.display = 'inline-block';
+      revokeBtn.style.display = 'none';
+    }
+  }
+  function openConsentModal(){
+    refreshConsentModalContent();
+    document.getElementById('onlineConsentModal').classList.add('show');
+  }
+  document.getElementById('consentSettingsBtn').addEventListener('click', openConsentModal);
+  document.getElementById('onlineConsentAgreeBtn').addEventListener('click', ()=>{
+    onlineConsentGiven = true;
+    localStorage.setItem('primeUnoOnlineConsent', '1');
+    document.getElementById('onlineConsentModal').classList.remove('show');
   });
+  document.getElementById('onlineConsentRevokeBtn').addEventListener('click', ()=>{
+    onlineConsentGiven = false;
+    localStorage.setItem('primeUnoOnlineConsent', '0');
+    document.getElementById('onlineConsentModal').classList.remove('show');
+    if(onlineRoomState !== 'idle'){
+      teardownConnection();
+      setOnlineStatus('同意を取り消したため接続を終了しました。');
+    }
+  });
+  document.getElementById('onlineConsentCancelBtn').addEventListener('click', ()=>{
+    document.getElementById('onlineConsentModal').classList.remove('show');
+  });
+
+  document.getElementById('hostBtn').addEventListener('click', ()=>{
+    if(onlineRoomState!=='idle'){ closeRoom(); return; }
+    if(!onlineConsentGiven){ setOnlineStatus('先に「P2P利用について」から同意してください。'); return; }
+    doHost();
+  });
+  document.getElementById('joinBtn').addEventListener('click', ()=>{
+    if(onlineRoomState!=='idle'){ leaveRoom(); return; }
+    if(!onlineConsentGiven){ setOnlineStatus('先に「P2P利用について」から同意してください。'); return; }
+    doJoin();
+  });
+  updateOnlineButtonsUI();
 
   document.getElementById('rankingBtn').addEventListener('click', ()=>{
     const box = document.getElementById('rankingBox');
