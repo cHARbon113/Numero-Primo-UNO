@@ -138,6 +138,7 @@
     box-shadow:0 5px 12px rgba(0,0,0,0.4); position:relative;
     border:1px solid rgba(255,255,255,0.09); user-select:none; flex-shrink:0;
     overflow:hidden;
+    touch-action: manipulation; -webkit-tap-highlight-color: transparent;
   }
   .card.back{
     background: repeating-linear-gradient(45deg, #33513f 0, #33513f 7px, #2a4335 7px, #2a4335 14px);
@@ -165,8 +166,27 @@
   .card.disabled{ filter:grayscale(0.6) brightness(0.65); cursor:default; }
   .card.stackable{ box-shadow:0 0 0 3px var(--draw4), 0 5px 12px rgba(0,0,0,0.4); cursor:pointer; }
   .card.multiPickable{ cursor:pointer; }
-  .card.multiSelected{ box-shadow:0 0 0 3px var(--reverse), 0 5px 12px rgba(0,0,0,0.4); transform:translateY(-8px); }
-  .card.multiFaded{ opacity:0.35; cursor:default; }
+  .card.multiSelected{
+    box-shadow:0 0 0 3px var(--reverse) inset, 0 5px 12px rgba(0,0,0,0.4);
+    background: linear-gradient(160deg, rgba(94,209,171,0.4), var(--panel-2) 65%);
+  }
+  .card.multiSelected .multiCheck{
+    position:absolute; top:3px; right:3px; width:16px; height:16px; border-radius:50%;
+    background:var(--reverse); color:#0d241c; font-size:11px; font-weight:900;
+    display:flex; align-items:center; justify-content:center; z-index:2;
+  }
+  .card.multiFaded{ opacity:0.3; cursor:default; }
+  button.ghost.emphasize{
+    border-color:var(--reverse); color:var(--reverse); box-shadow:0 0 0 2px rgba(94,209,171,0.25);
+    animation: emphasizePulse 1.6s ease-in-out infinite;
+  }
+  @keyframes emphasizePulse{
+    0%,100%{ box-shadow:0 0 0 2px rgba(94,209,171,0.25); }
+    50%{ box-shadow:0 0 0 5px rgba(94,209,171,0.12); }
+  }
+  @media (prefers-reduced-motion: reduce){
+    button.ghost.emphasize{ animation:none; }
+  }
   .draw-pile .card{ cursor:pointer; }
   .draw-pile.locked .card{ cursor:default; filter:grayscale(0.5) brightness(0.7); }
 
@@ -239,11 +259,20 @@
     padding:10px 12px; color:var(--ink); font-family:'Space Mono',monospace; font-size:14px;
   }
 
-  .rankRow{ display:flex; justify-content:space-between; gap:6px; padding:8px 4px; border-bottom:1px solid rgba(255,255,255,0.06); }
-  .rankRow .rk{ color:var(--ink-dim); width:18px; }
-  .rankRow .nm{ flex:1; }
-  .rankRow .st{ color:var(--ink-dim); font-family:'Space Mono',monospace; font-weight:700; font-size:16px; }
-  .rankRow .rt{ font-family:'Space Mono',monospace; font-weight:700; color:var(--hundreds); font-size:16px; }
+  .rankRow{
+    display:flex; flex-wrap:wrap; align-items:baseline; gap:2px 8px;
+    padding:8px 4px; border-bottom:1px solid rgba(255,255,255,0.06);
+  }
+  .rankRow .main{ display:flex; align-items:baseline; gap:8px; flex:1 1 100%; min-width:0; }
+  .rankRow .rk{ color:var(--ink-dim); width:18px; flex-shrink:0; }
+  .rankRow .nm{
+    flex:1 1 auto; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  }
+  .rankRow .rt{ font-family:'Space Mono',monospace; font-weight:700; color:var(--hundreds); font-size:16px; flex-shrink:0; }
+  .rankRow .st{
+    color:var(--ink-dim); font-family:'Space Mono',monospace; font-weight:700; font-size:13px;
+    flex:1 1 100%; padding-left:26px; opacity:0.9;
+  }
   .rateHighlight{ font-family:'Space Mono',monospace; font-weight:700; color:var(--hundreds); font-size:1.15em; }
   .statNumber{ font-family:'Space Mono',monospace; font-weight:700; font-size:1.15em; }
 
@@ -411,7 +440,7 @@
     <div class="controls">
       <button class="ghost" id="drawBtn">山札から引く</button>
       <button class="ghost" id="passBtn" disabled>パスする</button>
-      <button class="ghost" id="multiDumpBtn" style="display:none;">まとめて出す</button>
+      <button class="ghost" id="multiDumpBtn">まとめて出す</button>
     </div>
 
     <div class="pendingBanner" id="multiDumpBar" style="border-color:var(--reverse);">
@@ -596,7 +625,7 @@
     log(`<span class="log-uno">${name} 残り1枚!</span>`);
     const toast = document.getElementById('unoToast');
     if(toast){
-      toast.textContent = `${name} リーチ!`;
+      toast.textContent = `${name} UNO!`;
       toast.classList.add('show');
       clearTimeout(unoToastTimer);
       unoToastTimer = setTimeout(()=> toast.classList.remove('show'), 1400);
@@ -835,6 +864,7 @@
     div.className = cls;
     const [h,t,o] = card.digits;
     div.innerHTML = (card.effect!=='plain' ? EFFECT_STRIP[card.effect] : '') +
+      (opts.multiSelected ? '<div class="multiCheck">✓</div>' : '') +
       `<div class="digits">
         <span class="d-h">${h}</span><span class="d-t">${t}</span><span class="d-o">${o}</span>
       </div>`;
@@ -947,7 +977,10 @@
       });
     }
 
-    document.getElementById('multiDumpBtn').style.display = (!state.multiMode && multiDumpEligible()) ? 'inline-block' : 'none';
+    const multiBtn = document.getElementById('multiDumpBtn');
+    const eligible = multiDumpEligible();
+    multiBtn.disabled = state.multiMode || !eligible;
+    multiBtn.classList.toggle('emphasize', eligible && !state.multiMode);
     document.getElementById('multiDumpBar').classList.toggle('show', state.multiMode);
     document.getElementById('multiDumpCount').textContent = state.multiSelection.length;
     document.getElementById('multiDumpConfirmBtn').disabled = state.multiSelection.length===0;
@@ -1078,7 +1111,7 @@
     const profile = window.PrimeUnoRating.getProfile();
     const winRate = profile.games>0 ? Math.round(profile.wins/profile.games*100) : 0;
     document.getElementById('statsRow').innerHTML =
-      `レート <span class="rateHighlight">${profile.rating}</span>(最高 <span class="statNumber">${profile.maxRating}</span>) ・ <span class="statNumber">${profile.games}</span>戦 <span class="statNumber">${profile.wins}</span>勝(${winRate}%)`;
+      `レート <span class="rateHighlight">${profile.rating}</span>(最高 <span class="statNumber">${profile.maxRating}</span>) ・ <span class="statNumber">${profile.games}</span>戦 <span class="statNumber">${profile.wins}</span>勝(<span class="statNumber">${winRate}</span>%)`;
   }
 
   window.addEventListener('DOMContentLoaded', ()=>{
@@ -1365,10 +1398,12 @@
       body.innerHTML = rows.map((r,i)=>{
         const winRate = r.games>0 ? Math.round(r.wins/r.games*100) : 0;
         return `<div class="rankRow">
-          <span class="rk">${i+1}</span>
-          <span class="nm">${(r.name||'名無し')}</span>
+          <div class="main">
+            <span class="rk">${i+1}</span>
+            <span class="nm">${(r.name||'名無し')}</span>
+            <span class="rt">${r.rating}</span>
+          </div>
           <span class="st">${r.games}戦 ${winRate}% ・ 最高${r.maxRating!=null ? r.maxRating : r.rating}</span>
-          <span class="rt">${r.rating}</span>
         </div>`;
       }).join('');
     }).catch(()=>{ body.textContent = '取得に失敗しました。'; });
