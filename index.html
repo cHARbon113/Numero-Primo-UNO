@@ -550,10 +550,14 @@
 
   let state = null;
 
-  function newGame(numCpu){
+  function newGame(numCpu, onlineGuestName){
     const deck = buildDeck();
-    const players = [{name:'あなた', human:true, hand:[]}];
-    for(let i=0;i<numCpu;i++) players.push({name:'CPU'+(i+1), human:false, hand:[]});
+    const players = [{name: onlineGuestName ? myDisplayName() : 'あなた', human:true, hand:[]}];
+    if(onlineGuestName){
+      players.push({name: onlineGuestName, human:true, hand:[]});
+    } else {
+      for(let i=0;i<numCpu;i++) players.push({name:'CPU'+(i+1), human:false, hand:[]});
+    }
     for(let r=0;r<7;r++) players.forEach(p=> p.hand.push(deck.pop()));
     let startIdx = deck.findIndex(c=>c.effect==='plain');
     if(startIdx<0) startIdx = deck.length-1;
@@ -571,7 +575,11 @@
     };
     log(`ゲーム開始。場札は <b>${pad3(start.value)}</b>`);
     render();
-    maybeCpuTurn();
+    if(onlineGuestName){
+      broadcastMatchStart();
+    } else {
+      maybeCpuTurn();
+    }
   }
 
   function matches(card, top){ return card.digits.some((d,i)=> d===top.digits[i]); }
@@ -592,7 +600,7 @@
   }
   function multiDumpEligible(){
     return state.multiDumpEnabled && anyoneAtUno() && state.pendingDraw===0 &&
-      state.current===0 && !state.over && !state.skipInterrupt;
+      state.current===mySeat && !state.over && !state.skipInterrupt;
   }
   // positions (0=hundreds,1=tens,2=ones) where this plain card matches the top card
   function comboPositionsFor(card, top){
@@ -719,7 +727,9 @@
     const victim = state.players[victimIdx];
     if(!victim.human){
       setTimeout(()=>{
-        if(Math.random() < 0.5) interruptSkip(victimIdx); else acceptSkip(victimIdx);
+        // smaller hands have less to lose from drawing 1 more, so interrupt more eagerly
+        const chance = victim.hand.length<=4 ? 0.75 : victim.hand.length>=9 ? 0.3 : 0.5;
+        if(Math.random() < chance) interruptSkip(victimIdx); else acceptSkip(victimIdx);
       }, 700);
     }
   }
@@ -792,29 +802,52 @@
     render();
   }
 
-  function playMultiDump(){
-    const human = state.players[0];
-    const selected = state.multiSelection;
-    if(selected.length===0) return;
-    const remaining = human.hand.filter(c=> !selected.includes(c));
+  function playMultiDump(playerIdx, selectedCards){
+    const p = state.players[playerIdx];
+    const selected = selectedCards;
+    if(!selected || selected.length===0) return false;
+    const remaining = p.hand.filter(c=> !selected.includes(c));
     if(remaining.length>0 && !remaining.some(c=>c.effect==='plain')){
-      log('<span class="log-uno">通常カードは手札に最低1枚残す必要があります。</span>');
-      return;
+      if(playerIdx===0) log('<span class="log-uno">通常カードは手札に最低1枚残す必要があります。</span>');
+      return false;
     }
-    human.hand = remaining;
+    p.hand = remaining;
     selected.forEach(c=> state.discardPile.push(c));
-    log(`あなたが <b>${selected.map(c=>pad3(c.value)).join(', ')}</b> をまとめて出しました。`);
-    state.multiMode = false;
-    state.multiSelection = [];
+    log(`${p.human ? 'あなた' : p.name}が <b>${selected.map(c=>pad3(c.value)).join(', ')}</b> をまとめて出しました。`);
+    if(playerIdx===0){ state.multiMode = false; state.multiSelection = []; }
 
-    if(human.hand.length===0){
-      state.over = true; render(); showWin(0); return;
+    if(p.hand.length===0){
+      state.over = true; render(); showWin(playerIdx); return true;
     }
-    if(human.hand.length===1) announceUno(human.name);
-    state.current = nextIndexFrom(0);
+    if(p.hand.length===1) announceUno(p.name);
+    state.current = nextIndexFrom(playerIdx);
     state.turnDrawn = false;
     render();
     maybeCpuTurn();
+    return true;
+  }
+
+  // find the largest group of plain cards a CPU could dump at once (same digit,
+  // same position, matching the top card), respecting the "keep 1 plain card" rule
+  function findMultiDumpGroup(hand, top){
+    let best = null;
+    for(let pos=0; pos<3; pos++){
+      const buckets = {};
+      hand.forEach(c=>{
+        if(c.effect!=='plain') return;
+        if(c.digits[pos]!==top.digits[pos]) return;
+        const key = c.digits[pos];
+        (buckets[key] = buckets[key] || []).push(c);
+      });
+      Object.values(buckets).forEach(group=>{
+        if(group.length<2) return;
+        const remaining = hand.filter(c=> !group.includes(c));
+        const ok = remaining.length===0 || remaining.some(c=>c.effect==='plain');
+        if(!ok) return;
+        if(!best || group.length>best.length) best = group;
+      });
+    }
+    return best;
   }
 
   function maybeCpuTurn(){
@@ -828,16 +861,31 @@
       if(state.pendingDraw>0){
         const stackOpt = pl.hand.filter(c=> canPlay(c, pl.hand, null));
         if(stackOpt.length>0){
-          stackCard(idx, stackOpt[Math.floor(Math.random()*stackOpt.length)]);
+          // prefer the strongest stack card available (draw4 > both > draw2) to
+          // pressure the human rather than always matching minimally
+          const byLevel = stackOpt.slice().sort((a,b)=> stackLevel(b.effect)-stackLevel(a.effect));
+          stackCard(idx, byLevel[0]);
         } else {
           acceptPending(idx);
         }
         return;
       }
       const top = state.discardPile[state.discardPile.length-1];
+
+      if(state.multiDumpEnabled && anyoneAtUno()){
+        const group = findMultiDumpGroup(pl.hand, top);
+        if(group && group.length>=2){
+          playMultiDump(idx, group);
+          return;
+        }
+      }
+
       const options = pl.hand.filter(c=> canPlay(c, pl.hand, top));
       if(options.length>0){
-        playCard(idx, options[Math.floor(Math.random()*options.length)]);
+        // hold onto special-effect cards as tools when a plain card will do
+        const plainOptions = options.filter(c=>c.effect==='plain');
+        const pool = plainOptions.length>0 ? plainOptions : options;
+        playCard(idx, pool[Math.floor(Math.random()*pool.length)]);
       } else {
         const drawn = drawCards(idx, 1);
         render();
@@ -932,13 +980,13 @@
       state.pendingLevel>=3 ? '(ドロー2では重ねられません)' : '';
 
     const interruptBanner = document.getElementById('interruptBanner');
-    const iAmVictim = state.skipInterrupt && state.skipInterrupt.victim===0;
+    const iAmVictim = state.skipInterrupt && state.skipInterrupt.victim===mySeat;
     interruptBanner.classList.toggle('show', !!iAmVictim);
 
-    const human = state.players[0];
+    const human = state.players[mySeat];
     const handWrap = document.getElementById('hand');
     handWrap.innerHTML='';
-    const myTurn = state.current===0 && !state.over && !state.skipInterrupt;
+    const myTurn = state.current===mySeat && !state.over && !state.skipInterrupt;
 
     if(state.multiMode){
       human.hand.forEach(card=>{
@@ -969,9 +1017,7 @@
           stackable: myTurn && state.pendingDraw>0 && playable
         });
         if(playable){
-          el.addEventListener('click', ()=>{
-            if(state.pendingDraw>0) stackCard(0, card); else playCard(0, card);
-          });
+          el.addEventListener('click', ()=> requestPlayCard(card));
         }
         handWrap.appendChild(el);
       });
@@ -997,31 +1043,146 @@
     // fixed: pass is allowed once at least one action (draw) was taken this turn,
     // regardless of whether a playable card remains in hand.
     document.getElementById('passBtn').disabled = !(myTurn && state.pendingDraw===0 && state.turnDrawn && !state.multiMode);
+
+    if(onlineGameActive && isOnlineHost) broadcastState();
+  }
+
+  // ---- action dispatch: local (host/offline) executes directly; guest sends to host ----
+  function requestPlayCard(card){
+    if(isOnlineGuest()){ sendAction({type:'play', cardId:card.id}); return; }
+    if(state.pendingDraw>0) stackCard(mySeat, card); else playCard(mySeat, card);
+  }
+  function requestDraw(){
+    if(isOnlineGuest()){ sendAction({type:'draw'}); return; }
+    voluntaryDraw(mySeat);
+  }
+  function requestPass(){
+    if(isOnlineGuest()){ sendAction({type:'pass'}); return; }
+    passTurn(mySeat);
+  }
+  function requestAccept(){
+    if(isOnlineGuest()){ sendAction({type:'accept'}); return; }
+    acceptPending(mySeat);
+  }
+  function requestInterrupt(){
+    if(isOnlineGuest()){ sendAction({type:'interrupt'}); return; }
+    interruptSkip(mySeat);
+  }
+  function requestAcceptSkip(){
+    if(isOnlineGuest()){ sendAction({type:'acceptSkip'}); return; }
+    acceptSkip(mySeat);
+  }
+  function requestMultiDump(){
+    const ids = state.multiSelection.map(c=>c.id);
+    if(isOnlineGuest()){ sendAction({type:'multiDump', cardIds: ids}); return; }
+    playMultiDump(mySeat, state.multiSelection);
+  }
+  function isOnlineGuest(){ return onlineGameActive && !isOnlineHost; }
+
+  // ---- P2P game sync: host is authoritative, guest is a thin client ----
+  function sendAction(action){
+    if(onlineConn && onlineConn.open) onlineConn.send({ type:'action', action });
+  }
+  function buildStateView(){
+    return {
+      players: state.players.map((p,i)=> ({
+        name: p.name, human: p.human, handCount: p.hand.length,
+        hand: i===1 ? p.hand.map(c=>({id:c.id, value:c.value, digits:c.digits, effect:c.effect})) : null
+      })),
+      drawCount: state.drawPile.length,
+      discardTop: state.discardPile[state.discardPile.length-1],
+      current: state.current, direction: state.direction, over: state.over,
+      turnDrawn: state.turnDrawn, pendingDraw: state.pendingDraw, pendingLevel: state.pendingLevel,
+      skipInterrupt: state.skipInterrupt,
+      interruptEnabled: state.interruptEnabled, tieredStackEnabled: state.tieredStackEnabled,
+      multiDumpEnabled: state.multiDumpEnabled
+    };
+  }
+  function broadcastState(){
+    if(!(onlineGameActive && isOnlineHost)) return;
+    if(!onlineConn || !onlineConn.open) return;
+    onlineConn.send({ type:'state', view: buildStateView() });
+  }
+  function broadcastMatchStart(){
+    if(!onlineConn || !onlineConn.open) return;
+    onlineConn.send({ type:'matchStart', view: buildStateView() });
+  }
+  function applyRemoteState(view){
+    state = {
+      players: view.players.map(p=> ({
+        name: p.name, human: p.human,
+        hand: p.hand ? p.hand : new Array(p.handCount).fill(0).map(()=>({}))
+      })),
+      drawPile: new Array(view.drawCount).fill(0),
+      discardPile: [view.discardTop],
+      current: view.current, direction: view.direction, over: view.over,
+      turnDrawn: view.turnDrawn, pendingDraw: view.pendingDraw, pendingLevel: view.pendingLevel,
+      skipInterrupt: view.skipInterrupt,
+      interruptEnabled: view.interruptEnabled, tieredStackEnabled: view.tieredStackEnabled,
+      multiDumpEnabled: view.multiDumpEnabled,
+      multiSelection: [], multiMode: false
+    };
+    render();
+    if(state.over) showWin(state.players.findIndex(p=>p.hand.length===0));
+  }
+  function handleRemoteAction(action){
+    const guestIdx = 1;
+    const pl = state.players[guestIdx];
+    if(!pl || !action) return;
+    if(action.type==='play'){
+      const card = pl.hand.find(c=>c.id===action.cardId);
+      if(card){ if(state.pendingDraw>0) stackCard(guestIdx, card); else playCard(guestIdx, card); }
+    } else if(action.type==='draw'){
+      voluntaryDraw(guestIdx);
+    } else if(action.type==='pass'){
+      passTurn(guestIdx);
+    } else if(action.type==='accept'){
+      acceptPending(guestIdx);
+    } else if(action.type==='interrupt'){
+      interruptSkip(guestIdx);
+    } else if(action.type==='acceptSkip'){
+      acceptSkip(guestIdx);
+    } else if(action.type==='multiDump'){
+      const cards = (action.cardIds||[]).map(id=> pl.hand.find(c=>c.id===id)).filter(Boolean);
+      playMultiDump(guestIdx, cards);
+    }
+  }
+  function enterGameLayout(){
+    document.getElementById('startScreen').style.display='none';
+    document.getElementById('layout').classList.add('active');
+  }
+  function returnToStartScreen(){
+    document.getElementById('winBox').classList.remove('show');
+    document.getElementById('layout').classList.remove('active');
+    document.getElementById('startScreen').style.display='block';
+    document.getElementById('log').innerHTML='';
+    onlineGameActive = false;
+    mySeat = 0;
   }
 
   document.getElementById('drawBtn').addEventListener('click', ()=>{
-    if(!state || state.over || state.current!==0 || state.pendingDraw>0 || state.turnDrawn) return;
-    voluntaryDraw(0);
+    if(!state || state.over || state.current!==mySeat || state.pendingDraw>0 || state.turnDrawn) return;
+    requestDraw();
   });
   document.getElementById('drawPile').addEventListener('click', ()=>{
-    if(!state || state.over || state.current!==0 || state.pendingDraw>0 || state.turnDrawn) return;
-    voluntaryDraw(0);
+    if(!state || state.over || state.current!==mySeat || state.pendingDraw>0 || state.turnDrawn) return;
+    requestDraw();
   });
   document.getElementById('acceptBtn').addEventListener('click', ()=>{
-    if(!state || state.over || state.current!==0 || state.pendingDraw<=0) return;
-    acceptPending(0);
+    if(!state || state.over || state.current!==mySeat || state.pendingDraw<=0) return;
+    requestAccept();
   });
   document.getElementById('interruptBtn').addEventListener('click', ()=>{
-    if(!state || state.over || !state.skipInterrupt || state.skipInterrupt.victim!==0) return;
-    interruptSkip(0);
+    if(!state || state.over || !state.skipInterrupt || state.skipInterrupt.victim!==mySeat) return;
+    requestInterrupt();
   });
   document.getElementById('acceptSkipBtn').addEventListener('click', ()=>{
-    if(!state || state.over || !state.skipInterrupt || state.skipInterrupt.victim!==0) return;
-    acceptSkip(0);
+    if(!state || state.over || !state.skipInterrupt || state.skipInterrupt.victim!==mySeat) return;
+    requestAcceptSkip();
   });
   document.getElementById('passBtn').addEventListener('click', ()=>{
-    if(!state || state.over || state.current!==0) return;
-    passTurn(0);
+    if(!state || state.over || state.current!==mySeat) return;
+    requestPass();
   });
   document.getElementById('multiDumpBtn').addEventListener('click', ()=>{
     if(!state || state.over) return;
@@ -1031,7 +1192,7 @@
   });
   document.getElementById('multiDumpConfirmBtn').addEventListener('click', ()=>{
     if(!state || state.over) return;
-    playMultiDump();
+    requestMultiDump();
   });
   document.getElementById('multiDumpCancelBtn').addEventListener('click', ()=>{
     if(!state) return;
@@ -1045,14 +1206,15 @@
 
   function showWin(winnerIdx){
     const name = state.players[winnerIdx].name;
-    const won = winnerIdx===0;
+    const won = winnerIdx===mySeat;
     document.getElementById('winText').textContent = `${name} の勝ち!`;
+    document.getElementById('rematchBtn').style.display = onlineGameActive ? 'none' : 'inline-block';
     const ratingText = document.getElementById('ratingText');
     const resultTweetBtn = document.getElementById('resultTweetBtn');
     ratingText.style.display = 'none';
     resultTweetBtn.style.display = 'none';
     lastResult = null;
-    if(window.PrimeUnoRating){
+    if(window.PrimeUnoRating && !onlineGameActive){
       window.PrimeUnoRating.recordResult(won, lastNumCpu).then(res=>{
         const sign = res.delta>=0 ? '+' : '';
         ratingText.innerHTML = `レート <span class="rateHighlight">${res.rating}</span> (${sign}${res.delta}, 最高 <span class="statNumber">${res.maxRating}</span>) ・ <span class="statNumber">${res.games}</span>戦 <span class="statNumber">${res.wins}</span>勝`;
@@ -1071,15 +1233,14 @@
     window.open('https://twitter.com/intent/tweet?text=' + encodeURIComponent(text), '_blank');
   });
   document.getElementById('rematchBtn').addEventListener('click', ()=>{
+    if(onlineGameActive){ return; } // instant rematch isn't wired up for online play yet
     document.getElementById('winBox').classList.remove('show');
     document.getElementById('log').innerHTML='';
     newGame(lastNumCpu);
   });
   document.getElementById('homeBtn').addEventListener('click', ()=>{
-    document.getElementById('winBox').classList.remove('show');
-    document.getElementById('layout').classList.remove('active');
-    document.getElementById('startScreen').style.display='block';
-    document.getElementById('log').innerHTML='';
+    if(onlineGameActive){ teardownConnection(); }
+    returnToStartScreen();
     refreshStatsDisplay();
   });
 
@@ -1195,6 +1356,8 @@
   });
   // ---- P2P online connection foundation (PeerJS). Not yet wired to gameplay. ----
   let onlinePeer = null, onlineConn = null, isOnlineHost = false;
+  let mySeat = 0;              // which players[] index the local UI controls
+  let onlineGameActive = false; // true once host/guest are actually playing (not just connected)
   let onlineRoomState = 'idle'; // 'idle' | 'hosting' | 'connected'
   let onlineConsentGiven = localStorage.getItem('primeUnoOnlineConsent') === '1';
 
@@ -1277,18 +1440,41 @@
       onlineConn.send({ type:'hello', name: myDisplayName() });
     });
     onlineConn.on('data', (msg)=>{
-      if(msg && msg.type==='hello'){
-        setOnlineStatus(`${msg.name} さんと接続できました!(対戦機能への接続は準備中です)`);
+      if(!msg) return;
+      if(msg.type==='hello'){
+        if(isOnlineHost){
+          setOnlineStatus(`${msg.name} さんと接続できました。対戦を開始します...`);
+          mySeat = 0;
+          onlineGameActive = true;
+          enterGameLayout();
+          newGame(0, msg.name);
+        } else {
+          setOnlineStatus(`${msg.name} さんと接続できました。対戦の開始を待っています...`);
+        }
+      } else if(msg.type==='matchStart' && !isOnlineHost){
+        mySeat = 1;
+        onlineGameActive = true;
+        enterGameLayout();
+        applyRemoteState(msg.view);
+        log('対戦が始まりました。');
+      } else if(msg.type==='state' && !isOnlineHost){
+        applyRemoteState(msg.view);
+      } else if(msg.type==='action' && isOnlineHost){
+        handleRemoteAction(msg.action);
       }
     });
     onlineConn.on('close', ()=>{
       setOnlineStatus('相手との接続が切れました。');
+      const wasActive = onlineGameActive;
       teardownConnection();
+      if(wasActive) returnToStartScreen();
     });
     onlineConn.on('error', (e)=>{
       console.warn('conn error', e);
       setOnlineStatus('接続エラーが発生しました。');
+      const wasActive = onlineGameActive;
       teardownConnection();
+      if(wasActive) returnToStartScreen();
     });
   }
 
