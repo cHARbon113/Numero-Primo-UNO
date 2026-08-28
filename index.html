@@ -388,6 +388,16 @@
       <button class="ghost" id="joinBtn">参加する</button>
     </div>
     <p id="onlineStatus" style="font-size:12.5px; color:var(--ink-dim); margin-top:8px; min-height:1.4em;"></p>
+
+    <div id="onlineLobbyBox" style="display:none; margin-top:14px; padding-top:14px; border-top:1px solid rgba(255,255,255,0.08);">
+      <p style="font-size:12.5px;color:var(--ink-dim);margin-bottom:8px;">対戦の準備(ホストのみ設定できます)</p>
+      <div class="cpu-select" id="onlineCpuSelect" style="max-width:280px; margin:0 auto 10px;">
+        <div class="cpu-btn selected" data-n="0">CPUなし<br><span style="font-size:10.5px;opacity:0.7;">2人対戦</span></div>
+        <div class="cpu-btn" data-n="1">CPU+1<br><span style="font-size:10.5px;opacity:0.7;">3人対戦</span></div>
+        <div class="cpu-btn" data-n="2">CPU+2<br><span style="font-size:10.5px;opacity:0.7;">4人対戦</span></div>
+      </div>
+      <button class="primary" id="onlineStartMatchBtn" style="font-size:14px; padding:10px 24px;">対戦を開始する</button>
+    </div>
   </div>
 </div>
 
@@ -471,7 +481,21 @@
       <button class="primary" id="rematchBtn">もう一度</button>
       <button class="ghost" id="homeBtn">ホームに戻る</button>
     </div>
-    <button class="ghost" id="resultTweetBtn" style="display:none; margin-top:10px;">Xでシェア</button>
+    <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-top:10px;">
+      <button class="ghost" id="resultTweetBtn" style="display:none;">Xでシェア</button>
+      <button class="ghost" id="viewLogBtn">ログを見る</button>
+    </div>
+  </div>
+</div>
+
+<div class="winbox" id="logViewModal">
+  <div class="wincard" style="max-width:480px; width:92vw; text-align:left;">
+    <h2 style="font-size:19px;">対戦ログ</h2>
+    <div id="logViewBody" style="max-height:50vh; overflow-y:auto; font-size:13px; line-height:1.8; white-space:pre-wrap; background:rgba(0,0,0,0.25); padding:12px; border-radius:8px; color:var(--ink-dim);"></div>
+    <div style="display:flex; gap:10px; justify-content:center; margin-top:14px;">
+      <button class="ghost" id="copyLogBtn">コピー</button>
+      <button class="ghost" id="closeLogViewBtn">閉じる</button>
+    </div>
   </div>
 </div>
 
@@ -552,12 +576,9 @@
 
   function newGame(numCpu, onlineGuestName){
     const deck = buildDeck();
-    const players = [{name: onlineGuestName ? myDisplayName() : 'あなた', human:true, hand:[]}];
-    if(onlineGuestName){
-      players.push({name: onlineGuestName, human:true, hand:[]});
-    } else {
-      for(let i=0;i<numCpu;i++) players.push({name:'CPU'+(i+1), human:false, hand:[]});
-    }
+    const players = [{name: myDisplayName(), human:true, hand:[]}];
+    if(onlineGuestName) players.push({name: onlineGuestName, human:true, hand:[]});
+    for(let i=0;i<numCpu;i++) players.push({name:'CPU'+(i+1), human:false, hand:[]});
     for(let r=0;r<7;r++) players.forEach(p=> p.hand.push(deck.pop()));
     let startIdx = deck.findIndex(c=>c.effect==='plain');
     if(startIdx<0) startIdx = deck.length-1;
@@ -599,8 +620,13 @@
     return state.players.some(p=> p.hand.length===1);
   }
   function multiDumpEligible(){
-    return state.multiDumpEnabled && anyoneAtUno() && state.pendingDraw===0 &&
-      state.current===mySeat && !state.over && !state.skipInterrupt;
+    if(!(state.multiDumpEnabled && anyoneAtUno() && state.pendingDraw===0 &&
+      state.current===mySeat && !state.over && !state.skipInterrupt)) return false;
+    const me = state.players[mySeat];
+    if(!me || me.hand.length<=1) return false; // no point dumping when you're already at (or below) UNO yourself
+    const top = state.discardPile[state.discardPile.length-1];
+    const group = findMultiDumpGroup(me.hand, top);
+    return !!(group && group.length>=2);
   }
   // positions (0=hundreds,1=tens,2=ones) where this plain card matches the top card
   function comboPositionsFor(card, top){
@@ -735,7 +761,7 @@
   }
   function interruptSkip(victimIdx){
     const drawn = drawCards(victimIdx, 1);
-    const who = state.players[victimIdx].human ? 'あなた' : state.players[victimIdx].name;
+    const who = state.players[victimIdx].name;
     if(drawn.length) log(`${who}は1枚引いて割り込み、番を取り戻しました。`);
     state.skipInterrupt = null;
     state.current = victimIdx;
@@ -796,7 +822,7 @@
     const drawn = drawCards(playerIdx, 1);
     state.turnDrawn = true;
     if(drawn.length){
-      const who = state.players[playerIdx].human ? 'あなた' : state.players[playerIdx].name;
+      const who = state.players[playerIdx].name;
       log(`${who}は山札から1枚引きました: <b>${pad3(drawn[0].value)}</b>`);
     }
     render();
@@ -813,7 +839,7 @@
     }
     p.hand = remaining;
     selected.forEach(c=> state.discardPile.push(c));
-    log(`${p.human ? 'あなた' : p.name}が <b>${selected.map(c=>pad3(c.value)).join(', ')}</b> をまとめて出しました。`);
+    log(`${p.name}が <b>${selected.map(c=>pad3(c.value)).join(', ')}</b> をまとめて出しました。`);
     if(playerIdx===0){ state.multiMode = false; state.multiSelection = []; }
 
     if(p.hand.length===0){
@@ -937,7 +963,7 @@
       chip.className = 'seatChip' + (state.current===i ? ' active' : '');
       chip.style.left = x+'px'; chip.style.top = y+'px';
       chip.innerHTML = `<div>${p.name}</div>` +
-        (p.human ? '' : `<div class="seatCount">${p.hand.length}</div>`) +
+        (i===mySeat ? '' : `<div class="seatCount">${p.hand.length}</div>`) +
         (p.hand.length===1 ? '<div class="seatReach">残1</div>' : '');
       wrap.appendChild(chip);
     });
@@ -1232,6 +1258,33 @@
     const text = `素数UNOの${lastResult.mode}モードで${outcome}\nレート${lastResult.rating}(${sign}${lastResult.delta})\n${location.href}`;
     window.open('https://twitter.com/intent/tweet?text=' + encodeURIComponent(text), '_blank');
   });
+  document.getElementById('viewLogBtn').addEventListener('click', ()=>{
+    const logEl = document.getElementById('log');
+    const chronological = Array.from(logEl.children).map(el=> el.textContent).reverse();
+    document.getElementById('logViewBody').textContent = chronological.join('\n');
+    document.getElementById('logViewModal').classList.add('show');
+  });
+  document.getElementById('copyLogBtn').addEventListener('click', ()=>{
+    const text = document.getElementById('logViewBody').textContent;
+    const btn = document.getElementById('copyLogBtn');
+    const done = ()=>{ const orig='コピー'; btn.textContent='コピーしました'; setTimeout(()=> btn.textContent=orig, 1500); };
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(done).catch(()=>{
+        const ta = document.createElement('textarea');
+        ta.value = text; document.body.appendChild(ta); ta.select();
+        try{ document.execCommand('copy'); done(); }catch(e){}
+        document.body.removeChild(ta);
+      });
+    } else {
+      const ta = document.createElement('textarea');
+      ta.value = text; document.body.appendChild(ta); ta.select();
+      try{ document.execCommand('copy'); done(); }catch(e){}
+      document.body.removeChild(ta);
+    }
+  });
+  document.getElementById('closeLogViewBtn').addEventListener('click', ()=>{
+    document.getElementById('logViewModal').classList.remove('show');
+  });
   document.getElementById('rematchBtn').addEventListener('click', ()=>{
     if(onlineGameActive){ return; } // instant rematch isn't wired up for online play yet
     document.getElementById('winBox').classList.remove('show');
@@ -1246,12 +1299,28 @@
 
   let numCpu = 2;
   let lastNumCpu = 2;
-  document.querySelectorAll('.cpu-btn').forEach(btn=>{
+  document.querySelectorAll('#cpuSelect .cpu-btn').forEach(btn=>{
     btn.addEventListener('click', ()=>{
-      document.querySelectorAll('.cpu-btn').forEach(b=>b.classList.remove('selected'));
+      document.querySelectorAll('#cpuSelect .cpu-btn').forEach(b=>b.classList.remove('selected'));
       btn.classList.add('selected');
       numCpu = Number(btn.dataset.n);
     });
+  });
+  document.querySelectorAll('#onlineCpuSelect .cpu-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      document.querySelectorAll('#onlineCpuSelect .cpu-btn').forEach(b=>b.classList.remove('selected'));
+      btn.classList.add('selected');
+      onlineExtraCpu = Number(btn.dataset.n);
+    });
+  });
+  document.getElementById('onlineStartMatchBtn').addEventListener('click', ()=>{
+    if(!isOnlineHost || !pendingGuestName) return;
+    document.getElementById('onlineLobbyBox').style.display = 'none';
+    mySeat = 0;
+    onlineGameActive = true;
+    enterGameLayout();
+    newGame(onlineExtraCpu, pendingGuestName);
+    pendingGuestName = null;
   });
   document.getElementById('startBtn').addEventListener('click', ()=>{
     if(window.PrimeUnoRating){
@@ -1357,6 +1426,8 @@
   // ---- P2P online connection foundation (PeerJS). Not yet wired to gameplay. ----
   let onlinePeer = null, onlineConn = null, isOnlineHost = false;
   let mySeat = 0;              // which players[] index the local UI controls
+  let pendingGuestName = null; // set once the host receives the guest's hello, until match start
+  let onlineExtraCpu = 0;      // CPUs the host chooses to add on top of the 2 online players
   let onlineGameActive = false; // true once host/guest are actually playing (not just connected)
   let onlineRoomState = 'idle'; // 'idle' | 'hosting' | 'connected'
   let onlineConsentGiven = localStorage.getItem('primeUnoOnlineConsent') === '1';
@@ -1421,6 +1492,8 @@
     if(onlineConn){ try{ onlineConn.close(); }catch(e){} onlineConn = null; }
     if(onlinePeer){ try{ onlinePeer.destroy(); }catch(e){} onlinePeer = null; }
     onlineRoomState = 'idle';
+    pendingGuestName = null;
+    document.getElementById('onlineLobbyBox').style.display = 'none';
     updateOnlineButtonsUI();
   }
   function closeRoom(){
@@ -1443,13 +1516,11 @@
       if(!msg) return;
       if(msg.type==='hello'){
         if(isOnlineHost){
-          setOnlineStatus(`${msg.name} さんと接続できました。対戦を開始します...`);
-          mySeat = 0;
-          onlineGameActive = true;
-          enterGameLayout();
-          newGame(0, msg.name);
+          pendingGuestName = msg.name;
+          setOnlineStatus(`${msg.name} さんと接続できました。対戦の準備をしてください。`);
+          document.getElementById('onlineLobbyBox').style.display = 'block';
         } else {
-          setOnlineStatus(`${msg.name} さんと接続できました。対戦の開始を待っています...`);
+          setOnlineStatus(`${msg.name} さんと接続できました。ホストの開始を待っています...`);
         }
       } else if(msg.type==='matchStart' && !isOnlineHost){
         mySeat = 1;
