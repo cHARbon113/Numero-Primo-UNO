@@ -203,6 +203,7 @@
   #log{ flex:1; overflow-y:auto; font-size:14.5px; color:var(--ink-dim); line-height:1.95; }
   #log b{ color:var(--ink); }
   #log .fx{ font-weight:700; }
+  #log .log-sub{ font-size:0.9em; opacity:0.9; }
   #log .fx-skip{ color:var(--skip); }
   #log .fx-reverse{ color:var(--reverse); }
   #log .fx-draw2{ color:var(--draw2); }
@@ -216,6 +217,7 @@
     padding:10px 26px; border-radius:999px; opacity:0; pointer-events:none;
     transition:opacity .2s ease, transform .2s ease; z-index:60;
     box-shadow:0 10px 26px rgba(0,0,0,0.45); letter-spacing:0.04em;
+    white-space:nowrap; max-width:92vw;
   }
   .unoToast.show{ opacity:1; transform:translateX(-50%) scale(1); }
 
@@ -319,7 +321,7 @@
 
     <p style="margin:14px 0 6px; font-weight:700; color:var(--ink);">2人対戦だけのルール</p>
     ・リバースはスキップとして扱われます(2人だと方向転換の意味が無いため)。ただし「リバース+ドロー2」の同時発動カードは<b>ドローのみ発動</b>し、スキップにはなりません。<br>
-    ・スキップされる側は、山札から1枚引くことで割り込んで自分の番を取り戻せます(割り込み設定がオンの場合)。<br>
+    ・スキップされる側は、手札のリバースを1枚捨てることで割り込んで自分の番を取り戻せます(割り込み設定がオンの場合。手元にリバースが無ければそのままスキップされます。割り込んだ後、通常通り任意で山札から引くこともできます)。<br>
     ・<b>リバース+ドロー2にはドロー2だけでは対抗できません</b>(リバース+ドロー2側からドロー2への対抗は可能。この設定はオンオフできます)。
 
     <p style="margin:14px 0 6px; font-weight:700; color:var(--ink);">3人以上だけのルール</p>
@@ -349,7 +351,7 @@
   <div>
     <p style="font-size:13px;color:var(--ink-dim);margin-bottom:8px;">2人対戦だけのルール設定</p>
     <div style="display:flex; flex-direction:column; gap:6px; align-items:flex-start; max-width:320px; margin:0 auto 14px; font-size:12.5px; color:var(--ink-dim);">
-      <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" id="interruptToggle" checked> リバース割り込み(1枚引いて番を取り戻す)を有効にする</label>
+      <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" id="interruptToggle" checked> リバース割り込み(リバースを1枚捨てて番を取り戻す)を有効にする</label>
       <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" id="tieredStackToggle" checked> リバース+ドロー2にドロー2だけでは対抗できないようにする</label>
     </div>
   </div>
@@ -440,9 +442,9 @@
     </div>
 
     <div class="pendingBanner interruptBanner" id="interruptBanner">
-      <div class="msg">リバースでスキップされそうです。1枚引いて番を取り戻しますか?</div>
+      <div class="msg">リバースでスキップされそうです。手札のリバースを1枚捨てて番を取り戻しますか?</div>
       <div style="display:flex; gap:8px;">
-        <button class="accept" id="interruptBtn">引いて割り込む</button>
+        <button class="accept" id="interruptBtn">リバースを捨てて割り込む</button>
         <button class="ghost" id="acceptSkipBtn">受け入れる</button>
       </div>
     </div>
@@ -538,6 +540,7 @@
   }
 
   const EFFECT_LABEL = { skip:'スキップ', reverse:'リバース', draw2:'ドロー2', draw4:'ドロー4', both:'リバース+ドロー2' };
+  const EFFECT_TAG = { skip:'SKIP', reverse:'REV', draw2:'+2', draw4:'+4', both:'REV+2' };
   const EFFECT_STRIP = {
     skip:'<div class="strip strip-skip">SKIP</div>',
     reverse:'<div class="strip strip-reverse">REV</div>',
@@ -594,7 +597,7 @@
       multiSelection: [],
       multiMode: false
     };
-    log(`ゲーム開始。場札は <b>${pad3(start.value)}</b>`);
+    logSystem(`<b>${pad3(start.value)}</b>`, 'START');
     render();
     if(onlineGuestName){
       broadcastMatchStart();
@@ -656,7 +659,7 @@
   }
   let unoToastTimer = null;
   function announceUno(name){
-    log(`<span class="log-uno">${name} 残り1枚!</span>`);
+    log(`<span class="log-uno">${name}：UNO</span>`);
     const toast = document.getElementById('unoToast');
     if(toast){
       toast.textContent = `${name} UNO!`;
@@ -665,9 +668,24 @@
       unoToastTimer = setTimeout(()=> toast.classList.remove('show'), 1400);
     }
   }
-  function fxSpan(effect){
-    if(effect==='plain') return '';
-    return ` <span class="fx fx-${effect==='both'?'reverse':effect}">[${EFFECT_LABEL[effect]}]</span>`;
+  // ---- compact log formats: 名前（枚数）：数字（効果） ----
+  function logPlay(name, card, remaining){
+    let html = `${name}（${remaining}）：<b>${pad3(card.value)}</b>`;
+    if(card.effect!=='plain'){
+      html += ` <span class="fx fx-${card.effect==='both'?'reverse':card.effect}">（${EFFECT_TAG[card.effect]}）</span>`;
+    }
+    log(html);
+  }
+  function logMultiPlay(name, cards, remaining){
+    log(`${name}（${remaining}）：<b>${cards.map(c=>pad3(c.value)).join(', ')}</b>`);
+  }
+  function logAction(name, action, remaining){
+    log(`${name}（${remaining}）：${action}`);
+  }
+  function logSystem(numberOrLabel, tag){
+    let html = `SYSTEM：${numberOrLabel}`;
+    if(tag) html += `（${tag}）`;
+    log(html);
   }
 
   function nextIndexFrom(idx){
@@ -681,7 +699,7 @@
       const top = state.discardPile.pop();
       state.drawPile = shuffle(state.discardPile);
       state.discardPile = [top];
-      log('山札が尽きたため捨て札をシャッフルしました。');
+      logSystem('SHUFFLE');
     }
   }
   function drawCards(playerIdx, count){
@@ -700,7 +718,7 @@
     const p = state.players[playerIdx];
     p.hand = p.hand.filter(c=>c.id!==card.id);
     state.discardPile.push(card);
-    log(`${p.name} が <b>${pad3(card.value)}</b> を出しました。${fxSpan(card.effect)}`);
+    logPlay(p.name, card, p.hand.length);
 
     if(p.hand.length===0){
       state.over = true; render(); showWin(playerIdx); return;
@@ -709,32 +727,27 @@
 
     const isDuel = state.players.length===2;
     if(IS_STACK_TYPE(card.effect)){
-      // in a 1v1 duel, flipping direction is a no-op anyway; for a combined
-      // reverse+draw2 card we deliberately drop the reverse part so it doesn't
-      // get treated as a skip on top of the draw (that would break the stack).
       const applyReverse = HAS_REVERSE[card.effect] && !isDuel;
-      if(applyReverse){ state.direction *= -1; log('順番が逆になりました。'); }
+      if(applyReverse) state.direction *= -1;
       state.pendingDraw += DRAW_AMOUNT[card.effect];
       state.pendingLevel = stackLevel(card.effect);
       state.current = nextIndexFrom(playerIdx);
     } else if(card.effect==='skip'){
       const skipped = nextIndexFrom(playerIdx);
-      log(`${state.players[skipped].name} はスキップされました。`);
       state.current = nextIndexFrom(skipped);
     } else if(card.effect==='reverse'){
       if(isDuel){
-        // reverse has no effect with only 2 players, so it acts as a skip instead.
         const skipped = nextIndexFrom(playerIdx);
-        if(state.interruptEnabled){
-          // the victim can pay 1 draw to cancel it, unlike a real skip card.
+        const victim = state.players[skipped];
+        const hasReverseCard = state.interruptEnabled && victim.hand.some(c=>c.effect==='reverse');
+        if(hasReverseCard){
           offerSkipInterrupt(skipped, playerIdx);
           return;
         } else {
-          log(`${state.players[skipped].name} はスキップされました。`);
           state.current = nextIndexFrom(skipped);
         }
       } else {
-        state.direction *= -1; log('順番が逆になりました。');
+        state.direction *= -1;
         state.current = nextIndexFrom(playerIdx);
       }
     } else {
@@ -745,32 +758,35 @@
     maybeCpuTurn();
   }
 
-  // ---- 1v1 only: a reverse-as-skip can be cancelled by the victim drawing 1 card ----
+  // ---- 2-player only: a reverse-as-skip can be cancelled by discarding a reverse card ----
   function offerSkipInterrupt(victimIdx, originIdx){
     state.skipInterrupt = { victim: victimIdx, origin: originIdx };
-    log(`${state.players[victimIdx].name} はリバースでスキップされそうです。`);
     render();
     const victim = state.players[victimIdx];
     if(!victim.human){
       setTimeout(()=>{
-        // smaller hands have less to lose from drawing 1 more, so interrupt more eagerly
+        // smaller hands have less to lose from spending a card, so interrupt more eagerly
         const chance = victim.hand.length<=4 ? 0.75 : victim.hand.length>=9 ? 0.3 : 0.5;
         if(Math.random() < chance) interruptSkip(victimIdx); else acceptSkip(victimIdx);
       }, 700);
     }
   }
   function interruptSkip(victimIdx){
-    const drawn = drawCards(victimIdx, 1);
-    const who = state.players[victimIdx].name;
-    if(drawn.length) log(`${who}は1枚引いて割り込み、番を取り戻しました。`);
+    const victim = state.players[victimIdx];
+    const idx = victim.hand.findIndex(c=>c.effect==='reverse');
+    let spent = null;
+    if(idx>=0) spent = victim.hand.splice(idx,1)[0];
+    if(spent){
+      state.discardPile.push(spent);
+      log(`${victim.name}（${victim.hand.length}）：<b>${pad3(spent.value)}</b> <span class="fx fx-reverse">（CANCEL）</span>`);
+    }
     state.skipInterrupt = null;
     state.current = victimIdx;
-    state.turnDrawn = true;
+    state.turnDrawn = false; // spending a card isn't drawing, so a voluntary draw is still available this turn
     render();
     maybeCpuTurn();
   }
   function acceptSkip(victimIdx){
-    log(`${state.players[victimIdx].name} はスキップを受け入れました。`);
     state.skipInterrupt = null;
     state.current = nextIndexFrom(victimIdx);
     state.turnDrawn = false;
@@ -782,13 +798,13 @@
     const p = state.players[playerIdx];
     p.hand = p.hand.filter(c=>c.id!==card.id);
     state.discardPile.push(card);
-    log(`${p.name} が <b>${pad3(card.value)}</b> を重ねました。${fxSpan(card.effect)}`);
+    logPlay(p.name, card, p.hand.length);
 
     if(p.hand.length===0){ state.over = true; render(); showWin(playerIdx); return; }
     if(p.hand.length===1) announceUno(p.name);
 
     const applyReverse = HAS_REVERSE[card.effect] && state.players.length!==2;
-    if(applyReverse){ state.direction *= -1; log('順番が逆になりました。'); }
+    if(applyReverse) state.direction *= -1;
     state.pendingDraw += DRAW_AMOUNT[card.effect];
     state.pendingLevel = stackLevel(card.effect);
     state.current = nextIndexFrom(playerIdx);
@@ -801,7 +817,7 @@
     const p = state.players[playerIdx];
     const n = state.pendingDraw;
     drawCards(playerIdx, n);
-    log(`${p.name} は積み上げられた${n}枚を引き受けました。`);
+    logAction(p.name, `+${n}`, p.hand.length);
     state.pendingDraw = 0;
     state.pendingLevel = 0;
     state.current = nextIndexFrom(playerIdx);
@@ -811,7 +827,8 @@
   }
 
   function passTurn(playerIdx){
-    log(`${state.players[playerIdx].name} はパスしました。`);
+    const p = state.players[playerIdx];
+    logAction(p.name, 'PASS', p.hand.length);
     state.current = nextIndexFrom(playerIdx);
     state.turnDrawn = false;
     render();
@@ -822,8 +839,8 @@
     const drawn = drawCards(playerIdx, 1);
     state.turnDrawn = true;
     if(drawn.length){
-      const who = state.players[playerIdx].name;
-      log(`${who}は山札から1枚引きました: <b>${pad3(drawn[0].value)}</b>`);
+      const p = state.players[playerIdx];
+      logAction(p.name, '+1', p.hand.length);
     }
     render();
   }
@@ -839,7 +856,7 @@
     }
     p.hand = remaining;
     selected.forEach(c=> state.discardPile.push(c));
-    log(`${p.name}が <b>${selected.map(c=>pad3(c.value)).join(', ')}</b> をまとめて出しました。`);
+    logMultiPlay(p.name, selected, p.hand.length);
     if(playerIdx===0){ state.multiMode = false; state.multiSelection = []; }
 
     if(p.hand.length===0){
@@ -914,6 +931,7 @@
         playCard(idx, pool[Math.floor(Math.random()*pool.length)]);
       } else {
         const drawn = drawCards(idx, 1);
+        if(drawn.length) logAction(pl.name, '+1', pl.hand.length);
         render();
         const top2 = state.discardPile[state.discardPile.length-1];
         if(drawn.length && canPlay(drawn[0], pl.hand, top2)){
@@ -963,7 +981,7 @@
       chip.className = 'seatChip' + (state.current===i ? ' active' : '');
       chip.style.left = x+'px'; chip.style.top = y+'px';
       chip.innerHTML = `<div>${p.name}</div>` +
-        (i===mySeat ? '' : `<div class="seatCount">${p.hand.length}</div>`) +
+        `<div class="seatCount">${p.hand.length}</div>` +
         (p.hand.length===1 ? '<div class="seatReach">残1</div>' : '');
       wrap.appendChild(chip);
     });
@@ -1174,6 +1192,7 @@
     }
   }
   function enterGameLayout(){
+    document.getElementById('winBox').classList.remove('show');
     document.getElementById('startScreen').style.display='none';
     document.getElementById('layout').classList.add('active');
   }
@@ -1292,7 +1311,24 @@
     newGame(lastNumCpu);
   });
   document.getElementById('homeBtn').addEventListener('click', ()=>{
-    if(onlineGameActive){ teardownConnection(); }
+    if(onlineGameActive){
+      // stay connected: go back to a lobby/waiting screen instead of disconnecting
+      onlineGameActive = false;
+      document.getElementById('winBox').classList.remove('show');
+      document.getElementById('layout').classList.remove('active');
+      document.getElementById('startScreen').style.display='block';
+      document.getElementById('log').innerHTML='';
+      mySeat = 0;
+      if(isOnlineHost){
+        document.getElementById('onlineLobbyBox').style.display = 'block';
+        setOnlineStatus(`${pendingGuestName||'相手'}さんと接続中です。設定を確認して対戦を開始できます。`);
+      } else {
+        document.getElementById('onlineLobbyBox').style.display = 'none';
+        setOnlineStatus('ホストの次の対戦を待っています...');
+      }
+      refreshStatsDisplay();
+      return;
+    }
     returnToStartScreen();
     refreshStatsDisplay();
   });
@@ -1320,7 +1356,6 @@
     onlineGameActive = true;
     enterGameLayout();
     newGame(onlineExtraCpu, pendingGuestName);
-    pendingGuestName = null;
   });
   document.getElementById('startBtn').addEventListener('click', ()=>{
     if(window.PrimeUnoRating){
@@ -1445,7 +1480,7 @@
     return s;
   }
   function myDisplayName(){
-    return (document.getElementById('nameInput').value||'').trim() || 'プレイヤー';
+    return (document.getElementById('nameInput').value||'').trim() || 'Player';
   }
 
   function updateConsentStatusUI(){
@@ -1494,6 +1529,9 @@
     onlineRoomState = 'idle';
     pendingGuestName = null;
     document.getElementById('onlineLobbyBox').style.display = 'none';
+    if(onlineGameActive || document.getElementById('winBox').classList.contains('show')){
+      returnToStartScreen();
+    }
     updateOnlineButtonsUI();
   }
   function closeRoom(){
@@ -1527,7 +1565,7 @@
         onlineGameActive = true;
         enterGameLayout();
         applyRemoteState(msg.view);
-        log('対戦が始まりました。');
+        logSystem('MATCH START');
       } else if(msg.type==='state' && !isOnlineHost){
         applyRemoteState(msg.view);
       } else if(msg.type==='action' && isOnlineHost){
@@ -1536,16 +1574,12 @@
     });
     onlineConn.on('close', ()=>{
       setOnlineStatus('相手との接続が切れました。');
-      const wasActive = onlineGameActive;
       teardownConnection();
-      if(wasActive) returnToStartScreen();
     });
     onlineConn.on('error', (e)=>{
       console.warn('conn error', e);
       setOnlineStatus('接続エラーが発生しました。');
-      const wasActive = onlineGameActive;
       teardownConnection();
-      if(wasActive) returnToStartScreen();
     });
   }
 
@@ -1657,7 +1691,7 @@
         return `<div class="rankRow">
           <div class="main">
             <span class="rk">${i+1}</span>
-            <span class="nm">${(r.name||'名無し')}</span>
+            <span class="nm">${(r.name||'Player')}</span>
             <span class="rt">${r.rating}</span>
           </div>
           <span class="st">${r.games}戦 ${winRate}% ・ 最高${r.maxRating!=null ? r.maxRating : r.rating}</span>
@@ -1669,7 +1703,7 @@
     if(!window.PrimeUnoRating) return;
     const profile = window.PrimeUnoRating.getProfile();
     const winRate = profile.games>0 ? Math.round(profile.wins/profile.games*100) : 0;
-    const text = `素数UNOでの${profile.name||'名無し'}の成績\n${profile.games}戦${profile.wins}勝\n勝率${winRate}%\nレート${profile.rating}(最高${profile.maxRating})です!\n${location.href}`;
+    const text = `素数UNOでの${profile.name||'Player'}の成績\n${profile.games}戦${profile.wins}勝\n勝率${winRate}%\nレート${profile.rating}(最高${profile.maxRating})です!\n${location.href}`;
     const url = 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(text);
     window.open(url, '_blank');
   });
@@ -1747,7 +1781,7 @@
     saveProfile(p);
     if(p.publish && db){
       setDoc(doc(db, 'players', p.id), {
-        name: p.name || '名無し', rating: p.rating, maxRating: p.maxRating,
+        name: p.name || 'Player', rating: p.rating, maxRating: p.maxRating,
         games: p.games, wins: p.wins, updatedAt: serverTimestamp()
       }).catch(e=> console.warn('leaderboard reset failed:', e));
     }
@@ -1757,7 +1791,7 @@
   async function writeEntry(p){
     if(!db) return;
     await setDoc(doc(db, 'players', p.id), {
-      name: p.name || '名無し',
+      name: p.name || 'Player',
       rating: p.rating, maxRating: p.maxRating, games: p.games, wins: p.wins,
       updatedAt: serverTimestamp()
     });
