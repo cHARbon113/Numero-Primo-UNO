@@ -138,7 +138,7 @@
     box-shadow:0 5px 12px rgba(0,0,0,0.4); position:relative;
     border:1px solid rgba(255,255,255,0.09); user-select:none; flex-shrink:0;
     overflow:hidden;
-    touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation; -webkit-tap-highlight-color: transparent; outline: none;
   }
   .card.back{
     background: repeating-linear-gradient(45deg, #33513f 0, #33513f 7px, #2a4335 7px, #2a4335 14px);
@@ -208,6 +208,9 @@
   #log .fx-reverse{ color:var(--reverse); }
   #log .fx-draw2{ color:var(--draw2); }
   #log .fx-draw4{ color:var(--draw4); }
+  #log .fx-win{ color:var(--hundreds); font-weight:900; }
+  #log .logPrefix{ display:inline-block; min-width:9em; text-align:right; padding-right:2px; white-space:nowrap; }
+  #log .logNum{ font-family:'Space Mono',monospace; }
   #log .log-latest{ color:var(--ink); font-weight:700; }
   #log .log-uno{ color:var(--danger); font-weight:900; }
 
@@ -321,7 +324,7 @@
 
     <p style="margin:14px 0 6px; font-weight:700; color:var(--ink);">2人対戦だけのルール</p>
     ・リバースはスキップとして扱われます(2人だと方向転換の意味が無いため)。ただし「リバース+ドロー2」の同時発動カードは<b>ドローのみ発動</b>し、スキップにはなりません。<br>
-    ・スキップされる側は、手札のリバースを1枚捨てることで割り込んで自分の番を取り戻せます(割り込み設定がオンの場合。手元にリバースが無ければそのままスキップされます。割り込んだ後、通常通り任意で山札から引くこともできます)。<br>
+    ・スキップされる側は、手札のリバースを1枚捨てることで打ち消して自分の番を取り戻せます(リバース打ち消しを有効にする設定がオンの場合。手元にリバースが無ければそのままスキップされます。打ち消した後、通常通り任意で山札から引くこともできます)。<br>
     ・<b>リバース+ドロー2にはドロー2だけでは対抗できません</b>(リバース+ドロー2側からドロー2への対抗は可能。この設定はオンオフできます)。
 
     <p style="margin:14px 0 6px; font-weight:700; color:var(--ink);">3人以上だけのルール</p>
@@ -351,7 +354,7 @@
   <div>
     <p style="font-size:13px;color:var(--ink-dim);margin-bottom:8px;">2人対戦だけのルール設定</p>
     <div style="display:flex; flex-direction:column; gap:6px; align-items:flex-start; max-width:320px; margin:0 auto 14px; font-size:12.5px; color:var(--ink-dim);">
-      <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" id="interruptToggle" checked> リバース割り込み(リバースを1枚捨てて番を取り戻す)を有効にする</label>
+      <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" id="interruptToggle" checked> リバース打ち消しを有効にする</label>
       <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" id="tieredStackToggle" checked> リバース+ドロー2にドロー2だけでは対抗できないようにする</label>
     </div>
   </div>
@@ -442,9 +445,8 @@
     </div>
 
     <div class="pendingBanner interruptBanner" id="interruptBanner">
-      <div class="msg">リバースでスキップされそうです。手札のリバースを1枚捨てて番を取り戻しますか?</div>
+      <div class="msg">リバースでスキップされそうです。手札のリバースを選んで打ち消すか、受け入れてください。</div>
       <div style="display:flex; gap:8px;">
-        <button class="accept" id="interruptBtn">リバースを捨てて割り込む</button>
         <button class="ghost" id="acceptSkipBtn">受け入れる</button>
       </div>
     </div>
@@ -541,6 +543,10 @@
 
   const EFFECT_LABEL = { skip:'スキップ', reverse:'リバース', draw2:'ドロー2', draw4:'ドロー4', both:'リバース+ドロー2' };
   const EFFECT_TAG = { skip:'SKIP', reverse:'REV', draw2:'+2', draw4:'+4', both:'REV+2' };
+  const EFFECT_SORT_ORDER = { plain:0, skip:1, reverse:2, draw2:3, draw4:4, both:5 };
+  function sortHand(hand){
+    hand.sort((a,b)=> (EFFECT_SORT_ORDER[a.effect]-EFFECT_SORT_ORDER[b.effect]) || (a.value-b.value));
+  }
   const EFFECT_STRIP = {
     skip:'<div class="strip strip-skip">SKIP</div>',
     reverse:'<div class="strip strip-reverse">REV</div>',
@@ -659,7 +665,7 @@
   }
   let unoToastTimer = null;
   function announceUno(name){
-    log(`<span class="log-uno">${name}：UNO</span>`);
+    logRow(`${name}：`, `<span class="log-uno">UNO</span>`);
     const toast = document.getElementById('unoToast');
     if(toast){
       toast.textContent = `${name} UNO!`;
@@ -669,23 +675,34 @@
     }
   }
   // ---- compact log formats: 名前（枚数）：数字（効果） ----
+  function logRow(prefix, body){
+    log(`<span class="logPrefix">${prefix}</span><span class="logBody">${body}</span>`);
+  }
   function logPlay(name, card, remaining){
-    let html = `${name}（${remaining}）：<b>${pad3(card.value)}</b>`;
-    if(card.effect!=='plain'){
-      html += ` <span class="fx fx-${card.effect==='both'?'reverse':card.effect}">（${EFFECT_TAG[card.effect]}）</span>`;
+    const isWin = remaining===0;
+    const prefix = isWin ? `${name}：` : `${name}（${remaining}）：`;
+    let body = `<b class="logNum">${pad3(card.value)}</b>`;
+    if(isWin){
+      body += ` <span class="fx fx-win">（WIN）</span>`;
+    } else if(card.effect!=='plain'){
+      body += ` <span class="fx fx-${card.effect==='both'?'reverse':card.effect}">（${EFFECT_TAG[card.effect]}）</span>`;
     }
-    log(html);
+    logRow(prefix, body);
   }
   function logMultiPlay(name, cards, remaining){
-    log(`${name}（${remaining}）：<b>${cards.map(c=>pad3(c.value)).join(', ')}</b>`);
+    const isWin = remaining===0;
+    const prefix = isWin ? `${name}：` : `${name}（${remaining}）：`;
+    let body = `<b class="logNum">${cards.map(c=>pad3(c.value)).join(', ')}</b>`;
+    if(isWin) body += ` <span class="fx fx-win">（WIN）</span>`;
+    logRow(prefix, body);
   }
   function logAction(name, action, remaining){
-    log(`${name}（${remaining}）：${action}`);
+    logRow(`${name}（${remaining}）：`, action);
   }
   function logSystem(numberOrLabel, tag){
-    let html = `SYSTEM：${numberOrLabel}`;
-    if(tag) html += `（${tag}）`;
-    log(html);
+    let body = numberOrLabel;
+    if(tag) body += `（${tag}）`;
+    logRow('SYSTEM：', body);
   }
 
   function nextIndexFrom(idx){
@@ -767,18 +784,28 @@
       setTimeout(()=>{
         // smaller hands have less to lose from spending a card, so interrupt more eagerly
         const chance = victim.hand.length<=4 ? 0.75 : victim.hand.length>=9 ? 0.3 : 0.5;
-        if(Math.random() < chance) interruptSkip(victimIdx); else acceptSkip(victimIdx);
+        if(Math.random() < chance){
+          const options = victim.hand.filter(c=>c.effect==='reverse');
+          interruptSkip(victimIdx, options[Math.floor(Math.random()*options.length)]);
+        } else {
+          acceptSkip(victimIdx);
+        }
       }, 700);
     }
   }
-  function interruptSkip(victimIdx){
+  function interruptSkip(victimIdx, chosenCard){
     const victim = state.players[victimIdx];
-    const idx = victim.hand.findIndex(c=>c.effect==='reverse');
     let spent = null;
-    if(idx>=0) spent = victim.hand.splice(idx,1)[0];
+    if(chosenCard && chosenCard.effect==='reverse'){
+      victim.hand = victim.hand.filter(c=>c.id!==chosenCard.id);
+      spent = chosenCard;
+    } else {
+      const idx = victim.hand.findIndex(c=>c.effect==='reverse');
+      if(idx>=0) spent = victim.hand.splice(idx,1)[0];
+    }
     if(spent){
       state.discardPile.push(spent);
-      log(`${victim.name}（${victim.hand.length}）：<b>${pad3(spent.value)}</b> <span class="fx fx-reverse">（CANCEL）</span>`);
+      logRow(`${victim.name}（${victim.hand.length}）：`, `<b class="logNum">${pad3(spent.value)}</b> <span class="fx fx-reverse">（CANCEL）</span>`);
     }
     state.skipInterrupt = null;
     state.current = victimIdx;
@@ -1028,11 +1055,19 @@
     interruptBanner.classList.toggle('show', !!iAmVictim);
 
     const human = state.players[mySeat];
+    sortHand(human.hand);
     const handWrap = document.getElementById('hand');
     handWrap.innerHTML='';
     const myTurn = state.current===mySeat && !state.over && !state.skipInterrupt;
 
-    if(state.multiMode){
+    if(iAmVictim){
+      human.hand.forEach(card=>{
+        const isReverse = card.effect==='reverse';
+        const el = cardEl(card, { playable:isReverse, multiFaded:!isReverse, stackable:isReverse });
+        if(isReverse) el.addEventListener('click', ()=> requestInterrupt(card));
+        handWrap.appendChild(el);
+      });
+    } else if(state.multiMode){
       human.hand.forEach(card=>{
         const isSelected = state.multiSelection.includes(card);
         const wouldBeOk = isSelected || comboPositionsIfAdded(card, state.multiSelection, top).length>0;
@@ -1108,9 +1143,9 @@
     if(isOnlineGuest()){ sendAction({type:'accept'}); return; }
     acceptPending(mySeat);
   }
-  function requestInterrupt(){
-    if(isOnlineGuest()){ sendAction({type:'interrupt'}); return; }
-    interruptSkip(mySeat);
+  function requestInterrupt(card){
+    if(isOnlineGuest()){ sendAction({type:'interrupt', cardId: card ? card.id : null}); return; }
+    interruptSkip(mySeat, card);
   }
   function requestAcceptSkip(){
     if(isOnlineGuest()){ sendAction({type:'acceptSkip'}); return; }
@@ -1183,7 +1218,8 @@
     } else if(action.type==='accept'){
       acceptPending(guestIdx);
     } else if(action.type==='interrupt'){
-      interruptSkip(guestIdx);
+      const card = pl.hand.find(c=>c.id===action.cardId);
+      interruptSkip(guestIdx, card);
     } else if(action.type==='acceptSkip'){
       acceptSkip(guestIdx);
     } else if(action.type==='multiDump'){
@@ -1216,10 +1252,6 @@
   document.getElementById('acceptBtn').addEventListener('click', ()=>{
     if(!state || state.over || state.current!==mySeat || state.pendingDraw<=0) return;
     requestAccept();
-  });
-  document.getElementById('interruptBtn').addEventListener('click', ()=>{
-    if(!state || state.over || !state.skipInterrupt || state.skipInterrupt.victim!==mySeat) return;
-    requestInterrupt();
   });
   document.getElementById('acceptSkipBtn').addEventListener('click', ()=>{
     if(!state || state.over || !state.skipInterrupt || state.skipInterrupt.victim!==mySeat) return;
