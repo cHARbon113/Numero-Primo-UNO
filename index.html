@@ -255,6 +255,7 @@
   }
   .publishToggle{ display:flex; align-items:center; gap:8px; font-size:13px; color:var(--ink-dim); cursor:pointer; }
   .publishToggle input{ width:16px; height:16px; }
+  .publishToggle:has(input:disabled){ opacity:0.4; cursor:default; }
   .resetHold{ width:100%; }
   .resetFill{ position:absolute; left:0; top:0; bottom:0; width:0%; background:rgba(234,114,103,0.4); }
 
@@ -324,7 +325,7 @@
     ・ドロー2/ドロー4は<b>積み可能</b>。同じ位が揃っていなくても重ねられ、枚数は加算されます(+2の上に+4で6枚)。<b>ドロー4はドロー4でしか対抗できません</b>(ドロー2では返せません)。積まずに引き受けると番が終わります。<br>
     ・リバースとドロー2が両方該当するカードがあります(エマープかつ隣接ペア)。効果の出方は人数によって異なります。<br>
     ・<b>最後の1枚は「通常カード」でしか上がれません</b>(特殊カードでは勝てません)。<br>
-    ・<b>まとめて出す(重ね出し)</b>: 同じ種類のカード同士で、2つの位の数字が一致していれば(そのうち場と合っている位が1つあれば)まとめて出せます。誰かが「残り1枚」の状態の間は、必要な一致は1つの位でよくなり、特殊カードも同種であれば対象になります。効果は出した枚数分そのまま繰り返し発動します(ドロー2を3枚まとめれば+6、スキップを2枚まとめれば2人分飛ばす、など)。まとめて出しても手札は種類を問わず最低1枚残る必要があり、重ね出しだけで上がることはできません(設定でオフ可)。
+    ・<b>まとめて出す(重ね出し)</b>: 同じ種類のカード同士で、2つの位の数字が一致していれば(そのうち場と合っている位が1つあれば)まとめて出せます。ドロー2とリバース+ドロー2は同じ種類として扱われ、混ぜてまとめて出せます。誰かが「残り1枚」の状態の間は、必要な一致は1つの位でよくなり、特殊カードも同種であれば対象になります。効果は出した枚数分そのまま繰り返し発動します(ドロー2を3枚まとめれば+6、スキップを2枚まとめれば2人分飛ばす、など)。まとめて出しても手札は種類を問わず最低1枚残る必要があり、重ね出しだけで上がることはできません(設定でオフ可)。
 
     <p style="margin:14px 0 6px; font-weight:700; color:var(--ink);">2人対戦だけのルール</p>
     ・リバースはスキップとして扱われます(2人だと方向転換の意味が無いため)。ただし「リバース+ドロー2」の同時発動カードは<b>ドローのみ発動</b>し、スキップにはなりません。積みの強さもドロー2と同格です。<br>
@@ -352,7 +353,7 @@
   <div>
     <p style="font-size:13px;color:var(--ink-dim);margin-bottom:8px;">共通ルール設定</p>
     <div style="display:flex; flex-direction:column; gap:6px; align-items:flex-start; max-width:340px; margin:0 auto 14px; font-size:12.5px; color:var(--ink-dim);">
-      <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" id="multiDumpToggle" checked> 誰かが「残り1枚」の時、通常カードのみ重ね出しできるようにする</label>
+      <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" id="multiDumpToggle" checked> まとめて出す(重ね出し)機能を有効にする</label>
     </div>
   </div>
   <div>
@@ -547,6 +548,9 @@
 
   const EFFECT_LABEL = { skip:'スキップ', reverse:'リバース', draw2:'ドロー2', draw4:'ドロー4', both:'リバース+ドロー2' };
   const EFFECT_TAG = { skip:'SKIP', reverse:'REV', draw2:'+2', draw4:'+4', both:'REV+2' };
+  // for multi-card combos, draw2 and "both" (reverse+draw2) count as the same
+  // kind of card and can be mixed together; everything else must match exactly.
+  const COMBO_GROUP = { plain:'plain', skip:'skip', reverse:'reverse', draw2:'draw2+', both:'draw2+', draw4:'draw4' };
   const EFFECT_SORT_ORDER = { plain:0, skip:1, reverse:2, draw2:3, draw4:4, both:5 };
   function sortHand(hand){
     hand.sort((a,b)=> (EFFECT_SORT_ORDER[a.effect]-EFFECT_SORT_ORDER[b.effect]) || (a.value-b.value));
@@ -649,15 +653,20 @@
   // given the cards already selected, can `card` be added? returns the resulting
   // shared-position set if so (non-empty array = yes), or [] if not addable.
   function comboPositionsIfAdded(card, selected, top){
-    const type = selected.length>0 ? selected[0].effect : card.effect;
-    if(card.effect!==type) return [];
-    if(type!=='plain' && !anyoneAtUno()) return []; // specials only combo-able while someone's at UNO
+    const group = selected.length>0 ? COMBO_GROUP[selected[0].effect] : COMBO_GROUP[card.effect];
+    if(COMBO_GROUP[card.effect]!==group) return [];
+    if(group!=='plain' && !anyoneAtUno()) return []; // specials only combo-able while someone's at UNO
     const candidate = selected.concat([card]);
     const shared = sharedPositions(candidate);
     if(shared.length < requiredMatchCount()) return [];
     const matchesTop = shared.some(i=> candidate[0].digits[i]===top.digits[i]);
     if(!matchesTop) return [];
     return shared;
+  }
+  // whether `card` could be the start of SOME valid 2+ card combo in this hand
+  // (used to avoid highlighting cards that would be a dead-end pick)
+  function canStartCombo(card, hand, top){
+    return hand.some(other=> other!==card && comboPositionsIfAdded(other, [card], top).length>0);
   }
 
   function log(msg){
@@ -892,7 +901,6 @@
     const p = state.players[playerIdx];
     const selected = selectedCards;
     if(!selected || selected.length===0) return false;
-    const type = selected[0].effect;
     const remaining = p.hand.filter(c=> !selected.includes(c));
     if(remaining.length===0){
       if(playerIdx===mySeat) log('<span class="log-uno">まとめて出しても、手札は最低1枚残す必要があります。</span>');
@@ -908,7 +916,7 @@
     }
     if(p.hand.length===1) announceUno(p.name);
 
-    const deferred = resolveComboEffects(playerIdx, type, selected.length);
+    const deferred = resolveComboEffects(playerIdx, selected);
     if(deferred) return true; // offerSkipInterrupt takes over render()/maybeCpuTurn() itself
     state.turnDrawn = false;
     render();
@@ -917,11 +925,15 @@
   }
 
   // apply the played group's effect. skip/reverse repeat once per card in the
-  // group; draw2/draw4/both (and a duel reverse's skip-or-cancel check) only
-  // ever resolve once, no matter how many cards were played together.
+  // group. draw2/draw4/both add up their draw amounts (draw2 and both can be
+  // mixed together in one group; each "both" card also contributes a reverse,
+  // same as playing it alone would). A duel reverse's skip-or-cancel check
+  // still only ever offers one interrupt for the whole group.
   // returns true if resolution was handed off to offerSkipInterrupt (async).
-  function resolveComboEffects(playerIdx, type, count){
+  function resolveComboEffects(playerIdx, selected){
     const isDuel = state.players.length===2;
+    const type = selected[0].effect;
+    const count = selected.length;
     if(type==='plain'){
       state.current = nextIndexFrom(playerIdx);
       return false;
@@ -948,29 +960,30 @@
         return false;
       }
     }
-    // draw2 / draw4 / both -- the draw amount (and, for 'both', the reverse) repeats
-    // once per card in the group. Responding to the resulting pile is still a
-    // normal single-card stacking action either way, same as any other pending draw.
-    const applyReverse = HAS_REVERSE[type] && !isDuel;
-    if(applyReverse){ for(let i=0;i<count;i++) state.direction *= -1; }
-    state.pendingDraw += DRAW_AMOUNT[type] * count;
-    state.pendingLevel = stackLevel(type);
+    // draw2 / draw4 / both -- draw2 and both may be mixed in one group; each
+    // card contributes its own draw amount, and each "both" card also
+    // contributes a reverse (dropped in a duel, same as a single "both" card).
+    const totalDraw = selected.reduce((sum,c)=> sum + DRAW_AMOUNT[c.effect], 0);
+    const reverseCount = selected.filter(c=> HAS_REVERSE[c.effect]).length;
+    if(reverseCount>0 && !isDuel){ for(let i=0;i<reverseCount;i++) state.direction *= -1; }
+    state.pendingDraw += totalDraw;
+    state.pendingLevel = Math.max(...selected.map(c=> stackLevel(c.effect)));
     state.current = nextIndexFrom(playerIdx);
     return false;
   }
 
-  // find the largest same-type group a CPU could dump at once, respecting the
-  // "keep 1 plain card" rule (or an all-plain group if it empties the hand)
+  // find the largest same-group combo a CPU could dump at once, respecting the
+  // "keep 1 card" rule (draw2/both share a group and can be mixed together)
   function findMultiDumpGroup(hand, top){
     const k = requiredMatchCount();
     const positionSets = k>=2 ? [[0,1],[0,2],[1,2]] : [[0],[1],[2]];
     let best = null;
-    const types = [...new Set(hand.map(c=>c.effect))].filter(t=> t==='plain' || anyoneAtUno());
-    types.forEach(type=>{
+    const groups = [...new Set(hand.map(c=>COMBO_GROUP[c.effect]))].filter(g=> g==='plain' || anyoneAtUno());
+    groups.forEach(comboGroup=>{
       positionSets.forEach(posSet=>{
         const buckets = {};
         hand.forEach(c=>{
-          if(c.effect!==type) return;
+          if(COMBO_GROUP[c.effect]!==comboGroup) return;
           const key = posSet.map(i=>c.digits[i]).join(',');
           (buckets[key] = buckets[key] || []).push(c);
         });
@@ -1010,7 +1023,7 @@
       }
       const top = state.discardPile[state.discardPile.length-1];
 
-      if(state.multiDumpEnabled && anyoneAtUno()){
+      if(state.multiDumpEnabled){
         const group = findMultiDumpGroup(pl.hand, top);
         if(group && group.length>=2){
           playMultiDump(idx, group);
@@ -1138,7 +1151,11 @@
     } else if(state.multiMode){
       human.hand.forEach(card=>{
         const isSelected = state.multiSelection.includes(card);
-        const wouldBeOk = isSelected || comboPositionsIfAdded(card, state.multiSelection, top).length>0;
+        const wouldBeOk = isSelected || (
+          state.multiSelection.length===0
+            ? canStartCombo(card, human.hand, top)
+            : comboPositionsIfAdded(card, state.multiSelection, top).length>0
+        );
         const el = cardEl(card, {
           playable: wouldBeOk,
           multiSelected: isSelected,
@@ -1433,13 +1450,18 @@
     refreshStatsDisplay();
   });
 
-  let numCpu = 2;
+  let numCpu = Number(localStorage.getItem('primeUnoNumCpu') || 2);
   let lastNumCpu = 2;
   document.querySelectorAll('#cpuSelect .cpu-btn').forEach(btn=>{
+    if(Number(btn.dataset.n)===numCpu){
+      document.querySelectorAll('#cpuSelect .cpu-btn').forEach(b=>b.classList.remove('selected'));
+      btn.classList.add('selected');
+    }
     btn.addEventListener('click', ()=>{
       document.querySelectorAll('#cpuSelect .cpu-btn').forEach(b=>b.classList.remove('selected'));
       btn.classList.add('selected');
       numCpu = Number(btn.dataset.n);
+      localStorage.setItem('primeUnoNumCpu', String(numCpu));
     });
   });
   document.querySelectorAll('#onlineCpuSelect .cpu-btn').forEach(btn=>{
@@ -1482,6 +1504,7 @@
   window.addEventListener('DOMContentLoaded', ()=>{
     document.getElementById('interruptToggle').checked = localStorage.getItem('primeUnoInterrupt') !== '0';
     document.getElementById('bothCancelDrawToggle').checked = localStorage.getItem('primeUnoBothCancelDraw') !== '0';
+    document.getElementById('bothCancelDrawToggle').disabled = !document.getElementById('interruptToggle').checked;
     document.getElementById('multiDumpToggle').checked = localStorage.getItem('primeUnoMultiDump') !== '0';
     if(window.PrimeUnoRating){
       const profile = window.PrimeUnoRating.getProfile();
@@ -1493,6 +1516,7 @@
   });
   document.getElementById('interruptToggle').addEventListener('change', (e)=>{
     localStorage.setItem('primeUnoInterrupt', e.target.checked ? '1' : '0');
+    document.getElementById('bothCancelDrawToggle').disabled = !e.target.checked;
   });
   document.getElementById('bothCancelDrawToggle').addEventListener('change', (e)=>{
     localStorage.setItem('primeUnoBothCancelDraw', e.target.checked ? '1' : '0');
