@@ -162,7 +162,9 @@
   .strip-both{ background:linear-gradient(90deg, var(--reverse), var(--draw2)); }
 
   .card.playable{ cursor:pointer; transition:transform .12s, box-shadow .12s; }
-  .card.playable:hover{ transform:translateY(-8px); box-shadow:0 14px 22px rgba(0,0,0,0.5); }
+  @media (hover: hover){
+    .card.playable:hover{ transform:translateY(-8px); box-shadow:0 14px 22px rgba(0,0,0,0.5); }
+  }
   .card.disabled{ filter:grayscale(0.6) brightness(0.65); cursor:default; }
   .card.stackable{ box-shadow:0 0 0 3px var(--draw4), 0 5px 12px rgba(0,0,0,0.4); cursor:pointer; }
   .card.multiPickable{ cursor:pointer; }
@@ -230,7 +232,9 @@
     padding:8px 18px; border-radius:999px; font-family:inherit; cursor:pointer; font-size:13.5px;
   }
   button.ghost:disabled{ opacity:0.35; cursor:default; }
-  button.ghost:not(:disabled):hover{ border-color:var(--hundreds); color:var(--hundreds); }
+  @media (hover: hover){
+    button.ghost:not(:disabled):hover{ border-color:var(--hundreds); color:var(--hundreds); }
+  }
 
   .winbox{
     position:fixed; inset:0; background:rgba(0,0,0,0.7); display:none; align-items:center; justify-content:center; z-index:30;
@@ -320,12 +324,12 @@
     ・ドロー2/ドロー4は<b>積み可能</b>。同じ位が揃っていなくても重ねられ、枚数は加算されます(+2の上に+4で6枚)。<b>ドロー4はドロー4でしか対抗できません</b>(ドロー2では返せません)。積まずに引き受けると番が終わります。<br>
     ・リバースとドロー2が両方該当するカードがあります(エマープかつ隣接ペア)。効果の出方は人数によって異なります。<br>
     ・<b>最後の1枚は「通常カード」でしか上がれません</b>(特殊カードでは勝てません)。<br>
-    ・(設定オンの場合)<b>誰か1人でも「残り1枚」の状態になっている間</b>、通常カードに限り、場のカードと<b>同じ位が一致している通常カードをまとめて</b>出せます(重ね出し)。選ぶカードは全て同じ位で一致している必要があります。ただし<b>通常カードは手札に最低1枚残す</b>必要があります。
+    ・<b>まとめて出す(重ね出し)</b>: 同じ種類のカード同士で、2つの位の数字が一致していれば(そのうち場と合っている位が1つあれば)まとめて出せます。誰かが「残り1枚」の状態の間は、必要な一致は1つの位でよくなり、特殊カードも同種であれば対象になります。効果は出した枚数分そのまま繰り返し発動します(ドロー2を3枚まとめれば+6、スキップを2枚まとめれば2人分飛ばす、など)。まとめて出しても手札は種類を問わず最低1枚残る必要があり、重ね出しだけで上がることはできません(設定でオフ可)。
 
     <p style="margin:14px 0 6px; font-weight:700; color:var(--ink);">2人対戦だけのルール</p>
-    ・リバースはスキップとして扱われます(2人だと方向転換の意味が無いため)。ただし「リバース+ドロー2」の同時発動カードは<b>ドローのみ発動</b>し、スキップにはなりません。<br>
-    ・スキップされる側は、手札のリバースを1枚捨てることで打ち消して自分の番を取り戻せます(リバース打ち消しを有効にする設定がオンの場合。手元にリバースが無ければそのままスキップされます。打ち消した後、通常通り任意で山札から引くこともできます)。<br>
-    ・<b>リバース+ドロー2にはドロー2だけでは対抗できません</b>(リバース+ドロー2側からドロー2への対抗は可能。この設定はオンオフできます)。
+    ・リバースはスキップとして扱われます(2人だと方向転換の意味が無いため)。ただし「リバース+ドロー2」の同時発動カードは<b>ドローのみ発動</b>し、スキップにはなりません。積みの強さもドロー2と同格です。<br>
+    ・スキップされる側は、手札のリバース(またはリバース+ドロー2)を1枚捨てることで打ち消して自分の番を取り戻せます(リバース打ち消しを有効にする設定がオンの場合。手元にどちらも無ければそのままスキップされます。打ち消した後、通常通り任意で山札から引くこともできます)。<br>
+    ・<b>リバース+ドロー2で打ち消した場合</b>、その場でドロー2を仕掛けた側(元のプレイヤー)に発動させることもできます(設定でオンオフ可能)。
 
     <p style="margin:14px 0 6px; font-weight:700; color:var(--ink);">3人以上だけのルール</p>
     ・リバースは通常通り順番の向きを変えます。<br>
@@ -355,7 +359,7 @@
     <p style="font-size:13px;color:var(--ink-dim);margin-bottom:8px;">2人対戦だけのルール設定</p>
     <div style="display:flex; flex-direction:column; gap:6px; align-items:flex-start; max-width:320px; margin:0 auto 14px; font-size:12.5px; color:var(--ink-dim);">
       <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" id="interruptToggle" checked> リバース打ち消しを有効にする</label>
-      <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" id="tieredStackToggle" checked> リバース+ドロー2にドロー2だけでは対抗できないようにする</label>
+      <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" id="bothCancelDrawToggle" checked> リバース+ドロー2で打ち消した時、ドロー2も発動する</label>
     </div>
   </div>
   <div>
@@ -557,14 +561,11 @@
   const DRAW_AMOUNT = { draw2:2, draw4:4, both:2 };
   const HAS_REVERSE = { reverse:true, both:true };
   const IS_STACK_TYPE = t => t==='draw2' || t==='draw4' || t==='both';
-  // stacking strength: draw4 beats everything, draw2 is weakest.
-  // in a 1v1 duel only, "both" (reverse+draw2) sits between them: a draw2
-  // alone can't counter a pending "both", but "both" can counter a draw2.
-  // with 3+ players "both" and draw2 are equal strength (both are level 2).
+  // stacking strength: draw4 beats everything; draw2 and "both" (reverse+draw2)
+  // are always equal strength, regardless of player count.
   function stackLevel(effect){
     if(effect==='draw4') return 4;
-    if(effect==='both') return (state.players.length===2 && state.tieredStackEnabled) ? 3 : 2;
-    return 2; // draw2
+    return 2; // draw2 and both
   }
 
   function buildDeck(){
@@ -598,7 +599,7 @@
       current: 0, direction: 1, over:false,
       turnDrawn:false, pendingDraw:0, pendingLevel:0, skipInterrupt:null,
       interruptEnabled: document.getElementById('interruptToggle').checked,
-      tieredStackEnabled: document.getElementById('tieredStackToggle').checked,
+      bothCancelDrawEnabled: document.getElementById('bothCancelDrawToggle').checked,
       multiDumpEnabled: document.getElementById('multiDumpToggle').checked,
       multiSelection: [],
       multiMode: false
@@ -624,33 +625,39 @@
     return matches(card, top);
   }
 
-  // ---- multi-card dump (only while someone is at 1 card, plain cards only) ----
+  // ---- multi-card dump: same-type cards sharing enough digits with each other ----
   function anyoneAtUno(){
     return state.players.some(p=> p.hand.length===1);
   }
+  // normally need 2 shared positions among the group; if anyone's at UNO, just 1 is enough
+  function requiredMatchCount(){
+    return anyoneAtUno() ? 1 : 2;
+  }
   function multiDumpEligible(){
-    if(!(state.multiDumpEnabled && anyoneAtUno() && state.pendingDraw===0 &&
+    if(!(state.multiDumpEnabled && state.pendingDraw===0 &&
       state.current===mySeat && !state.over && !state.skipInterrupt)) return false;
     const me = state.players[mySeat];
-    if(!me || me.hand.length<=1) return false; // no point dumping when you're already at (or below) UNO yourself
+    if(!me || me.hand.length<2) return false;
     const top = state.discardPile[state.discardPile.length-1];
     const group = findMultiDumpGroup(me.hand, top);
     return !!(group && group.length>=2);
   }
-  // positions (0=hundreds,1=tens,2=ones) where this plain card matches the top card
-  function comboPositionsFor(card, top){
-    return [0,1,2].filter(i=> card.digits[i]===top.digits[i]);
+  // positions where every card in the array has an identical digit
+  function sharedPositions(cards){
+    return [0,1,2].filter(i=> cards.every(c=> c.digits[i]===cards[0].digits[i]));
   }
-  // given the cards already selected, which positions still line up if we add `card`?
+  // given the cards already selected, can `card` be added? returns the resulting
+  // shared-position set if so (non-empty array = yes), or [] if not addable.
   function comboPositionsIfAdded(card, selected, top){
-    const base = selected.length===0
-      ? comboPositionsFor(card, top)
-      : selected[0].digits.map((_,i)=>i).filter(i=>
-          selected.every(c=> c.digits[i]===selected[0].digits[i]) && selected[0].digits[i]===top.digits[i]
-        );
-    if(selected.length===0) return card.effect==='plain' ? base : [];
-    if(card.effect!=='plain') return [];
-    return base.filter(i=> card.digits[i]===selected[0].digits[i]);
+    const type = selected.length>0 ? selected[0].effect : card.effect;
+    if(card.effect!==type) return [];
+    if(type!=='plain' && !anyoneAtUno()) return []; // specials only combo-able while someone's at UNO
+    const candidate = selected.concat([card]);
+    const shared = sharedPositions(candidate);
+    if(shared.length < requiredMatchCount()) return [];
+    const matchesTop = shared.some(i=> candidate[0].digits[i]===top.digits[i]);
+    if(!matchesTop) return [];
+    return shared;
   }
 
   function log(msg){
@@ -702,7 +709,7 @@
   function logSystem(numberOrLabel, tag){
     let body = numberOrLabel;
     if(tag) body += `（${tag}）`;
-    logRow('SYSTEM：', body);
+    logRow('System：', body);
   }
 
   function nextIndexFrom(idx){
@@ -756,8 +763,8 @@
       if(isDuel){
         const skipped = nextIndexFrom(playerIdx);
         const victim = state.players[skipped];
-        const hasReverseCard = state.interruptEnabled && victim.hand.some(c=>c.effect==='reverse');
-        if(hasReverseCard){
+        const hasCancelCard = state.interruptEnabled && victim.hand.some(c=>c.effect==='reverse'||c.effect==='both');
+        if(hasCancelCard){
           offerSkipInterrupt(skipped, playerIdx);
           return;
         } else {
@@ -775,7 +782,9 @@
     maybeCpuTurn();
   }
 
-  // ---- 2-player only: a reverse-as-skip can be cancelled by discarding a reverse card ----
+  // ---- 2-player only: a reverse-as-skip can be cancelled by discarding a reverse
+  // (or reverse+draw2) card. Cancelling with a reverse+draw2 card can also fire its
+  // draw2 back at the original attacker, if that setting is enabled. ----
   function offerSkipInterrupt(victimIdx, originIdx){
     state.skipInterrupt = { victim: victimIdx, origin: originIdx };
     render();
@@ -785,7 +794,7 @@
         // smaller hands have less to lose from spending a card, so interrupt more eagerly
         const chance = victim.hand.length<=4 ? 0.75 : victim.hand.length>=9 ? 0.3 : 0.5;
         if(Math.random() < chance){
-          const options = victim.hand.filter(c=>c.effect==='reverse');
+          const options = victim.hand.filter(c=>c.effect==='reverse'||c.effect==='both');
           interruptSkip(victimIdx, options[Math.floor(Math.random()*options.length)]);
         } else {
           acceptSkip(victimIdx);
@@ -795,17 +804,24 @@
   }
   function interruptSkip(victimIdx, chosenCard){
     const victim = state.players[victimIdx];
+    const originIdx = state.skipInterrupt ? state.skipInterrupt.origin : null;
     let spent = null;
-    if(chosenCard && chosenCard.effect==='reverse'){
+    if(chosenCard && (chosenCard.effect==='reverse'||chosenCard.effect==='both')){
       victim.hand = victim.hand.filter(c=>c.id!==chosenCard.id);
       spent = chosenCard;
     } else {
-      const idx = victim.hand.findIndex(c=>c.effect==='reverse');
+      const idx = victim.hand.findIndex(c=>c.effect==='reverse'||c.effect==='both');
       if(idx>=0) spent = victim.hand.splice(idx,1)[0];
     }
     if(spent){
       state.discardPile.push(spent);
-      logRow(`${victim.name}（${victim.hand.length}）：`, `<b class="logNum">${pad3(spent.value)}</b> <span class="fx fx-reverse">（CANCEL）</span>`);
+      const bonusDraw = spent.effect==='both' && state.bothCancelDrawEnabled;
+      const tag = bonusDraw ? 'CANCEL+2' : 'CANCEL';
+      logRow(`${victim.name}（${victim.hand.length}）：`, `<b class="logNum">${pad3(spent.value)}</b> <span class="fx fx-reverse">（${tag}）</span>`);
+      if(bonusDraw && originIdx!=null){
+        state.pendingDraw += 2;
+        state.pendingLevel = stackLevel('draw2');
+      }
     }
     state.skipInterrupt = null;
     state.current = victimIdx;
@@ -876,47 +892,99 @@
     const p = state.players[playerIdx];
     const selected = selectedCards;
     if(!selected || selected.length===0) return false;
+    const type = selected[0].effect;
     const remaining = p.hand.filter(c=> !selected.includes(c));
-    if(remaining.length>0 && !remaining.some(c=>c.effect==='plain')){
-      if(playerIdx===0) log('<span class="log-uno">通常カードは手札に最低1枚残す必要があります。</span>');
+    if(remaining.length===0){
+      if(playerIdx===mySeat) log('<span class="log-uno">まとめて出しても、手札は最低1枚残す必要があります。</span>');
       return false;
     }
     p.hand = remaining;
     selected.forEach(c=> state.discardPile.push(c));
     logMultiPlay(p.name, selected, p.hand.length);
-    if(playerIdx===0){ state.multiMode = false; state.multiSelection = []; }
+    if(playerIdx===mySeat){ state.multiMode = false; state.multiSelection = []; }
 
     if(p.hand.length===0){
       state.over = true; render(); showWin(playerIdx); return true;
     }
     if(p.hand.length===1) announceUno(p.name);
-    state.current = nextIndexFrom(playerIdx);
+
+    const deferred = resolveComboEffects(playerIdx, type, selected.length);
+    if(deferred) return true; // offerSkipInterrupt takes over render()/maybeCpuTurn() itself
     state.turnDrawn = false;
     render();
     maybeCpuTurn();
     return true;
   }
 
-  // find the largest group of plain cards a CPU could dump at once (same digit,
-  // same position, matching the top card), respecting the "keep 1 plain card" rule
-  function findMultiDumpGroup(hand, top){
-    let best = null;
-    for(let pos=0; pos<3; pos++){
-      const buckets = {};
-      hand.forEach(c=>{
-        if(c.effect!=='plain') return;
-        if(c.digits[pos]!==top.digits[pos]) return;
-        const key = c.digits[pos];
-        (buckets[key] = buckets[key] || []).push(c);
-      });
-      Object.values(buckets).forEach(group=>{
-        if(group.length<2) return;
-        const remaining = hand.filter(c=> !group.includes(c));
-        const ok = remaining.length===0 || remaining.some(c=>c.effect==='plain');
-        if(!ok) return;
-        if(!best || group.length>best.length) best = group;
-      });
+  // apply the played group's effect. skip/reverse repeat once per card in the
+  // group; draw2/draw4/both (and a duel reverse's skip-or-cancel check) only
+  // ever resolve once, no matter how many cards were played together.
+  // returns true if resolution was handed off to offerSkipInterrupt (async).
+  function resolveComboEffects(playerIdx, type, count){
+    const isDuel = state.players.length===2;
+    if(type==='plain'){
+      state.current = nextIndexFrom(playerIdx);
+      return false;
     }
+    if(type==='skip'){
+      let from = playerIdx;
+      for(let i=0;i<count;i++) from = nextIndexFrom(from);
+      state.current = nextIndexFrom(from);
+      return false;
+    }
+    if(type==='reverse'){
+      if(isDuel){
+        // repeated reverse-as-skip in a duel: walk the same skip chain as 'skip' does
+        let from = playerIdx;
+        for(let i=0;i<count;i++) from = nextIndexFrom(from);
+        const victim = state.players[from];
+        const hasCancelCard = state.interruptEnabled && victim.hand.some(c=>c.effect==='reverse'||c.effect==='both');
+        if(hasCancelCard){ offerSkipInterrupt(from, playerIdx); return true; }
+        state.current = nextIndexFrom(from);
+        return false;
+      } else {
+        for(let i=0;i<count;i++) state.direction *= -1;
+        state.current = nextIndexFrom(playerIdx);
+        return false;
+      }
+    }
+    // draw2 / draw4 / both -- the draw amount (and, for 'both', the reverse) repeats
+    // once per card in the group. Responding to the resulting pile is still a
+    // normal single-card stacking action either way, same as any other pending draw.
+    const applyReverse = HAS_REVERSE[type] && !isDuel;
+    if(applyReverse){ for(let i=0;i<count;i++) state.direction *= -1; }
+    state.pendingDraw += DRAW_AMOUNT[type] * count;
+    state.pendingLevel = stackLevel(type);
+    state.current = nextIndexFrom(playerIdx);
+    return false;
+  }
+
+  // find the largest same-type group a CPU could dump at once, respecting the
+  // "keep 1 plain card" rule (or an all-plain group if it empties the hand)
+  function findMultiDumpGroup(hand, top){
+    const k = requiredMatchCount();
+    const positionSets = k>=2 ? [[0,1],[0,2],[1,2]] : [[0],[1],[2]];
+    let best = null;
+    const types = [...new Set(hand.map(c=>c.effect))].filter(t=> t==='plain' || anyoneAtUno());
+    types.forEach(type=>{
+      positionSets.forEach(posSet=>{
+        const buckets = {};
+        hand.forEach(c=>{
+          if(c.effect!==type) return;
+          const key = posSet.map(i=>c.digits[i]).join(',');
+          (buckets[key] = buckets[key] || []).push(c);
+        });
+        Object.values(buckets).forEach(group=>{
+          if(group.length<2) return;
+          const matchesTop = posSet.some(i=> group[0].digits[i]===top.digits[i]);
+          if(!matchesTop) return;
+          const remaining = hand.filter(c=> !group.includes(c));
+          const okLeftover = remaining.length>0;
+          if(!okLeftover) return;
+          if(!best || group.length>best.length) best = group;
+        });
+      });
+    });
     return best;
   }
 
@@ -1062,9 +1130,9 @@
 
     if(iAmVictim){
       human.hand.forEach(card=>{
-        const isReverse = card.effect==='reverse';
-        const el = cardEl(card, { playable:isReverse, multiFaded:!isReverse, stackable:isReverse });
-        if(isReverse) el.addEventListener('click', ()=> requestInterrupt(card));
+        const isCancelCard = card.effect==='reverse' || card.effect==='both';
+        const el = cardEl(card, { playable:isCancelCard, multiFaded:!isCancelCard, stackable:isCancelCard });
+        if(isCancelCard) el.addEventListener('click', ()=> requestInterrupt(card));
         handWrap.appendChild(el);
       });
     } else if(state.multiMode){
@@ -1173,7 +1241,7 @@
       current: state.current, direction: state.direction, over: state.over,
       turnDrawn: state.turnDrawn, pendingDraw: state.pendingDraw, pendingLevel: state.pendingLevel,
       skipInterrupt: state.skipInterrupt,
-      interruptEnabled: state.interruptEnabled, tieredStackEnabled: state.tieredStackEnabled,
+      interruptEnabled: state.interruptEnabled, bothCancelDrawEnabled: state.bothCancelDrawEnabled,
       multiDumpEnabled: state.multiDumpEnabled
     };
   }
@@ -1197,7 +1265,7 @@
       current: view.current, direction: view.direction, over: view.over,
       turnDrawn: view.turnDrawn, pendingDraw: view.pendingDraw, pendingLevel: view.pendingLevel,
       skipInterrupt: view.skipInterrupt,
-      interruptEnabled: view.interruptEnabled, tieredStackEnabled: view.tieredStackEnabled,
+      interruptEnabled: view.interruptEnabled, bothCancelDrawEnabled: view.bothCancelDrawEnabled,
       multiDumpEnabled: view.multiDumpEnabled,
       multiSelection: [], multiMode: false
     };
@@ -1413,7 +1481,7 @@
 
   window.addEventListener('DOMContentLoaded', ()=>{
     document.getElementById('interruptToggle').checked = localStorage.getItem('primeUnoInterrupt') !== '0';
-    document.getElementById('tieredStackToggle').checked = localStorage.getItem('primeUnoTieredStack') !== '0';
+    document.getElementById('bothCancelDrawToggle').checked = localStorage.getItem('primeUnoBothCancelDraw') !== '0';
     document.getElementById('multiDumpToggle').checked = localStorage.getItem('primeUnoMultiDump') !== '0';
     if(window.PrimeUnoRating){
       const profile = window.PrimeUnoRating.getProfile();
@@ -1426,8 +1494,8 @@
   document.getElementById('interruptToggle').addEventListener('change', (e)=>{
     localStorage.setItem('primeUnoInterrupt', e.target.checked ? '1' : '0');
   });
-  document.getElementById('tieredStackToggle').addEventListener('change', (e)=>{
-    localStorage.setItem('primeUnoTieredStack', e.target.checked ? '1' : '0');
+  document.getElementById('bothCancelDrawToggle').addEventListener('change', (e)=>{
+    localStorage.setItem('primeUnoBothCancelDraw', e.target.checked ? '1' : '0');
   });
   document.getElementById('multiDumpToggle').addEventListener('change', (e)=>{
     localStorage.setItem('primeUnoMultiDump', e.target.checked ? '1' : '0');
