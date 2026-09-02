@@ -375,6 +375,14 @@
   <button class="primary" id="startBtn" style="margin:14px 0;">ゲーム開始</button>
 
   <div class="ratingSetup">
+    <div style="display:flex; align-items:center; gap:8px; justify-content:center; flex-wrap:wrap;">
+      <button class="ghost" id="googleSignInBtn" style="font-size:12px; padding:6px 14px;">Googleでログイン</button>
+      <span id="authStatus" style="display:none; font-size:12px; color:var(--ink-dim); align-items:center; gap:6px;">
+        ログイン中: <b id="authUserName" style="color:var(--ink);"></b>
+        <a href="#" id="signOutLink" style="color:var(--danger);">ログアウト</a>
+      </span>
+    </div>
+    <p style="font-size:11px; color:var(--ink-dim); margin:4px 0 0; text-align:center;">ログインすると、レート・戦績を別の端末でも引き継げます(ログインしなくても今まで通り遊べます)</p>
     <input type="text" id="nameInput" placeholder="プレイヤー名" maxlength="16">
     <label class="publishToggle">
       <input type="checkbox" id="publishToggle">
@@ -1532,6 +1540,39 @@
     document.getElementById('publishToggle').checked = profile.publish;
     refreshStatsDisplay();
     if(!profile.publish) window.PrimeUnoRating.removePublicEntry(profile.id);
+    document.getElementById('googleSignInBtn').style.display =
+      window.PrimeUnoRating.isAuthConfigured() ? 'inline-block' : 'none';
+  });
+  document.getElementById('googleSignInBtn').addEventListener('click', ()=>{
+    if(!window.PrimeUnoRating) return;
+    window.PrimeUnoRating.signInGoogle().catch(e=> console.warn('sign-in failed:', e));
+  });
+  document.getElementById('signOutLink').addEventListener('click', (e)=>{
+    e.preventDefault();
+    if(!window.PrimeUnoRating) return;
+    window.PrimeUnoRating.signOutUser().catch(e=> console.warn('sign-out failed:', e));
+  });
+  window.addEventListener('prime-uno-auth-changed', (e)=>{
+    const signedIn = e.detail && e.detail.signedIn;
+    const btn = document.getElementById('googleSignInBtn');
+    const status = document.getElementById('authStatus');
+    if(signedIn){
+      btn.style.display = 'none';
+      status.style.display = 'inline-flex';
+      document.getElementById('authUserName').textContent = e.detail.name || 'ログイン済み';
+      if(!document.getElementById('nameInput').value.trim() && e.detail.name){
+        document.getElementById('nameInput').value = e.detail.name;
+      }
+    } else {
+      btn.style.display = window.PrimeUnoRating && window.PrimeUnoRating.isAuthConfigured() ? 'inline-block' : 'none';
+      status.style.display = 'none';
+    }
+    if(window.PrimeUnoRating){
+      const profile = window.PrimeUnoRating.getProfile();
+      document.getElementById('nameInput').value = document.getElementById('nameInput').value || profile.name || '';
+      document.getElementById('publishToggle').checked = profile.publish;
+      refreshStatsDisplay();
+    }
   });
   document.getElementById('publishToggle').addEventListener('change', (e)=>{
     if(!window.PrimeUnoRating) return;
@@ -1849,6 +1890,9 @@
   import {
     getFirestore, doc, getDoc, setDoc, deleteDoc, collection, query, orderBy, limit, getDocs, serverTimestamp
   } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+  import {
+    getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged
+  } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
 
   // ---- TODO: paste your firebaseConfig object from the Firebase console here ----
   const firebaseConfig = {
@@ -1861,10 +1905,19 @@
   };
 
   let db = null;
+  let auth = null;
+  let currentUser = null;
   try{
     if(firebaseConfig.apiKey && firebaseConfig.apiKey !== 'YOUR_API_KEY'){
       const app = initializeApp(firebaseConfig);
       db = getFirestore(app);
+      auth = getAuth(app);
+      onAuthStateChanged(auth, (user)=>{
+        currentUser = user;
+        syncFromCloud().finally(()=>{
+          window.dispatchEvent(new CustomEvent('prime-uno-auth-changed', { detail: { signedIn: !!user, name: user ? (user.displayName||'') : '' } }));
+        });
+      });
     }
   } catch(e){ console.warn('Firebase init failed:', e); db = null; }
 
@@ -1874,11 +1927,41 @@
   const WIN_POINTS  = { 1: 15, 2: 20, 3: 25 };
   const LOSS_POINTS = { 1: 10, 2: 13, 3: 16 };
 
+  // when a login completes, pull that account's cloud record (if any) down over
+  // the local numbers, so progress carries across devices for signed-in users.
+  async function syncFromCloud(){
+    if(!currentUser || !db) return;
+    try{
+      const snap = await getDoc(doc(db, 'players', currentUser.uid));
+      if(snap.exists()){
+        const d = snap.data();
+        localStorage.setItem('primeUnoRating', String(d.rating ?? 1000));
+        localStorage.setItem('primeUnoMaxRating', String(d.maxRating ?? d.rating ?? 1000));
+        localStorage.setItem('primeUnoGames', String(d.games ?? 0));
+        localStorage.setItem('primeUnoWins', String(d.wins ?? 0));
+        if(d.name) localStorage.setItem('primeUnoPlayerName', d.name);
+      }
+    } catch(e){ console.warn('cloud sync failed:', e); }
+  }
+  function signInGoogle(){
+    if(!auth) return Promise.reject(new Error('not configured'));
+    return signInWithPopup(auth, new GoogleAuthProvider());
+  }
+  function signOutUser(){
+    if(!auth) return Promise.resolve();
+    return signOut(auth);
+  }
+
   function loadProfile(){
-    let id = localStorage.getItem('primeUnoPlayerId');
-    if(!id){
-      id = 'p_' + Math.random().toString(36).slice(2) + Date.now().toString(36);
-      localStorage.setItem('primeUnoPlayerId', id);
+    let id;
+    if(currentUser){
+      id = currentUser.uid;
+    } else {
+      id = localStorage.getItem('primeUnoPlayerId');
+      if(!id){
+        id = 'p_' + Math.random().toString(36).slice(2) + Date.now().toString(36);
+        localStorage.setItem('primeUnoPlayerId', id);
+      }
     }
     const rating = Number(localStorage.getItem('primeUnoRating') || 1000);
     return {
@@ -1888,7 +1971,8 @@
       rating,
       maxRating: Number(localStorage.getItem('primeUnoMaxRating') || rating),
       games: Number(localStorage.getItem('primeUnoGames') || 0),
-      wins: Number(localStorage.getItem('primeUnoWins') || 0)
+      wins: Number(localStorage.getItem('primeUnoWins') || 0),
+      signedIn: !!currentUser
     };
   }
   function saveProfile(p){
@@ -1968,7 +2052,10 @@
     fetchLeaderboard,
     removePublicEntry,
     syncPublicEntry,
-    isConfigured: ()=> !!db
+    signInGoogle,
+    signOutUser,
+    isConfigured: ()=> !!db,
+    isAuthConfigured: ()=> !!auth
   };
 
   window.dispatchEvent(new Event('prime-uno-rating-ready'));
