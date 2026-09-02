@@ -1891,7 +1891,7 @@
     getFirestore, doc, getDoc, setDoc, deleteDoc, collection, query, orderBy, limit, getDocs, serverTimestamp
   } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
   import {
-    getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged
+    getAuth, GoogleAuthProvider, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged
   } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
 
   // ---- TODO: paste your firebaseConfig object from the Firebase console here ----
@@ -1918,6 +1918,7 @@
           window.dispatchEvent(new CustomEvent('prime-uno-auth-changed', { detail: { signedIn: !!user, name: user ? (user.displayName||'') : '' } }));
         });
       });
+      getRedirectResult(auth).catch(e=> console.warn('redirect sign-in failed:', e));
     }
   } catch(e){ console.warn('Firebase init failed:', e); db = null; }
 
@@ -1945,7 +1946,7 @@
   }
   function signInGoogle(){
     if(!auth) return Promise.reject(new Error('not configured'));
-    return signInWithPopup(auth, new GoogleAuthProvider());
+    return signInWithRedirect(auth, new GoogleAuthProvider());
   }
   function signOutUser(){
     if(!auth) return Promise.resolve();
