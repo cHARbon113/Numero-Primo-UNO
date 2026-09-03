@@ -1542,6 +1542,9 @@
     if(!profile.publish) window.PrimeUnoRating.removePublicEntry(profile.id);
     document.getElementById('googleSignInBtn').style.display =
       window.PrimeUnoRating.isAuthConfigured() ? 'inline-block' : 'none';
+    if(window.PrimeUnoRating.isSignedIn()){
+      updateAuthUI(true, window.PrimeUnoRating.getCurrentUserName());
+    }
   });
   document.getElementById('googleSignInBtn').addEventListener('click', ()=>{
     if(!window.PrimeUnoRating) return;
@@ -1552,16 +1555,15 @@
     if(!window.PrimeUnoRating) return;
     window.PrimeUnoRating.signOutUser().catch(e=> console.warn('sign-out failed:', e));
   });
-  window.addEventListener('prime-uno-auth-changed', (e)=>{
-    const signedIn = e.detail && e.detail.signedIn;
+  function updateAuthUI(signedIn, name){
     const btn = document.getElementById('googleSignInBtn');
     const status = document.getElementById('authStatus');
     if(signedIn){
       btn.style.display = 'none';
       status.style.display = 'inline-flex';
-      document.getElementById('authUserName').textContent = e.detail.name || 'ログイン済み';
-      if(!document.getElementById('nameInput').value.trim() && e.detail.name){
-        document.getElementById('nameInput').value = e.detail.name;
+      document.getElementById('authUserName').textContent = name || 'ログイン済み';
+      if(!document.getElementById('nameInput').value.trim() && name){
+        document.getElementById('nameInput').value = name;
       }
     } else {
       btn.style.display = window.PrimeUnoRating && window.PrimeUnoRating.isAuthConfigured() ? 'inline-block' : 'none';
@@ -1573,6 +1575,9 @@
       document.getElementById('publishToggle').checked = profile.publish;
       refreshStatsDisplay();
     }
+  }
+  window.addEventListener('prime-uno-auth-changed', (e)=>{
+    updateAuthUI(e.detail && e.detail.signedIn, e.detail && e.detail.name);
   });
   document.getElementById('publishToggle').addEventListener('change', (e)=>{
     if(!window.PrimeUnoRating) return;
@@ -1930,10 +1935,24 @@
 
   // when a login completes, pull that account's cloud record (if any) down over
   // the local numbers, so progress carries across devices for signed-in users.
+  async function pushProfileToCloud(){
+    if(!currentUser || !db) return;
+    const p = loadProfile();
+    try{
+      await setDoc(doc(db, 'profiles', currentUser.uid), {
+        name: p.name || 'Player', rating: p.rating, maxRating: p.maxRating,
+        games: p.games, wins: p.wins, updatedAt: serverTimestamp()
+      });
+    } catch(e){ console.warn('profile push failed:', e); }
+  }
+  // when a login completes: if this account already has a private profile in
+  // the cloud, pull it down over the local numbers (returning device). If not,
+  // this must be a device with only local progress on it -- push it up so it
+  // becomes that account's cloud profile (first sync from an existing device).
   async function syncFromCloud(){
     if(!currentUser || !db) return;
     try{
-      const snap = await getDoc(doc(db, 'players', currentUser.uid));
+      const snap = await getDoc(doc(db, 'profiles', currentUser.uid));
       if(snap.exists()){
         const d = snap.data();
         localStorage.setItem('primeUnoRating', String(d.rating ?? 1000));
@@ -1941,6 +1960,8 @@
         localStorage.setItem('primeUnoGames', String(d.games ?? 0));
         localStorage.setItem('primeUnoWins', String(d.wins ?? 0));
         if(d.name) localStorage.setItem('primeUnoPlayerName', d.name);
+      } else {
+        await pushProfileToCloud();
       }
     } catch(e){ console.warn('cloud sync failed:', e); }
   }
@@ -1994,6 +2015,7 @@
         games: p.games, wins: p.wins, updatedAt: serverTimestamp()
       }).catch(e=> console.warn('leaderboard reset failed:', e));
     }
+    if(currentUser) pushProfileToCloud().catch(()=>{});
     return p;
   }
 
@@ -2019,6 +2041,7 @@
     if(p.publish && db){
       try{ await writeEntry(p); } catch(e){ console.warn('leaderboard write failed:', e); }
     }
+    if(currentUser) pushProfileToCloud().catch(()=>{});
     return { rating: p.rating, maxRating: p.maxRating, delta, games: p.games, wins: p.wins };
   }
 
@@ -2055,6 +2078,8 @@
     syncPublicEntry,
     signInGoogle,
     signOutUser,
+    getCurrentUserName: ()=> currentUser ? (currentUser.displayName||'') : null,
+    isSignedIn: ()=> !!currentUser,
     isConfigured: ()=> !!db,
     isAuthConfigured: ()=> !!auth
   };
