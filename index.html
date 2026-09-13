@@ -383,6 +383,19 @@
       </span>
     </div>
     <p style="font-size:11px; color:var(--ink-dim); margin:4px 0 0; text-align:center;">ログインすると、レート・戦績を別の端末でも引き継げます(ログインしなくても今まで通り遊べます)</p>
+
+    <div id="syncBox" style="border-top:1px solid rgba(255,255,255,0.08); padding-top:10px; margin-top:4px;">
+      <p style="font-size:11.5px; color:var(--ink-dim); margin:0 0 8px; text-align:center;">アカウント同期(ログイン中のみ)</p>
+      <label class="publishToggle" id="autoSyncLabel">
+        <input type="checkbox" id="autoSyncToggle">
+        端末の成績を自動でクラウドと同期する
+      </label>
+      <button class="ghost resetHold" id="uploadHoldBtn" style="position:relative; overflow:hidden; margin-top:8px;">
+        <span class="resetFill" id="uploadFill"></span>
+        <span style="position:relative;">今すぐ端末の成績をアップロード(10秒長押し)</span>
+      </button>
+    </div>
+
     <input type="text" id="nameInput" placeholder="プレイヤー名" maxlength="16">
     <label class="publishToggle">
       <input type="checkbox" id="publishToggle">
@@ -393,6 +406,18 @@
       <span class="resetFill" id="resetFill"></span>
       <span style="position:relative;">レート情報をリセット(10秒長押し)</span>
     </button>
+  </div>
+
+  <div class="winbox" id="syncResolveModal">
+    <div class="wincard" style="max-width:380px;">
+      <h2 style="font-size:18px;">端末とクラウドで成績が違います</h2>
+      <p id="syncResolveDetail" style="text-align:left; font-size:13px; color:var(--ink-dim); line-height:1.8;"></p>
+      <div style="display:flex; flex-direction:column; gap:8px; margin-top:10px;">
+        <button class="primary" id="syncUseLocalBtn" style="font-size:13px;">この端末の成績を使う(クラウドを上書き)</button>
+        <button class="ghost" id="syncUseCloudBtn" style="font-size:13px;">クラウドの成績を使う(この端末を上書き)</button>
+        <button class="ghost" id="syncCancelBtn" style="font-size:13px;">キャンセル</button>
+      </div>
+    </div>
   </div>
 
   <div><button class="ghost" id="rankingBtn" style="margin-top:12px;">ランキングを見る</button></div>
@@ -1558,6 +1583,7 @@
   function updateAuthUI(signedIn, name){
     const btn = document.getElementById('googleSignInBtn');
     const status = document.getElementById('authStatus');
+    document.getElementById('syncBox').style.display = signedIn ? 'block' : 'none';
     if(signedIn){
       btn.style.display = 'none';
       status.style.display = 'inline-flex';
@@ -1565,6 +1591,7 @@
       if(!document.getElementById('nameInput').value.trim() && name){
         document.getElementById('nameInput').value = name;
       }
+      document.getElementById('autoSyncToggle').checked = localStorage.getItem('primeUnoAutoSync')==='1';
     } else {
       btn.style.display = window.PrimeUnoRating && window.PrimeUnoRating.isAuthConfigured() ? 'inline-block' : 'none';
       status.style.display = 'none';
@@ -1590,6 +1617,72 @@
       window.PrimeUnoRating.removePublicEntry(profile.id);
     }
   });
+
+  // ---- account sync (only while signed in) ----
+  function profilesDiffer(a, b){
+    if(!a || !b) return false;
+    return a.rating!==b.rating || a.maxRating!==b.maxRating || a.games!==b.games || a.wins!==b.wins;
+  }
+  document.getElementById('autoSyncToggle').addEventListener('change', async (e)=>{
+    if(!window.PrimeUnoRating || !window.PrimeUnoRating.isSignedIn()){ e.target.checked = false; return; }
+    if(!e.target.checked){
+      localStorage.setItem('primeUnoAutoSync', '0');
+      return;
+    }
+    e.target.checked = false; // don't commit until resolved below
+    const local = window.PrimeUnoRating.getProfile();
+    const cloud = await window.PrimeUnoRating.fetchCloudProfile();
+    if(!cloud || !profilesDiffer(local, cloud)){
+      if(!cloud) await window.PrimeUnoRating.pushProfileToCloud();
+      localStorage.setItem('primeUnoAutoSync', '1');
+      e.target.checked = true;
+      return;
+    }
+    // mismatch: ask which side wins before turning auto-sync on
+    document.getElementById('syncResolveDetail').innerHTML =
+      `この端末: レート${local.rating} / ${local.games}戦${local.wins}勝<br>クラウド: レート${cloud.rating} / ${cloud.games}戦${cloud.wins}勝`;
+    document.getElementById('syncResolveModal').classList.add('show');
+    const modal = document.getElementById('syncResolveModal');
+    const cleanup = ()=>{ modal.classList.remove('show'); };
+    document.getElementById('syncUseLocalBtn').onclick = async ()=>{
+      await window.PrimeUnoRating.pushProfileToCloud();
+      localStorage.setItem('primeUnoAutoSync', '1');
+      document.getElementById('autoSyncToggle').checked = true;
+      cleanup();
+    };
+    document.getElementById('syncUseCloudBtn').onclick = async ()=>{
+      await window.PrimeUnoRating.pullProfileFromCloud(cloud);
+      localStorage.setItem('primeUnoAutoSync', '1');
+      document.getElementById('autoSyncToggle').checked = true;
+      refreshStatsDisplay();
+      cleanup();
+    };
+    document.getElementById('syncCancelBtn').onclick = ()=>{
+      document.getElementById('autoSyncToggle').checked = false;
+      cleanup();
+    };
+  });
+
+  let uploadHoldTimer = null;
+  function startUploadHold(){
+    if(uploadHoldTimer || !window.PrimeUnoRating || !window.PrimeUnoRating.isSignedIn()) return;
+    const fill = document.getElementById('uploadFill');
+    fill.style.transition = 'none'; fill.style.width = '0%';
+    requestAnimationFrame(()=>{ fill.style.transition = 'width 10s linear'; fill.style.width = '100%'; });
+    uploadHoldTimer = setTimeout(()=>{
+      window.PrimeUnoRating.pushProfileToCloud();
+      cancelUploadHold();
+    }, 10000);
+  }
+  function cancelUploadHold(){
+    clearTimeout(uploadHoldTimer);
+    uploadHoldTimer = null;
+    const fill = document.getElementById('uploadFill');
+    fill.style.transition = 'none'; fill.style.width = '0%';
+  }
+  const uploadHoldBtn = document.getElementById('uploadHoldBtn');
+  ['mousedown','touchstart'].forEach(ev=> uploadHoldBtn.addEventListener(ev, (e)=>{ e.preventDefault(); startUploadHold(); }));
+  ['mouseup','mouseleave','touchend','touchcancel'].forEach(ev=> uploadHoldBtn.addEventListener(ev, cancelUploadHold));
 
   // ---- reset stats: hold the button for 10 seconds ----
   let resetHoldTimer = null;
@@ -1919,9 +2012,20 @@
       auth = getAuth(app);
       onAuthStateChanged(auth, (user)=>{
         currentUser = user;
-        syncFromCloud().finally(()=>{
-          window.dispatchEvent(new CustomEvent('prime-uno-auth-changed', { detail: { signedIn: !!user, name: user ? (user.displayName||'') : '' } }));
-        });
+        const fire = ()=> window.dispatchEvent(new CustomEvent('prime-uno-auth-changed', { detail: { signedIn: !!user, name: user ? (user.displayName||'') : '' } }));
+        if(user){
+          // a public leaderboard entry made before signing in lives under the
+          // old anonymous id; clean it up so login doesn't fork the entry in
+          // two (the account's uid-keyed entry is the one going forward).
+          const anonId = localStorage.getItem('primeUnoPlayerId');
+          if(anonId && anonId !== user.uid) removePublicEntry(anonId).catch(()=>{});
+        }
+        if(user && localStorage.getItem('primeUnoAutoSync')==='1'){
+          syncFromCloud().finally(fire);
+        } else {
+          if(!user) clearLocalProfileOnLogout();
+          fire();
+        }
       });
     }
   } catch(e){ console.warn('Firebase init failed:', e); db = null; }
@@ -1948,21 +2052,37 @@
   // the cloud, pull it down over the local numbers (returning device). If not,
   // this must be a device with only local progress on it -- push it up so it
   // becomes that account's cloud profile (first sync from an existing device).
-  async function syncFromCloud(){
-    if(!currentUser || !db) return;
+  async function pullProfileFromCloud(d){
+    localStorage.setItem('primeUnoRating', String(d.rating ?? 1000));
+    localStorage.setItem('primeUnoMaxRating', String(d.maxRating ?? d.rating ?? 1000));
+    localStorage.setItem('primeUnoGames', String(d.games ?? 0));
+    localStorage.setItem('primeUnoWins', String(d.wins ?? 0));
+    if(d.name) localStorage.setItem('primeUnoPlayerName', d.name);
+  }
+  async function fetchCloudProfile(){
+    if(!currentUser || !db) return null;
     try{
       const snap = await getDoc(doc(db, 'profiles', currentUser.uid));
-      if(snap.exists()){
-        const d = snap.data();
-        localStorage.setItem('primeUnoRating', String(d.rating ?? 1000));
-        localStorage.setItem('primeUnoMaxRating', String(d.maxRating ?? d.rating ?? 1000));
-        localStorage.setItem('primeUnoGames', String(d.games ?? 0));
-        localStorage.setItem('primeUnoWins', String(d.wins ?? 0));
-        if(d.name) localStorage.setItem('primeUnoPlayerName', d.name);
-      } else {
-        await pushProfileToCloud();
-      }
-    } catch(e){ console.warn('cloud sync failed:', e); }
+      return snap.exists() ? snap.data() : null;
+    } catch(e){ console.warn('cloud fetch failed:', e); return null; }
+  }
+  // used only when auto-sync was already turned on in a previous session: keep
+  // quietly pulling (or, for a first-ever sync, pushing) without re-prompting.
+  async function syncFromCloud(){
+    if(!currentUser || !db) return;
+    const d = await fetchCloudProfile();
+    if(d) await pullProfileFromCloud(d);
+    else await pushProfileToCloud();
+  }
+  function clearLocalProfileOnLogout(){
+    if(localStorage.getItem('primeUnoAutoSync')==='1'){
+      localStorage.removeItem('primeUnoRating');
+      localStorage.removeItem('primeUnoMaxRating');
+      localStorage.removeItem('primeUnoGames');
+      localStorage.removeItem('primeUnoWins');
+      localStorage.removeItem('primeUnoPlayerName');
+      localStorage.setItem('primeUnoAutoSync', '0');
+    }
   }
   function signInGoogle(){
     if(!auth) return Promise.reject(new Error('not configured'));
@@ -2014,7 +2134,7 @@
         games: p.games, wins: p.wins, updatedAt: serverTimestamp()
       }).catch(e=> console.warn('leaderboard reset failed:', e));
     }
-    if(currentUser) pushProfileToCloud().catch(()=>{});
+    if(currentUser && localStorage.getItem('primeUnoAutoSync')==='1') pushProfileToCloud().catch(()=>{});
     return p;
   }
 
@@ -2040,7 +2160,7 @@
     if(p.publish && db){
       try{ await writeEntry(p); } catch(e){ console.warn('leaderboard write failed:', e); }
     }
-    if(currentUser) pushProfileToCloud().catch(()=>{});
+    if(currentUser && localStorage.getItem('primeUnoAutoSync')==='1') pushProfileToCloud().catch(()=>{});
     return { rating: p.rating, maxRating: p.maxRating, delta, games: p.games, wins: p.wins };
   }
 
@@ -2077,6 +2197,9 @@
     syncPublicEntry,
     signInGoogle,
     signOutUser,
+    fetchCloudProfile,
+    pullProfileFromCloud,
+    pushProfileToCloud,
     getCurrentUserName: ()=> currentUser ? (currentUser.displayName||'') : null,
     isSignedIn: ()=> !!currentUser,
     isConfigured: ()=> !!db,
