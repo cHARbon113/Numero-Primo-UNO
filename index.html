@@ -25,7 +25,12 @@
     --radius: 10px;
     --shadow: 0 12px 34px rgba(0,0,0,0.4);
   }
-  *{box-sizing:border-box;}
+  *{box-sizing:border-box; touch-action:manipulation;}
+  html,body{
+    -webkit-user-select:none; user-select:none;
+    -webkit-touch-callout:none; -webkit-text-size-adjust:100%;
+  }
+  input, textarea{ -webkit-user-select:text; user-select:text; }
   html,body{height:100%;}
   body{
     margin:0;
@@ -325,7 +330,7 @@
     ・ドロー2/ドロー4は<b>積み可能</b>。同じ位が揃っていなくても重ねられ、枚数は加算されます(+2の上に+4で6枚)。<b>ドロー4はドロー4でしか対抗できません</b>(ドロー2では返せません)。積まずに引き受けると番が終わります。<br>
     ・リバースとドロー2が両方該当するカードがあります(エマープかつ隣接ペア)。効果の出方は人数によって異なります。<br>
     ・<b>最後の1枚は「通常カード」でしか上がれません</b>(特殊カードでは勝てません)。<br>
-    ・<b>まとめて出す(重ね出し)</b>: 同じ種類のカード同士で、2つの位の数字が一致していれば(そのうち場と合っている位が1つあれば)まとめて出せます。ドロー2とリバース+ドロー2は同じ種類として扱われ、混ぜてまとめて出せます。誰かが「残り1枚」の状態の間は、必要な一致は1つの位でよくなり、特殊カードも同種であれば対象になります。効果は出した枚数分そのまま繰り返し発動します(ドロー2を3枚まとめれば+6、スキップを2枚まとめれば2人分飛ばす、など)。まとめて出しても手札は種類を問わず最低1枚残る必要があり、重ね出しだけで上がることはできません(設定でオフ可)。
+    ・<b>まとめて出す(重ね出し)</b>: いつでも使えます(ドロー2/ドロー4の積みの最中も含みます)。同じ種類のカード同士で、2つの位の数字が全員一致していて、そのうち1つが場と合っていれば、まとめて出せます。積みの最中は、場との一致は不要で、積める強さのカード同士であれば出せます。ドロー2とリバース+ドロー2は同じ種類として扱われ、混ぜてまとめて出せます。誰かが「残り1枚」の状態の間は、必要な一致が1つの位でよくなります。効果は出した枚数分そのまま繰り返し発動します(ドロー2を3枚まとめれば+6、ドロー4を2枚まとめれば+8、スキップを2枚まとめれば2人分飛ばす、など。2人対戦では、何枚出しても飛ばされるのは相手だけです)。まとめて出しても手札は種類を問わず最低1枚残る必要があり、重ね出しだけで上がることはできません(設定でオフ可)。
 
     <p style="margin:14px 0 6px; font-weight:700; color:var(--ink);">2人対戦だけのルール</p>
     ・リバースはスキップとして扱われます(2人だと方向転換の意味が無いため)。ただし「リバース+ドロー2」の同時発動カードは<b>ドローのみ発動</b>し、スキップにはなりません。積みの強さもドロー2と同格です。<br>
@@ -403,7 +408,7 @@
 
   <div class="winbox" id="syncResolveModal">
     <div class="wincard" style="max-width:380px;">
-      <h2 style="font-size:18px;">端末とクラウドで成績が違います</h2>
+      <h2 style="font-size:18px;" id="syncResolveTitle">端末とクラウドで成績が違います</h2>
       <p style="font-size:12px; color:var(--ink-dim); margin-top:0;">どちらかを5秒長押しして選んでください。</p>
       <p id="syncResolveDetail" style="text-align:left; font-size:13px; color:var(--ink-dim); line-height:1.8; margin-bottom:12px;"></p>
       <div style="display:flex; flex-direction:column; gap:10px;">
@@ -496,7 +501,7 @@
     </div>
 
     <div class="pendingBanner" id="multiDumpBar" style="border-color:var(--reverse);">
-      <div class="msg"><span id="multiDumpCount">0</span>枚選択中(同じ位で揃った通常カードのみ)</div>
+      <div class="msg"><span id="multiDumpCount">0</span>枚選択中(同じ種類で、位が揃ったカード)</div>
       <div style="display:flex; gap:8px;">
         <button class="accept" id="multiDumpConfirmBtn" style="background:var(--reverse); color:#0d241c;">出す</button>
         <button class="ghost" id="multiDumpCancelBtn">キャンセル</button>
@@ -641,7 +646,7 @@
       multiSelection: [],
       multiMode: false
     };
-    logSystem(`<b>${pad3(start.value)}</b>`, 'START');
+    logSystem(`<b class="logNum">${pad3(start.value)}</b>`, 'START');
     render();
     if(onlineGuestName){
       broadcastMatchStart();
@@ -670,8 +675,11 @@
   function requiredMatchCount(){
     return anyoneAtUno() ? 1 : 2;
   }
+  function canStackOnPending(card){
+    return IS_STACK_TYPE(card.effect) && stackLevel(card.effect) >= state.pendingLevel;
+  }
   function multiDumpEligible(){
-    if(!(state.multiDumpEnabled && state.pendingDraw===0 &&
+    if(!(state.multiDumpEnabled &&
       state.current===mySeat && !state.over && !state.skipInterrupt)) return false;
     const me = state.players[mySeat];
     if(!me || me.hand.length<2) return false;
@@ -688,12 +696,17 @@
   function comboPositionsIfAdded(card, selected, top){
     const group = selected.length>0 ? COMBO_GROUP[selected[0].effect] : COMBO_GROUP[card.effect];
     if(COMBO_GROUP[card.effect]!==group) return [];
-    if(group!=='plain' && !anyoneAtUno()) return []; // specials only combo-able while someone's at UNO
+    // while a draw is pending, only cards strong enough to stack can be dumped,
+    // and (as with single stacking) they don't need to match the top card
+    const stacking = state.pendingDraw>0;
+    if(stacking && !canStackOnPending(card)) return [];
     const candidate = selected.concat([card]);
     const shared = sharedPositions(candidate);
     if(shared.length < requiredMatchCount()) return [];
-    const matchesTop = shared.some(i=> candidate[0].digits[i]===top.digits[i]);
-    if(!matchesTop) return [];
+    if(!stacking){
+      const matchesTop = shared.some(i=> candidate[0].digits[i]===top.digits[i]);
+      if(!matchesTop) return [];
+    }
     return shared;
   }
   // whether `card` could be the start of SOME valid 2+ card combo in this hand
@@ -742,7 +755,14 @@
     const isWin = remaining===0;
     const prefix = isWin ? `${name}：` : `${name}（${remaining}）：`;
     let body = `<b class="logNum">${cards.map(c=>pad3(c.value)).join(', ')}</b>`;
-    if(isWin) body += ` <span class="fx fx-win">（WIN）</span>`;
+    if(isWin){
+      body += ` <span class="fx fx-win">（WIN）</span>`;
+    } else if(cards[0].effect!=='plain'){
+      const counts = {};
+      cards.forEach(c=>{ counts[c.effect] = (counts[c.effect]||0)+1; });
+      const tag = Object.keys(counts).map(e=> counts[e]>1 ? `${EFFECT_TAG[e]}×${counts[e]}` : EFFECT_TAG[e]).join(' ');
+      body += ` <span class="fx fx-${cards[0].effect==='both'?'reverse':cards[0].effect}">（${tag}）</span>`;
+    }
     logRow(prefix, body);
   }
   function logAction(name, action, remaining){
@@ -932,6 +952,21 @@
     render();
   }
 
+  // re-check a dump against the current state (also guards online guests' requests)
+  function isValidCombo(playerIdx, cards){
+    if(!state || state.over || state.skipInterrupt || !state.multiDumpEnabled) return false;
+    if(state.current!==playerIdx) return false;
+    if(cards.length<2 || new Set(cards).size!==cards.length) return false;
+    const hand = state.players[playerIdx].hand;
+    if(!cards.every(c=> hand.includes(c))) return false;
+    const top = state.discardPile[state.discardPile.length-1];
+    const sel = [];
+    for(const c of cards){
+      if(comboPositionsIfAdded(c, sel, top).length===0) return false;
+      sel.push(c);
+    }
+    return true;
+  }
   function playMultiDump(playerIdx, selectedCards){
     const p = state.players[playerIdx];
     const selected = selectedCards;
@@ -941,6 +976,7 @@
       if(playerIdx===mySeat) log('<span class="log-uno">まとめて出しても、手札は最低1枚残す必要があります。</span>');
       return false;
     }
+    if(!isValidCombo(playerIdx, selected)) return false;
     p.hand = remaining;
     selected.forEach(c=> state.discardPile.push(c));
     logMultiPlay(p.name, selected, p.hand.length);
@@ -974,16 +1010,19 @@
       return false;
     }
     if(type==='skip'){
+      // 2 players: only the opponent can be skipped, however many were dumped.
+      // 3+ players: one skip per card, so the count can be used to tune who plays next.
+      const skips = state.players.length===2 ? 1 : count;
       let from = playerIdx;
-      for(let i=0;i<count;i++) from = nextIndexFrom(from);
+      for(let i=0;i<skips;i++) from = nextIndexFrom(from);
       state.current = nextIndexFrom(from);
       return false;
     }
     if(type==='reverse'){
       if(isDuel){
-        // repeated reverse-as-skip in a duel: walk the same skip chain as 'skip' does
-        let from = playerIdx;
-        for(let i=0;i<count;i++) from = nextIndexFrom(from);
+        // reverse-as-skip in a duel: always the opponent who is skipped, however
+        // many were dumped; one cancel offer covers the whole group
+        const from = nextIndexFrom(playerIdx);
         const victim = state.players[from];
         const hasCancelCard = state.interruptEnabled && victim.hand.some(c=>c.effect==='reverse'||c.effect==='both');
         if(hasCancelCard){ offerSkipInterrupt(from, playerIdx); return true; }
@@ -1013,18 +1052,20 @@
     const k = requiredMatchCount();
     const positionSets = k>=2 ? [[0,1],[0,2],[1,2]] : [[0],[1],[2]];
     let best = null;
-    const groups = [...new Set(hand.map(c=>COMBO_GROUP[c.effect]))].filter(g=> g==='plain' || anyoneAtUno());
+    const stacking = state.pendingDraw>0;
+    const groups = [...new Set(hand.map(c=>COMBO_GROUP[c.effect]))];
     groups.forEach(comboGroup=>{
       positionSets.forEach(posSet=>{
         const buckets = {};
         hand.forEach(c=>{
           if(COMBO_GROUP[c.effect]!==comboGroup) return;
+          if(stacking && !canStackOnPending(c)) return;
           const key = posSet.map(i=>c.digits[i]).join(',');
           (buckets[key] = buckets[key] || []).push(c);
         });
         Object.values(buckets).forEach(group=>{
           if(group.length<2) return;
-          const matchesTop = posSet.some(i=> group[0].digits[i]===top.digits[i]);
+          const matchesTop = stacking || posSet.some(i=> group[0].digits[i]===top.digits[i]);
           if(!matchesTop) return;
           const remaining = hand.filter(c=> !group.includes(c));
           const okLeftover = remaining.length>0;
@@ -1045,6 +1086,10 @@
       const idx = state.current;
       const pl = state.players[idx];
       if(state.pendingDraw>0){
+        if(state.multiDumpEnabled){
+          const g = findMultiDumpGroup(pl.hand, null);
+          if(g && g.length>=2){ playMultiDump(idx, g); return; }
+        }
         const stackOpt = pl.hand.filter(c=> canPlay(c, pl.hand, null));
         if(stackOpt.length>0){
           // prefer the strongest stack card available (draw4 > both > draw2) to
@@ -1240,7 +1285,7 @@
 
     document.getElementById('reachBadge').style.display = human.hand.length===1 ? 'inline' : 'none';
 
-    document.getElementById('acceptBtn').disabled = !(myTurn && state.pendingDraw>0);
+    document.getElementById('acceptBtn').disabled = !(myTurn && state.pendingDraw>0 && !state.multiMode);
     document.getElementById('acceptBtn').style.visibility = (myTurn && state.pendingDraw>0) ? 'visible' : 'hidden';
 
     const drawWrap = document.getElementById('drawPileWrap');
@@ -1665,6 +1710,8 @@
   async function openSyncResolveModal(local, cloud){
     _cachedCloudProfile = cloud;
     document.getElementById('syncUseLocalBtn').style.display = local ? 'block' : 'none';
+    document.getElementById('syncUseCloudBtn').style.display = cloud ? 'block' : 'none';
+    document.getElementById('syncResolveTitle').textContent = cloud ? '端末とクラウドで成績が違います' : 'クラウドにまだ成績がありません';
     document.getElementById('syncResolveDetail').innerHTML =
       (local ? `この端末: レート ${local.rating} / ${local.games}戦 ${local.wins}勝<br>` : '') +
       (cloud ? `クラウド: レート ${cloud.rating} / ${cloud.games}戦 ${cloud.wins}勝` : 'クラウドにデータはありません。');
@@ -1691,11 +1738,54 @@
   });
   document.getElementById('syncCancelBtn').addEventListener('click', closeSyncResolveModal);
 
+  let _syncFlashTimer = null;
+  function flashSyncBtn(msg){
+    const btn = document.getElementById('syncActionBtn');
+    btn.textContent = msg;
+    clearTimeout(_syncFlashTimer);
+    _syncFlashTimer = setTimeout(updateSyncBtn, 2200);
+  }
   document.getElementById('syncActionBtn').addEventListener('click', async ()=>{
     if(!window.PrimeUnoRating || !window.PrimeUnoRating.isSignedIn()) return;
-    const local = window.PrimeUnoRating.getProfile();
-    const cloud = await window.PrimeUnoRating.fetchCloudProfile();
-    openSyncResolveModal(local, cloud);
+    const btn = document.getElementById('syncActionBtn');
+    if(btn.disabled) return;
+    btn.disabled = true;
+    try{
+      const R = window.PrimeUnoRating;
+      const done = localStorage.getItem('primeUnoSyncDone')==='1';
+      const local = R.getProfile();
+      const cloud = await R.fetchCloudProfile();
+
+      if(!cloud){
+        // first sync with nothing in the cloud yet: let the user confirm uploading.
+        // after the first sync a missing cloud record just means the fetch failed.
+        if(done){ flashSyncBtn('クラウドに接続できませんでした'); return; }
+        openSyncResolveModal(local, null);
+        return;
+      }
+      if(!profilesDiffer(local, cloud)){
+        localStorage.setItem('primeUnoSyncDone', '1');
+        flashSyncBtn('同期済みです(差はありません)');
+        return;
+      }
+      if(!done){
+        // very first sync with differing data: the user decides which side wins
+        openSyncResolveModal(local, cloud);
+        return;
+      }
+      // "今すぐ同期": no choice needed. Every result is pushed right after it is
+      // played, so the side with more games is the newer one (tie -> cloud).
+      if(local.games > cloud.games){
+        await R.pushProfileToCloud();
+        flashSyncBtn('この端末の成績をクラウドに反映しました');
+      } else {
+        await R.pullProfileFromCloud(cloud);
+        refreshStatsDisplay();
+        flashSyncBtn('クラウドの成績を反映しました');
+      }
+    } finally {
+      btn.disabled = false;
+    }
   });
 
   // ---- reset stats: hold the button for 10 seconds ----
