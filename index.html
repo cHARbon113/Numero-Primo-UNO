@@ -24,7 +24,12 @@
     --danger: #ea7267;
     --radius: 10px;
     --shadow: 0 12px 34px rgba(0,0,0,0.4);
+    --bg-glow: #24402f;
+    --mode-accent: #5ed1ab;
   }
+  /* each mode gets its own palette */
+  body[data-mode="free"]{ --bg:#141c2e; --panel:#1e2b46; --panel-2:#2a3b5e; --bg-glow:#26395e; --mode-accent:#7fb0ec; }
+  body[data-mode="online"]{ --bg:#1e1527; --panel:#2f2140; --panel-2:#413057; --bg-glow:#47306b; --mode-accent:#d79ce6; }
   *{box-sizing:border-box; touch-action:manipulation;}
   html,body{
     -webkit-user-select:none; user-select:none;
@@ -41,7 +46,7 @@
     background:
       repeating-linear-gradient(0deg, var(--bg-line) 0px, var(--bg-line) 1px, transparent 1px, transparent 34px),
       repeating-linear-gradient(90deg, var(--bg-line) 0px, var(--bg-line) 1px, transparent 1px, transparent 34px),
-      radial-gradient(ellipse at 50% -10%, #24402f 0%, var(--bg) 60%);
+      radial-gradient(ellipse at 50% -10%, var(--bg-glow) 0%, var(--bg) 60%);
     min-height:100vh;
     display:flex; flex-direction:column; align-items:center;
     padding:12px 14px 16px;
@@ -253,6 +258,70 @@
   .wincard p{ color:var(--ink-dim); margin-bottom:20px; font-size:14px; }
   .wincard.rankingCard{ max-width:420px; width:92vw; }
 
+  /* mode toggle (big segmented switch) */
+  .modeToggle{
+    position:relative; display:grid; grid-template-columns:repeat(3,1fr);
+    background:rgba(0,0,0,0.3); border-radius:20px; padding:5px; margin:0 0 8px; --idx:0;
+  }
+  .modeThumb{
+    position:absolute; top:5px; bottom:5px; left:5px; width:calc((100% - 10px)/3);
+    border-radius:15px; background:var(--mode-accent);
+    transform:translateX(calc(var(--idx) * 100%)); transition:transform .25s ease, background .25s;
+    box-shadow:0 4px 14px rgba(0,0,0,0.35);
+  }
+  .modeBtn{
+    position:relative; z-index:1; background:transparent; border:0; color:var(--ink-dim);
+    padding:13px 4px 11px; border-radius:15px; cursor:pointer; font-family:inherit;
+    display:flex; flex-direction:column; align-items:center; gap:2px; transition:color .2s;
+  }
+  .modeBtn .mTitle{ font-size:17px; font-weight:900; letter-spacing:0.02em; }
+  .modeBtn .mSub{ font-size:10.5px; opacity:0.8; }
+  .modeBtn.selected{ color:#10170f; }
+  .modeToggle.locked .modeBtn:not(.selected){ opacity:0.4; cursor:default; }
+  .modeNote{ font-size:12.5px; color:var(--ink-dim); margin:0 0 14px; min-height:1.4em; }
+
+  /* rule toggles (switch style) */
+  .swRow{
+    display:flex; align-items:center; justify-content:space-between; gap:12px;
+    width:100%; max-width:360px; text-align:left; cursor:pointer;
+  }
+  .swRow.disabled{ opacity:0.4; cursor:default; }
+  .sw{ position:relative; width:48px; height:27px; flex:none; }
+  .sw input{ position:absolute; inset:0; width:100%; height:100%; margin:0; opacity:0; cursor:inherit; z-index:1; }
+  .swSlider{
+    position:absolute; inset:0; border-radius:999px; background:var(--panel-2);
+    border:1px solid rgba(255,255,255,0.2); transition:background .2s;
+  }
+  .swSlider::after{
+    content:''; position:absolute; top:2px; left:2px; width:21px; height:21px; border-radius:50%;
+    background:#cbdbd0; transition:transform .2s, background .2s;
+  }
+  .sw input:checked + .swSlider{ background:var(--mode-accent); border-color:transparent; }
+  .sw input:checked + .swSlider::after{ transform:translateX(21px); background:#10170f; }
+  .settingGroup{ display:flex; flex-direction:column; gap:10px; align-items:center; margin:0 auto 16px; font-size:13px; color:var(--ink-dim); }
+  .settingTitle{ font-size:13px; color:var(--ink-dim); margin:0 0 8px; }
+
+  /* steppers (free mode) */
+  .stepRow{ display:flex; align-items:center; justify-content:space-between; gap:12px; width:100%; max-width:360px; text-align:left; }
+  .stepper{ display:flex; align-items:center; gap:8px; }
+  .stepBtn{
+    width:36px; height:36px; border-radius:10px; border:1px solid rgba(255,255,255,0.18);
+    background:var(--panel-2); color:var(--ink); font-size:20px; line-height:1; cursor:pointer; font-family:inherit;
+  }
+  .stepBtn:active{ transform:translateY(1px); }
+  .stepVal{ min-width:34px; text-align:center; font-family:'Space Mono',monospace; font-weight:700; font-size:18px; color:var(--ink); }
+
+  /* the rules header stays on screen while the long rules are open */
+  .rulesWrap{ text-align:center; }
+  .rulesHead{
+    position:sticky; top:0; z-index:5; margin:0; padding:10px 0 8px;
+    background:var(--panel); box-shadow:0 1px 0 rgba(255,255,255,0.08);
+  }
+  .nameRow{ margin:6px 0 0; }
+  .nameRow input[type=text]{
+    width:100%; background:var(--panel-2); border:1px solid rgba(255,255,255,0.14); border-radius:8px;
+    padding:10px 12px; color:var(--ink); font-family:inherit; font-size:14.5px;
+  }
   .ratingSetup{ display:flex; flex-direction:column; gap:10px; margin:16px 0; text-align:left; }
   .ratingSetup input[type=text]{
     background:var(--panel-2); border:1px solid rgba(255,255,255,0.14); border-radius:8px;
@@ -317,12 +386,22 @@
 </header>
 
 <div id="startScreen">
-  <h2>ルール <button class="ghost" id="rulesToggleBtn" style="padding:4px 12px; font-size:12px; margin-left:6px;">表示</button></h2>
+  <div class="modeToggle" id="modeToggle">
+    <div class="modeThumb"></div>
+    <button class="modeBtn" data-mode="rate"><span class="mTitle">レート</span><span class="mSub">戦績を記録</span></button>
+    <button class="modeBtn" data-mode="free"><span class="mTitle">フリー</span><span class="mSub">自由に設定</span></button>
+    <button class="modeBtn" data-mode="online"><span class="mTitle">オンライン</span><span class="mSub">2人・P2P</span></button>
+  </div>
+  <p class="modeNote" id="modeNote"></p>
+
+<div class="rulesWrap">
+  <h2 class="rulesHead">ルール <button class="ghost" id="rulesToggleBtn" style="padding:4px 12px; font-size:12px; margin-left:6px;">表示</button></h2>
   <div class="rules" id="rulesBody" style="display:none;">
     <p style="margin:0 0 6px; font-weight:700; color:var(--ink);">共通ルール</p>
     ・カードは1〜3桁の素数(3桁表記でゼロ埋め。例: 2→002, 11→011)。全168枚、重複なし。<br>
     ・場のカードと<b>いずれか同じ位に同じ数字</b>があれば出せます。<br>
     ・出せるカードがあっても、あえて山札から引くことができます。引いた後は、出せるカードがあっても出さずにパスできます(1ターンに最低1回、引くか出すかのアクションが必要です)。<br>
+    ・<b>モード</b>: レート(CPU対戦。勝敗がレートに反映されます) / フリー(レートに影響しません。人数・初手の枚数・ドローの回数制限を変えられます) / オンライン(2人・P2P)。ルール設定はモードごとに保存されます。<br>
     ・<span class="eff-tag tag-skip">スキップ</span> 回文素数(131, 373など)<br>
     ・<span class="eff-tag tag-rev">リバース</span> エマープ/可逆素数(107→701など)<br>
     ・<span class="eff-tag tag-d2">ドロー2</span> 隣接する位が同じ数字(113, 599など)<br>
@@ -355,31 +434,47 @@
     </table>
     <p style="font-size:12px; color:var(--ink-dim); margin-top:6px;">人数が多いほど勝った時の増加が大きく、負けた時の減少は相対的に小さくなります。</p>
   </div>
+</div>
+
   <div>
-    <p style="font-size:13px;color:var(--ink-dim);margin-bottom:8px;">共通ルール設定</p>
-    <div style="display:flex; flex-direction:column; gap:6px; align-items:flex-start; max-width:340px; margin:0 auto 14px; font-size:12.5px; color:var(--ink-dim);">
-      <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" id="multiDumpToggle" checked> まとめて出す(重ね出し)機能を有効にする</label>
+    <p class="settingTitle">共通ルール設定</p>
+    <div class="settingGroup">
+      <label class="swRow"><span>まとめて出す(重ね出し)機能</span><span class="sw"><input type="checkbox" id="multiDumpToggle" checked><span class="swSlider"></span></span></label>
     </div>
   </div>
   <div>
-    <p style="font-size:13px;color:var(--ink-dim);margin-bottom:8px;">2人対戦だけのルール設定</p>
-    <div style="display:flex; flex-direction:column; gap:6px; align-items:flex-start; max-width:320px; margin:0 auto 14px; font-size:12.5px; color:var(--ink-dim);">
-      <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" id="interruptToggle" checked> リバース打ち消しを有効にする</label>
-      <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" id="bothCancelDrawToggle" checked> リバース+ドロー2で打ち消した時、ドロー2も発動する</label>
+    <p class="settingTitle">2人対戦だけのルール設定</p>
+    <div class="settingGroup">
+      <label class="swRow" id="interruptRow"><span>リバース打ち消し</span><span class="sw"><input type="checkbox" id="interruptToggle" checked><span class="swSlider"></span></span></label>
+      <label class="swRow" id="bothCancelRow"><span>リバース+ドロー2で打ち消した時、ドロー2も発動する</span><span class="sw"><input type="checkbox" id="bothCancelDrawToggle" checked><span class="swSlider"></span></span></label>
     </div>
   </div>
-  <div>
-    <p style="font-size:13px;color:var(--ink-dim);margin-bottom:8px;">対戦相手の人数</p>
+  <div data-modes="rate">
+    <p class="settingTitle">対戦相手の人数</p>
     <div class="cpu-select" id="cpuSelect">
       <div class="cpu-btn" data-n="1">CPU × 1<br><span style="font-size:10.5px;opacity:0.7;">2人対戦</span></div>
       <div class="cpu-btn selected" data-n="2">CPU × 2<br><span style="font-size:10.5px;opacity:0.7;">3人対戦</span></div>
       <div class="cpu-btn" data-n="3">CPU × 3<br><span style="font-size:10.5px;opacity:0.7;">4人対戦</span></div>
     </div>
   </div>
+  <div data-modes="free">
+    <p class="settingTitle">フリーモードの設定</p>
+    <div class="settingGroup">
+      <div class="stepRow"><span>人数(自分を含む)</span>
+        <div class="stepper"><button class="stepBtn" data-key="players" data-d="-1">−</button><span class="stepVal" id="freePlayersVal">3</span><button class="stepBtn" data-key="players" data-d="1">＋</button></div></div>
+      <div class="stepRow"><span>初手の枚数</span>
+        <div class="stepper"><button class="stepBtn" data-key="handSize" data-d="-1">−</button><span class="stepVal" id="freeHandVal">7</span><button class="stepBtn" data-key="handSize" data-d="1">＋</button></div></div>
+      <label class="swRow"><span>ドローの回数制限をなくす(何枚でも続けて引ける)</span><span class="sw"><input type="checkbox" id="unlimitedDrawToggle"><span class="swSlider"></span></span></label>
+    </div>
+  </div>
 
-  <button class="primary" id="startBtn" style="margin:14px 0;">ゲーム開始</button>
+  <div class="nameRow" data-modes="rate free online">
+    <input type="text" id="nameInput" placeholder="プレイヤー名" maxlength="16">
+  </div>
 
-  <div class="ratingSetup">
+  <button class="primary" id="startBtn" data-modes="rate free" style="margin:14px 0;">ゲーム開始</button>
+
+  <div class="ratingSetup" data-modes="rate">
     <div style="display:flex; align-items:center; gap:8px; justify-content:center; flex-wrap:wrap;">
       <button class="ghost" id="googleSignInBtn" style="font-size:12px; padding:6px 14px;">Googleでログイン</button>
       <span id="authStatus" style="display:none; font-size:12px; color:var(--ink-dim); align-items:center; gap:6px;">
@@ -394,7 +489,6 @@
       <button class="ghost" id="syncActionBtn" style="width:100%;"></button>
     </div>
 
-    <input type="text" id="nameInput" placeholder="プレイヤー名" maxlength="16">
     <label class="publishToggle">
       <input type="checkbox" id="publishToggle">
       対戦結果を公開ランキングに送信する
@@ -425,9 +519,9 @@
     </div>
   </div>
 
-  <div><button class="ghost" id="rankingBtn" style="margin-top:12px;">ランキングを見る</button></div>
+  <div data-modes="rate"><button class="ghost" id="rankingBtn" style="margin-top:12px;">ランキングを見る</button></div>
 
-  <div class="onlineBox">
+  <div class="onlineBox" data-modes="online">
     <p style="font-size:12.5px;color:var(--ink-dim);margin:0 0 8px;">オンライン対戦(2人・P2P、試験実装)</p>
     <button class="ghost" id="consentSettingsBtn" style="font-size:12px; padding:6px 14px; margin-bottom:10px;">P2P利用について(同意設定)</button>
     <div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:center;">
@@ -625,13 +719,21 @@
   }
 
   let state = null;
+  let lastGameCfg = { numCpu:2, opts:{ mode:'rate' } }; // for rematch
 
-  function newGame(numCpu, onlineGuestName){
+  function newGame(numCpu, onlineGuestName, opts){
+    opts = opts || {};
+    lastGameCfg = { numCpu, opts };
+    const mode = opts.mode || (onlineGuestName ? 'online' : 'rate');
+    const seats = 1 + (onlineGuestName ? 1 : 0) + numCpu;
+    // keep the starting hands within what the 168-card deck can supply
+    const handSize = Math.max(1, Math.min(opts.handSize || 7, Math.floor(160/seats)));
+    document.body.dataset.mode = mode;
     const deck = buildDeck();
     const players = [{name: myDisplayName(), human:true, hand:[]}];
     if(onlineGuestName) players.push({name: onlineGuestName, human:true, hand:[]});
     for(let i=0;i<numCpu;i++) players.push({name:'CPU'+(i+1), human:false, hand:[]});
-    for(let r=0;r<7;r++) players.forEach(p=> p.hand.push(deck.pop()));
+    for(let r=0;r<handSize;r++) players.forEach(p=> p.hand.push(deck.pop()));
     let startIdx = deck.findIndex(c=>c.effect==='plain');
     if(startIdx<0) startIdx = deck.length-1;
     const start = deck.splice(startIdx,1)[0];
@@ -643,6 +745,7 @@
       interruptEnabled: document.getElementById('interruptToggle').checked,
       bothCancelDrawEnabled: document.getElementById('bothCancelDrawToggle').checked,
       multiDumpEnabled: document.getElementById('multiDumpToggle').checked,
+      mode, unlimitedDraw: !!opts.unlimitedDraw,
       multiSelection: [],
       multiMode: false
     };
@@ -751,6 +854,20 @@
     }
     logRow(prefix, body);
   }
+  // the combined effect of a dump, written in the same notation as a single card:
+  // skip/reverse show how many times they repeat, draws show the total that the
+  // next player has to take (the same "+N" they see when they accept it)
+  function comboEffectTag(cards){
+    const first = cards[0].effect;
+    const n = cards.length;
+    const isDuel = state.players.length===2;
+    if(first==='skip') return (n>1 && !isDuel) ? `SKIP×${n}` : 'SKIP';
+    if(first==='reverse') return (n>1 && !isDuel) ? `REV×${n}` : 'REV';
+    const total = cards.reduce((t,c)=> t + DRAW_AMOUNT[c.effect], 0);
+    const m = cards.filter(c=> HAS_REVERSE[c.effect]).length;
+    const rev = m===0 ? '' : (m>1 ? `REV×${m}` : 'REV');
+    return `${rev}+${total}`;
+  }
   function logMultiPlay(name, cards, remaining){
     const isWin = remaining===0;
     const prefix = isWin ? `${name}：` : `${name}（${remaining}）：`;
@@ -758,10 +875,7 @@
     if(isWin){
       body += ` <span class="fx fx-win">（WIN）</span>`;
     } else if(cards[0].effect!=='plain'){
-      const counts = {};
-      cards.forEach(c=>{ counts[c.effect] = (counts[c.effect]||0)+1; });
-      const tag = Object.keys(counts).map(e=> counts[e]>1 ? `${EFFECT_TAG[e]}×${counts[e]}` : EFFECT_TAG[e]).join(' ');
-      body += ` <span class="fx fx-${cards[0].effect==='both'?'reverse':cards[0].effect}">（${tag}）</span>`;
+      body += ` <span class="fx fx-${cards[0].effect==='both'?'reverse':cards[0].effect}">（${comboEffectTag(cards)}）</span>`;
     }
     logRow(prefix, body);
   }
@@ -995,11 +1109,9 @@
     return true;
   }
 
-  // apply the played group's effect. skip/reverse repeat once per card in the
-  // group. draw2/draw4/both add up their draw amounts (draw2 and both can be
-  // mixed together in one group; each "both" card also contributes a reverse,
-  // same as playing it alone would). A duel reverse's skip-or-cancel check
-  // still only ever offers one interrupt for the whole group.
+  // apply the played group's effect. Every card repeats its effect (skip: one
+  // player skipped per card, reverse: one flip per card, draws add up). In a
+  // duel only the opponent can be skipped, so skip/reverse count as one skip.
   // returns true if resolution was handed off to offerSkipInterrupt (async).
   function resolveComboEffects(playerIdx, selected){
     const isDuel = state.players.length===2;
@@ -1010,9 +1122,7 @@
       return false;
     }
     if(type==='skip'){
-      // 2 players: only the opponent can be skipped, however many were dumped.
-      // 3+ players: one skip per card, so the count can be used to tune who plays next.
-      const skips = state.players.length===2 ? 1 : count;
+      const skips = isDuel ? 1 : count;
       let from = playerIdx;
       for(let i=0;i<skips;i++) from = nextIndexFrom(from);
       state.current = nextIndexFrom(from);
@@ -1020,26 +1130,22 @@
     }
     if(type==='reverse'){
       if(isDuel){
-        // reverse-as-skip in a duel: always the opponent who is skipped, however
-        // many were dumped; one cancel offer covers the whole group
         const from = nextIndexFrom(playerIdx);
         const victim = state.players[from];
         const hasCancelCard = state.interruptEnabled && victim.hand.some(c=>c.effect==='reverse'||c.effect==='both');
         if(hasCancelCard){ offerSkipInterrupt(from, playerIdx); return true; }
         state.current = nextIndexFrom(from);
         return false;
-      } else {
-        for(let i=0;i<count;i++) state.direction *= -1;
-        state.current = nextIndexFrom(playerIdx);
-        return false;
       }
+      for(let i=0;i<count;i++) state.direction *= -1;
+      state.current = nextIndexFrom(playerIdx);
+      return false;
     }
-    // draw2 / draw4 / both -- draw2 and both may be mixed in one group; each
-    // card contributes its own draw amount, and each "both" card also
-    // contributes a reverse (dropped in a duel, same as a single "both" card).
-    const totalDraw = selected.reduce((sum,c)=> sum + DRAW_AMOUNT[c.effect], 0);
+    // draw2 / draw4 / both: draws add up, each "both" card also flips the direction
+    // (the reverse part is dropped in a duel, same as a single card)
+    const totalDraw = selected.reduce((t,c)=> t + DRAW_AMOUNT[c.effect], 0);
     const reverseCount = selected.filter(c=> HAS_REVERSE[c.effect]).length;
-    if(reverseCount>0 && !isDuel){ for(let i=0;i<reverseCount;i++) state.direction *= -1; }
+    if(!isDuel) for(let i=0;i<reverseCount;i++) state.direction *= -1;
     state.pendingDraw += totalDraw;
     state.pendingLevel = Math.max(...selected.map(c=> stackLevel(c.effect)));
     state.current = nextIndexFrom(playerIdx);
@@ -1289,8 +1395,8 @@
     document.getElementById('acceptBtn').style.visibility = (myTurn && state.pendingDraw>0) ? 'visible' : 'hidden';
 
     const drawWrap = document.getElementById('drawPileWrap');
-    drawWrap.classList.toggle('locked', !(myTurn && state.pendingDraw===0 && !state.turnDrawn && !state.multiMode));
-    document.getElementById('drawBtn').disabled = !(myTurn && state.pendingDraw===0 && !state.turnDrawn && !state.multiMode);
+    drawWrap.classList.toggle('locked', !(myTurn && state.pendingDraw===0 && (!state.turnDrawn || state.unlimitedDraw) && !state.multiMode));
+    document.getElementById('drawBtn').disabled = !(myTurn && state.pendingDraw===0 && (!state.turnDrawn || state.unlimitedDraw) && !state.multiMode);
 
     // fixed: pass is allowed once at least one action (draw) was taken this turn,
     // regardless of whether a playable card remains in hand.
@@ -1415,11 +1521,11 @@
   }
 
   document.getElementById('drawBtn').addEventListener('click', ()=>{
-    if(!state || state.over || state.current!==mySeat || state.pendingDraw>0 || state.turnDrawn) return;
+    if(!state || state.over || state.current!==mySeat || state.pendingDraw>0 || (state.turnDrawn && !state.unlimitedDraw)) return;
     requestDraw();
   });
   document.getElementById('drawPile').addEventListener('click', ()=>{
-    if(!state || state.over || state.current!==mySeat || state.pendingDraw>0 || state.turnDrawn) return;
+    if(!state || state.over || state.current!==mySeat || state.pendingDraw>0 || (state.turnDrawn && !state.unlimitedDraw)) return;
     requestDraw();
   });
   document.getElementById('acceptBtn').addEventListener('click', ()=>{
@@ -1464,7 +1570,7 @@
     ratingText.style.display = 'none';
     resultTweetBtn.style.display = 'none';
     lastResult = null;
-    if(window.PrimeUnoRating && !onlineGameActive){
+    if(window.PrimeUnoRating && !onlineGameActive && state.mode==='rate'){
       window.PrimeUnoRating.recordResult(won, lastNumCpu).then(res=>{
         const sign = res.delta>=0 ? '+' : '';
         ratingText.innerHTML = `レート <span class="rateHighlight">${res.rating}</span> (${sign}${res.delta}, 最高 <span class="statNumber">${res.maxRating}</span>) ・ <span class="statNumber">${res.games}</span>戦 <span class="statNumber">${res.wins}</span>勝`;
@@ -1513,7 +1619,7 @@
     if(onlineGameActive){ return; } // instant rematch isn't wired up for online play yet
     document.getElementById('winBox').classList.remove('show');
     document.getElementById('log').innerHTML='';
-    newGame(lastNumCpu);
+    newGame(lastGameCfg.numCpu, null, lastGameCfg.opts);
   });
   document.getElementById('homeBtn').addEventListener('click', ()=>{
     if(onlineGameActive){
@@ -1538,62 +1644,178 @@
     refreshStatsDisplay();
   });
 
-  let numCpu = Number(localStorage.getItem('primeUnoNumCpu') || 2);
+  // ---- modes (rate / free / online): every mode keeps its own settings ----
+  const MODE_ORDER = ['rate','free','online'];
+  const MODE_NOTE = {
+    rate: '勝敗がレートに反映されます(CPU対戦)',
+    free: 'レートに影響しません。人数・初手枚数・ドロー制限を変えられます',
+    online: '2人で対戦(CPUも追加可)。レートには反映されません'
+  };
+  const SETTING_DEFAULTS = {
+    rate:   { multiDump:true, interrupt:true, bothCancel:true, cpu:2 },
+    free:   { multiDump:true, interrupt:true, bothCancel:true, players:3, handSize:7, unlimitedDraw:false },
+    online: { multiDump:true, interrupt:true, bothCancel:true, cpu:0 }
+  };
+  function loadModeSettings(){
+    let saved = null;
+    try{ saved = JSON.parse(localStorage.getItem('primeUnoModeSettings') || 'null'); }catch(e){}
+    // first run after the modes were added: carry the old single set of settings into every mode
+    const legacy = {
+      multiDump: localStorage.getItem('primeUnoMultiDump') !== '0',
+      interrupt: localStorage.getItem('primeUnoInterrupt') !== '0',
+      bothCancel: localStorage.getItem('primeUnoBothCancelDraw') !== '0'
+    };
+    const legacyCpu = Math.min(3, Math.max(1, Number(localStorage.getItem('primeUnoNumCpu')) || 2));
+    const out = {};
+    MODE_ORDER.forEach(m=>{
+      const base = Object.assign({}, SETTING_DEFAULTS[m]);
+      if(!saved){
+        Object.assign(base, legacy);
+        if(m==='rate') base.cpu = legacyCpu;
+        if(m==='free') base.players = legacyCpu + 1;
+      }
+      out[m] = Object.assign(base, saved && saved[m] ? saved[m] : {});
+    });
+    return out;
+  }
+  let modeSettings = loadModeSettings();
+  let currentMode = MODE_ORDER.includes(localStorage.getItem('primeUnoMode')) ? localStorage.getItem('primeUnoMode') : 'rate';
   let lastNumCpu = 2;
-  document.querySelectorAll('#cpuSelect .cpu-btn').forEach(btn=>{
-    if(Number(btn.dataset.n)===numCpu){
-      document.querySelectorAll('#cpuSelect .cpu-btn').forEach(b=>b.classList.remove('selected'));
-      btn.classList.add('selected');
-    }
+  function saveModeSettings(){
+    try{ localStorage.setItem('primeUnoModeSettings', JSON.stringify(modeSettings)); }catch(e){}
+  }
+  function maxHandFor(players){ return Math.max(2, Math.min(20, Math.floor(160/players))); }
+  function refreshFreeUi(){
+    const f = modeSettings.free;
+    f.players = Math.max(2, Math.min(8, Number(f.players)||3));
+    f.handSize = Math.max(2, Math.min(maxHandFor(f.players), Number(f.handSize)||7));
+    document.getElementById('freePlayersVal').textContent = f.players;
+    document.getElementById('freeHandVal').textContent = f.handSize;
+    document.getElementById('unlimitedDrawToggle').checked = !!f.unlimitedDraw;
+  }
+  function syncBothCancelRow(){
+    const on = document.getElementById('interruptToggle').checked;
+    document.getElementById('bothCancelDrawToggle').disabled = !on;
+    document.getElementById('bothCancelRow').classList.toggle('disabled', !on);
+  }
+  function selectCpuButtons(sel, n){
+    document.querySelectorAll(sel+' .cpu-btn').forEach(b=> b.classList.toggle('selected', Number(b.dataset.n)===n));
+  }
+  function applyMode(mode){
+    currentMode = mode;
+    try{ localStorage.setItem('primeUnoMode', mode); }catch(e){}
+    document.body.dataset.mode = mode;
+    const toggle = document.getElementById('modeToggle');
+    toggle.style.setProperty('--idx', MODE_ORDER.indexOf(mode));
+    toggle.querySelectorAll('.modeBtn').forEach(b=> b.classList.toggle('selected', b.dataset.mode===mode));
+    document.querySelectorAll('#startScreen [data-modes]').forEach(el=>{
+      el.style.display = el.dataset.modes.split(' ').includes(mode) ? '' : 'none';
+    });
+    document.getElementById('modeNote').textContent = MODE_NOTE[mode];
+    const st = modeSettings[mode];
+    document.getElementById('multiDumpToggle').checked = !!st.multiDump;
+    document.getElementById('interruptToggle').checked = !!st.interrupt;
+    document.getElementById('bothCancelDrawToggle').checked = !!st.bothCancel;
+    syncBothCancelRow();
+    if(mode==='rate') selectCpuButtons('#cpuSelect', st.cpu);
+    if(mode==='free') refreshFreeUi();
+    if(mode==='online'){ onlineExtraCpu = st.cpu; selectCpuButtons('#onlineCpuSelect', st.cpu); }
+  }
+  function modeSwitchLocked(){ return typeof onlineRoomState!=='undefined' && onlineRoomState!=='idle'; }
+  function updateModeLock(){
+    document.getElementById('modeToggle').classList.toggle('locked', modeSwitchLocked());
+  }
+  document.querySelectorAll('#modeToggle .modeBtn').forEach(btn=>{
     btn.addEventListener('click', ()=>{
-      document.querySelectorAll('#cpuSelect .cpu-btn').forEach(b=>b.classList.remove('selected'));
-      btn.classList.add('selected');
-      numCpu = Number(btn.dataset.n);
-      localStorage.setItem('primeUnoNumCpu', String(numCpu));
+      if(btn.dataset.mode===currentMode) return;
+      if(modeSwitchLocked()){
+        document.getElementById('modeNote').textContent = 'オンライン接続中はモードを切り替えられません(先に切断してください)';
+        return;
+      }
+      applyMode(btn.dataset.mode);
+    });
+  });
+  document.querySelectorAll('#cpuSelect .cpu-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      modeSettings.rate.cpu = Number(btn.dataset.n);
+      selectCpuButtons('#cpuSelect', modeSettings.rate.cpu);
+      saveModeSettings();
     });
   });
   document.querySelectorAll('#onlineCpuSelect .cpu-btn').forEach(btn=>{
     btn.addEventListener('click', ()=>{
-      document.querySelectorAll('#onlineCpuSelect .cpu-btn').forEach(b=>b.classList.remove('selected'));
-      btn.classList.add('selected');
       onlineExtraCpu = Number(btn.dataset.n);
+      modeSettings.online.cpu = onlineExtraCpu;
+      selectCpuButtons('#onlineCpuSelect', onlineExtraCpu);
+      saveModeSettings();
     });
   });
+  document.querySelectorAll('.stepBtn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const f = modeSettings.free;
+      f[btn.dataset.key] = Number(f[btn.dataset.key]) + Number(btn.dataset.d);
+      refreshFreeUi();
+      saveModeSettings();
+    });
+  });
+  document.getElementById('unlimitedDrawToggle').addEventListener('change', (e)=>{
+    modeSettings.free.unlimitedDraw = e.target.checked; saveModeSettings();
+  });
+  document.getElementById('multiDumpToggle').addEventListener('change', (e)=>{
+    modeSettings[currentMode].multiDump = e.target.checked; saveModeSettings();
+  });
+  document.getElementById('interruptToggle').addEventListener('change', (e)=>{
+    modeSettings[currentMode].interrupt = e.target.checked; saveModeSettings();
+    syncBothCancelRow();
+  });
+  document.getElementById('bothCancelDrawToggle').addEventListener('change', (e)=>{
+    modeSettings[currentMode].bothCancel = e.target.checked; saveModeSettings();
+  });
+
   document.getElementById('onlineStartMatchBtn').addEventListener('click', ()=>{
     if(!isOnlineHost || !pendingGuestName) return;
     document.getElementById('onlineLobbyBox').style.display = 'none';
     mySeat = 0;
     onlineGameActive = true;
     enterGameLayout();
-    newGame(onlineExtraCpu, pendingGuestName);
+    newGame(onlineExtraCpu, pendingGuestName, { mode:'online' });
   });
   document.getElementById('startBtn').addEventListener('click', ()=>{
+    if(currentMode==='online') return;
     if(window.PrimeUnoRating){
       const profile = window.PrimeUnoRating.getProfile();
       profile.name = document.getElementById('nameInput').value.trim() || profile.name;
       profile.publish = document.getElementById('publishToggle').checked;
       window.PrimeUnoRating.saveProfile(profile);
     }
-    lastNumCpu = numCpu;
+    const st = modeSettings[currentMode];
     document.getElementById('startScreen').style.display='none';
     document.getElementById('layout').classList.add('active');
-    newGame(numCpu);
+    if(currentMode==='free'){
+      newGame(st.players-1, null, { mode:'free', handSize:st.handSize, unlimitedDraw:st.unlimitedDraw });
+    } else {
+      lastNumCpu = st.cpu;
+      newGame(st.cpu, null, { mode:'rate' });
+    }
   });
   window.addEventListener('resize', ()=>{ if(state) renderTableCircle(); });
 
+  function reflectProfileToUi(){
+    if(!window.PrimeUnoRating) return;
+    document.getElementById('publishToggle').checked = window.PrimeUnoRating.getProfile().publish;
+    refreshStatsDisplay();
+  }
   function refreshStatsDisplay(){
     if(!window.PrimeUnoRating) return;
     const profile = window.PrimeUnoRating.getProfile();
     const winRate = profile.games>0 ? Math.round(profile.wins/profile.games*100) : 0;
     document.getElementById('statsRow').innerHTML =
-      `レート <span class="rateHighlight">${profile.rating}</span>(最高 <span class="statNumber">${profile.maxRating}</span>) ・ <span class="statNumber">${profile.games}</span>戦 <span class="statNumber">${profile.wins}</span>勝(<span class="statNumber">${winRate}</span>%)`;
+      `レート <span class="rateHighlight">${profile.rating}</span>(最高 <span class="statNumber">${profile.maxRating}</span>) ・ <span class="statNumber">${profile.games}</span>戦 <span class="statNumber">${profile.wins}</span>勝(<span class="statNumber">${winRate}</span>%)` +
+      (profile.resets>0 ? ` ・ リセット<span class="statNumber">${profile.resets}</span>回` : '');
   }
 
   window.addEventListener('DOMContentLoaded', ()=>{
-    document.getElementById('interruptToggle').checked = localStorage.getItem('primeUnoInterrupt') !== '0';
-    document.getElementById('bothCancelDrawToggle').checked = localStorage.getItem('primeUnoBothCancelDraw') !== '0';
-    document.getElementById('bothCancelDrawToggle').disabled = !document.getElementById('interruptToggle').checked;
-    document.getElementById('multiDumpToggle').checked = localStorage.getItem('primeUnoMultiDump') !== '0';
+    applyMode(currentMode);
     if(window.PrimeUnoRating){
       const profile = window.PrimeUnoRating.getProfile();
       document.getElementById('nameInput').value = profile.name || '';
@@ -1601,16 +1823,6 @@
       refreshStatsDisplay();
       if(!profile.publish) window.PrimeUnoRating.removePublicEntry(profile.id);
     }
-  });
-  document.getElementById('interruptToggle').addEventListener('change', (e)=>{
-    localStorage.setItem('primeUnoInterrupt', e.target.checked ? '1' : '0');
-    document.getElementById('bothCancelDrawToggle').disabled = !e.target.checked;
-  });
-  document.getElementById('bothCancelDrawToggle').addEventListener('change', (e)=>{
-    localStorage.setItem('primeUnoBothCancelDraw', e.target.checked ? '1' : '0');
-  });
-  document.getElementById('multiDumpToggle').addEventListener('change', (e)=>{
-    localStorage.setItem('primeUnoMultiDump', e.target.checked ? '1' : '0');
   });
   window.addEventListener('prime-uno-rating-ready', ()=>{
     const profile = window.PrimeUnoRating.getProfile();
@@ -1677,7 +1889,8 @@
   let _cachedCloudProfile = null; // fetched once when resolve modal opens
   function profilesDiffer(a, b){
     if(!a || !b) return false;
-    return a.rating!==b.rating || a.maxRating!==b.maxRating || a.games!==b.games || a.wins!==b.wins;
+    return a.rating!==b.rating || a.maxRating!==b.maxRating || a.games!==b.games || a.wins!==b.wins
+      || (a.resets||0)!==(b.resets||0);
   }
   function updateSyncBtn(){
     if(!window.PrimeUnoRating || !window.PrimeUnoRating.isSignedIn()) return;
@@ -1768,6 +1981,20 @@
         flashSyncBtn('同期済みです(差はありません)');
         return;
       }
+      const lr = local.resets||0, cr = cloud.resets||0;
+      if(lr !== cr){
+        // a reset is final and never asks: the side with more resets wins, even on the first sync
+        if(lr > cr){
+          await R.pushProfileToCloud();
+          flashSyncBtn('この端末のリセットをクラウドに反映しました');
+        } else {
+          await R.pullProfileFromCloud(cloud);
+          reflectProfileToUi();
+          flashSyncBtn('他の端末のリセットを反映しました');
+        }
+        localStorage.setItem('primeUnoSyncDone', '1');
+        return;
+      }
       if(!done){
         // very first sync with differing data: the user decides which side wins
         openSyncResolveModal(local, cloud);
@@ -1780,7 +2007,7 @@
         flashSyncBtn('この端末の成績をクラウドに反映しました');
       } else {
         await R.pullProfileFromCloud(cloud);
-        refreshStatsDisplay();
+        reflectProfileToUi();
         flashSyncBtn('クラウドの成績を反映しました');
       }
     } finally {
@@ -1802,7 +2029,7 @@
     resetHoldTimer = setTimeout(()=>{
       if(window.PrimeUnoRating){
         window.PrimeUnoRating.resetStats();
-        refreshStatsDisplay();
+        reflectProfileToUi();
       }
       cancelResetHold();
     }, 10000);
@@ -1823,7 +2050,7 @@
     const btn = document.getElementById('rulesToggleBtn');
     const show = body.style.display==='none';
     body.style.display = show ? 'block' : 'none';
-    btn.textContent = show ? '隠す' : '表示';
+    btn.textContent = show ? '閉じる' : '表示';
   });
   // ---- P2P online connection foundation (PeerJS). Not yet wired to gameplay. ----
   let onlinePeer = null, onlineConn = null, isOnlineHost = false;
@@ -1839,6 +2066,7 @@
     el.textContent = msg;
     el.style.color = warn ? 'var(--danger)' : 'var(--ink-dim)';
     el.style.fontWeight = warn ? '700' : '500';
+    updateModeLock();
   }
   function genRoomCode(){
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -1930,6 +2158,7 @@
       } else if(msg.type==='matchStart' && !isOnlineHost){
         mySeat = 1;
         onlineGameActive = true;
+        document.body.dataset.mode = 'online';
         enterGameLayout();
         applyRemoteState(msg.view);
         logSystem('MATCH START');
@@ -2148,13 +2377,30 @@
 
   // when a login completes, pull that account's cloud record (if any) down over
   // the local numbers, so progress carries across devices for signed-in users.
+  // A reset is final. Every reset bumps a counter that travels with the profile;
+  // the side with the higher counter always wins, so a device that still holds
+  // pre-reset numbers can never push them back over a reset.
+  function withTimeout(promise, ms){
+    return Promise.race([promise, new Promise(res=> setTimeout(()=> res(null), ms))]);
+  }
+  async function adoptCloudResetIfNewer(){
+    if(!currentUser || !db) return false;
+    const d = await withTimeout(fetchCloudProfile(), 4000);
+    if(d && (d.resets||0) > loadProfile().resets){
+      await pullProfileFromCloud(d);
+      return true;
+    }
+    return false;
+  }
   async function pushProfileToCloud(){
     if(!currentUser || !db) return;
-    const p = loadProfile();
     try{
+      // another device reset since this one last synced: take that reset instead
+      if(await adoptCloudResetIfNewer()) return;
+      const p = loadProfile();
       await setDoc(doc(db, 'profiles', currentUser.uid), {
         name: p.name || 'Player', rating: p.rating, maxRating: p.maxRating,
-        games: p.games, wins: p.wins, updatedAt: serverTimestamp()
+        games: p.games, wins: p.wins, resets: p.resets, updatedAt: serverTimestamp()
       });
     } catch(e){ console.warn('profile push failed:', e); }
   }
@@ -2163,6 +2409,14 @@
   // this must be a device with only local progress on it -- push it up so it
   // becomes that account's cloud profile (first sync from an existing device).
   async function pullProfileFromCloud(d){
+    const prev = loadProfile();
+    const cloudResets = d.resets || 0;
+    localStorage.setItem('primeUnoResets', String(cloudResets));
+    if(cloudResets > prev.resets){
+      // reset on another device: public ranking goes off here too
+      localStorage.setItem('primeUnoPublish', '0');
+      removePublicEntry(prev.id);
+    }
     localStorage.setItem('primeUnoRating', String(d.rating ?? 1000));
     localStorage.setItem('primeUnoMaxRating', String(d.maxRating ?? d.rating ?? 1000));
     localStorage.setItem('primeUnoGames', String(d.games ?? 0));
@@ -2190,6 +2444,7 @@
     localStorage.removeItem('primeUnoMaxRating');
     localStorage.removeItem('primeUnoGames');
     localStorage.removeItem('primeUnoWins');
+    localStorage.removeItem('primeUnoResets');
     localStorage.removeItem('primeUnoPlayerName');
     localStorage.removeItem('primeUnoSyncDone');
   }
@@ -2222,6 +2477,7 @@
       maxRating: Number(localStorage.getItem('primeUnoMaxRating') || rating),
       games: Number(localStorage.getItem('primeUnoGames') || 0),
       wins: Number(localStorage.getItem('primeUnoWins') || 0),
+      resets: Number(localStorage.getItem('primeUnoResets') || 0),
       signedIn: !!currentUser
     };
   }
@@ -2232,17 +2488,15 @@
     localStorage.setItem('primeUnoMaxRating', String(p.maxRating));
     localStorage.setItem('primeUnoGames', String(p.games));
     localStorage.setItem('primeUnoWins', String(p.wins));
+    localStorage.setItem('primeUnoResets', String(p.resets || 0));
   }
   function resetStats(){
     const p = loadProfile();
     p.rating = 1000; p.maxRating = 1000; p.games = 0; p.wins = 0;
+    p.resets = (p.resets || 0) + 1;
+    p.publish = false;               // a reset takes the player off the public ranking
     saveProfile(p);
-    if(p.publish && db){
-      setDoc(doc(db, 'players', p.id), {
-        name: p.name || 'Player', rating: p.rating, maxRating: p.maxRating,
-        games: p.games, wins: p.wins, updatedAt: serverTimestamp()
-      }).catch(e=> console.warn('leaderboard reset failed:', e));
-    }
+    removePublicEntry(p.id);
     if(currentUser) pushProfileToCloud().catch(()=>{});
     return p;
   }
@@ -2257,6 +2511,8 @@
   }
 
   async function recordResult(won, numCpuOpponents){
+    // if another device reset in the meantime, this game counts on top of that reset
+    if(currentUser) await adoptCloudResetIfNewer();
     const p = loadProfile();
     const delta = won ? (WIN_POINTS[numCpuOpponents]||15) : -(LOSS_POINTS[numCpuOpponents]||10);
     const newRating = Math.max(0, p.rating + delta);
