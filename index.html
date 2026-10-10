@@ -21,6 +21,8 @@
     --reverse: #5ed1ab;
     --draw2: #7fb0ec;
     --draw4: #d79ce6;
+    --draw6: #ffb347;
+    --thousands: #8fb4f5;
     --danger: #ea7267;
     --radius: 10px;
     --shadow: 0 12px 34px rgba(0,0,0,0.4);
@@ -29,7 +31,7 @@
   }
   /* each mode gets its own palette */
   body[data-mode="free"]{ --bg:#141c2e; --panel:#1e2b46; --panel-2:#2a3b5e; --bg-glow:#26395e; --mode-accent:#7fb0ec; }
-  body[data-mode="online"]{ --bg:#1e1527; --panel:#2f2140; --panel-2:#413057; --bg-glow:#47306b; --mode-accent:#d79ce6; }
+  body[data-mode="online"]{ --bg:#191640; --panel:#27246a; --panel-2:#37358f; --bg-glow:#4540b0; --mode-accent:#aeb0ff; }
   *{box-sizing:border-box; touch-action:manipulation;}
   html,body{
     -webkit-user-select:none; user-select:none;
@@ -159,6 +161,11 @@
   .card .d-h{ color:var(--hundreds); border-color:var(--hundreds); }
   .card .d-t{ color:var(--tens); border-color:var(--tens); }
   .card .d-o{ color:var(--ones); border-color:var(--ones); }
+  .card .d-k{ color:var(--thousands); border-color:var(--thousands); }
+  /* 4-digit cards: slightly smaller digits so they fit the same card */
+  body.deck4 .card .digits{ font-size:16.5px; }
+  body.deck4 .card .digits span{ padding:0 1px; }
+  body.deck4 .tableCenter .digits{ font-size:12px; }
 
   .card .strip{
     position:absolute; top:0; left:0; right:0; height:19px;
@@ -169,6 +176,7 @@
   .strip-reverse{ background:var(--reverse); }
   .strip-draw2{ background:var(--draw2); }
   .strip-draw4{ background:var(--draw4); }
+  .strip-draw6{ background:var(--draw6); }
   .strip-both{ background:linear-gradient(90deg, var(--reverse), var(--draw2)); }
 
   .card.playable{ cursor:pointer; transition:transform .12s, box-shadow .12s; }
@@ -220,6 +228,7 @@
   #log .fx-reverse{ color:var(--reverse); }
   #log .fx-draw2{ color:var(--draw2); }
   #log .fx-draw4{ color:var(--draw4); }
+  #log .fx-draw6{ color:var(--draw6); }
   #log .fx-win{ color:var(--hundreds); font-weight:900; }
   #log .logPrefix{ display:inline-block; min-width:9em; text-align:right; padding-right:2px; white-space:nowrap; }
   #log .logNum{ font-family:'Space Mono',monospace; }
@@ -382,7 +391,7 @@
 
 <header>
   <h1>素数<span class="accent">UNO</span></h1>
-  <p>1〜3桁の素数168枚 ・ どこかの位の数字が揃えば出せる</p>
+  <p>素数のカード ・ どこかの位の数字が揃えば出せる</p>
 </header>
 
 <div id="startScreen">
@@ -401,6 +410,11 @@
     ・カードは1〜3桁の素数(3桁表記でゼロ埋め。例: 2→002, 11→011)。全168枚、重複なし。<br>
     ・場のカードと<b>いずれか同じ位に同じ数字</b>があれば出せます。<br>
     ・出せるカードがあっても、あえて山札から引くことができます。引いた後は、出せるカードがあっても出さずにパスできます(1ターンに最低1回、引くか出すかのアクションが必要です)。<br>
+    <span data-modes="free">
+    ・<b>4桁デッキ(フリーモード・試験中)</b>: カードは「数字の組み合わせごとに、並べ替えてできる素数のうち最大の1枚だけ」の443枚です(例: 1279・1297…は9721だけ、113・131・311は0311だけ。頭の0は組み合わせに数えません)。1〜4桁をすべて4桁表記でゼロ埋めし(0002など)、その0も位の一致に数えます。特殊カードはこの4桁デッキ専用で、重ならないように決まっています。<br>
+    　<b>ドロー系</b>: 1・3・7・9の数字が合わせて1個以下のカード(8623など)。同じ数字がなければ<b>ドロー2</b>、2つ同じなら<b>ドロー4</b>(8863など)、3つ同じなら<b>ドロー6</b>(0002など)。ドロー4はドロー4か6、ドロー6はドロー6でしか重ねられません。<br>
+    　<b>スキップ</b>: 両端の数字が同じ(頭の0は数えない)。<b>リバース</b>: 数字がすべて1・3・7・9(頭の0は数えない)。それ以外は通常カードです。重ね出しの条件(2つの位が一致)は3桁と同じです。<br>
+    </span>
     ・<b>モード</b>: レート(CPU対戦。勝敗がレートに反映されます) / フリー(レートに影響しません。人数・初手の枚数・ドローの回数制限を変えられます) / オンライン(2人・P2P)。ルール設定はモードごとに保存されます。<br>
     ・<span class="eff-tag tag-skip">スキップ</span> 回文素数(131, 373など)<br>
     ・<span class="eff-tag tag-rev">リバース</span> エマープ/可逆素数(107→701など)<br>
@@ -459,6 +473,10 @@
   </div>
   <div data-modes="free">
     <p class="settingTitle">フリーモードの設定</p>
+    <div class="cpu-select" id="digitSelect" style="margin-bottom:14px;">
+      <div class="cpu-btn selected" data-d="3">3桁<br><span style="font-size:10.5px;opacity:0.7;">168枚・今まで通り</span></div>
+      <div class="cpu-btn" data-d="4">4桁(試験)<br><span style="font-size:10.5px;opacity:0.7;">443枚・特殊カード変更</span></div>
+    </div>
     <div class="settingGroup">
       <div class="stepRow"><span>人数(自分を含む)</span>
         <div class="stepper"><button class="stepBtn" data-key="players" data-d="-1">−</button><span class="stepVal" id="freePlayersVal">3</span><button class="stepBtn" data-key="players" data-d="1">＋</button></div></div>
@@ -661,11 +679,18 @@
   const allPrimes = [];
   for(let n=2;n<=997;n++) if(isPrime(n)) allPrimes.push(n);
 
-  function pad3(n){ return String(n).padStart(3,'0'); }
+  // how many digits the cards of the current game have (3 = normal deck, 4 = free-mode 4-digit deck)
+  let DECK_WIDTH = 3;
+  function setDeckWidth(w){
+    DECK_WIDTH = w;
+    document.body.classList.toggle('deck4', w===4);
+  }
+  function pad3(n){ return String(n).padStart(DECK_WIDTH,'0'); }
   function digitsOf(n){ return pad3(n).split('').map(Number); }
 
+  // 3-digit deck effects (unchanged)
   function classify(n){
-    const s = pad3(n);
+    const s = String(n).padStart(3,'0');
     if(s[0]==='0' && s[1]==='0') return 'draw4';
     const isPal = s === s.split('').reverse().join('');
     const revN = Number(s.split('').reverse().join(''));
@@ -678,12 +703,49 @@
     return 'plain';
   }
 
-  const EFFECT_LABEL = { skip:'スキップ', reverse:'リバース', draw2:'ドロー2', draw4:'ドロー4', both:'リバース+ドロー2' };
-  const EFFECT_TAG = { skip:'SKIP', reverse:'REV', draw2:'+2', draw4:'+4', both:'REV+2' };
+  // 4-digit deck (trial): for every combination of digits (leading zeros not
+  // counted) only the LARGEST prime that can be made from them is a card, e.g.
+  // 1279/1297/... -> 9721 only, 113/131/311 -> 311 only. Cards of 1-4 digits are
+  // all shown zero-padded to 4 digits (0002, 0311), and those zeros count as matches.
+  let deck4Cache = null;
+  function deck4Values(){
+    if(deck4Cache) return deck4Cache;
+    const best = {};
+    for(let n=2;n<=9999;n++){
+      if(!isPrime(n)) continue;
+      const key = String(n).split('').sort().join('');
+      if(!(key in best) || n>best[key]) best[key] = n;
+    }
+    deck4Cache = Object.values(best).sort((a,b)=>a-b);
+    return deck4Cache;
+  }
+  // effects in the 4-digit deck never overlap: the digits 1,3,7,9 decide the family
+  //  - draws: 1,3,7,9 appear at most once in total (zero-padded string; zeros are not 1/3/7/9)
+  //      all digits different -> +2, a pair of equal digits -> +4, three equal digits -> +6
+  //  - skip: first and last digit are the same (leading zeros not counted)
+  //  - reverse: every digit of the number (leading zeros not counted) is 1, 3, 7 or 9
+  //  - everything else is a plain card
+  function classify4(n){
+    const padded = String(n).padStart(4,'0');
+    const real = String(n);
+    const oddCount = padded.split('').filter(c=> '1379'.includes(c)).length;
+    if(oddCount<=1){
+      const counts = {};
+      padded.split('').forEach(c=>{ counts[c] = (counts[c]||0)+1; });
+      const same = Math.max(...Object.values(counts));
+      return same>=3 ? 'draw6' : same===2 ? 'draw4' : 'draw2';
+    }
+    if(real[0]===real[real.length-1]) return 'skip';
+    if(real.split('').every(c=> '1379'.includes(c))) return 'reverse';
+    return 'plain';
+  }
+
+  const EFFECT_LABEL = { skip:'スキップ', reverse:'リバース', draw2:'ドロー2', draw4:'ドロー4', draw6:'ドロー6', both:'リバース+ドロー2' };
+  const EFFECT_TAG = { skip:'SKIP', reverse:'REV', draw2:'+2', draw4:'+4', draw6:'+6', both:'REV+2' };
   // for multi-card combos, draw2 and "both" (reverse+draw2) count as the same
   // kind of card and can be mixed together; everything else must match exactly.
-  const COMBO_GROUP = { plain:'plain', skip:'skip', reverse:'reverse', draw2:'draw2+', both:'draw2+', draw4:'draw4' };
-  const EFFECT_SORT_ORDER = { plain:0, skip:1, reverse:2, draw2:3, draw4:4, both:5 };
+  const COMBO_GROUP = { plain:'plain', skip:'skip', reverse:'reverse', draw2:'draw2+', both:'draw2+', draw4:'draw4', draw6:'draw6' };
+  const EFFECT_SORT_ORDER = { plain:0, skip:1, reverse:2, draw2:3, draw4:4, both:5, draw6:6 };
   function sortHand(hand){
     hand.sort((a,b)=> (EFFECT_SORT_ORDER[a.effect]-EFFECT_SORT_ORDER[b.effect]) || (a.value-b.value));
   }
@@ -692,21 +754,25 @@
     reverse:'<div class="strip strip-reverse">REV</div>',
     draw2:'<div class="strip strip-draw2">+2</div>',
     draw4:'<div class="strip strip-draw4">+4</div>',
+    draw6:'<div class="strip strip-draw6">+6</div>',
     both:'<div class="strip strip-both">REV+2</div>'
   };
-  const DRAW_AMOUNT = { draw2:2, draw4:4, both:2 };
+  const DRAW_AMOUNT = { draw2:2, draw4:4, draw6:6, both:2 };
   const HAS_REVERSE = { reverse:true, both:true };
-  const IS_STACK_TYPE = t => t==='draw2' || t==='draw4' || t==='both';
-  // stacking strength: draw4 beats everything; draw2 and "both" (reverse+draw2)
-  // are always equal strength, regardless of player count.
+  const IS_STACK_TYPE = t => t==='draw2' || t==='draw4' || t==='draw6' || t==='both';
+  // stacking strength: a bigger draw can only be answered by the same or a bigger
+  // draw (+4 by +4/+6, +6 only by +6); draw2 and "both" are always equal strength.
   function stackLevel(effect){
+    if(effect==='draw6') return 6;
     if(effect==='draw4') return 4;
     return 2; // draw2 and both
   }
 
   function buildDeck(){
-    const deck = allPrimes.map(n=>({
-      id: Math.random().toString(36).slice(2), value:n, digits:digitsOf(n), effect:classify(n)
+    const values = DECK_WIDTH===4 ? deck4Values() : allPrimes;
+    const deck = values.map(n=>({
+      id: Math.random().toString(36).slice(2), value:n, digits:digitsOf(n),
+      effect: DECK_WIDTH===4 ? classify4(n) : classify(n)
     }));
     return shuffle(deck);
   }
@@ -729,6 +795,7 @@
     // keep the starting hands within what the 168-card deck can supply
     const handSize = Math.max(1, Math.min(opts.handSize || 7, Math.floor(160/seats)));
     document.body.dataset.mode = mode;
+    setDeckWidth(opts.digits===4 ? 4 : 3);
     const deck = buildDeck();
     const players = [{name: myDisplayName(), human:true, hand:[]}];
     if(onlineGuestName) players.push({name: onlineGuestName, human:true, hand:[]});
@@ -792,7 +859,7 @@
   }
   // positions where every card in the array has an identical digit
   function sharedPositions(cards){
-    return [0,1,2].filter(i=> cards.every(c=> c.digits[i]===cards[0].digits[i]));
+    return cards[0].digits.map((_,i)=>i).filter(i=> cards.every(c=> c.digits[i]===cards[0].digits[i]));
   }
   // given the cards already selected, can `card` be added? returns the resulting
   // shared-position set if so (non-empty array = yes), or [] if not addable.
@@ -1156,7 +1223,12 @@
   // "keep 1 card" rule (draw2/both share a group and can be mixed together)
   function findMultiDumpGroup(hand, top){
     const k = requiredMatchCount();
-    const positionSets = k>=2 ? [[0,1],[0,2],[1,2]] : [[0],[1],[2]];
+    const W = DECK_WIDTH;
+    const positionSets = [];
+    for(let i=0;i<W;i++){
+      if(k<2) positionSets.push([i]);
+      else for(let j=i+1;j<W;j++) positionSets.push([i,j]);
+    }
     let best = null;
     const stacking = state.pendingDraw>0;
     const groups = [...new Set(hand.map(c=>COMBO_GROUP[c.effect]))];
@@ -1248,12 +1320,12 @@
     else if(opts.playable && opts.multiFaded===false) cls += ' multiPickable';
     if(opts.multiFaded) cls += ' multiFaded';
     div.className = cls;
-    const [h,t,o] = card.digits;
+    const placeClass = ['d-o','d-t','d-h','d-k'];
+    const digitsHtml = card.digits.map((d,i)=>
+      `<span class="${placeClass[card.digits.length-1-i]}">${d}</span>`).join('');
     div.innerHTML = (card.effect!=='plain' ? EFFECT_STRIP[card.effect] : '') +
       (opts.multiSelected ? '<div class="multiCheck">✓</div>' : '') +
-      `<div class="digits">
-        <span class="d-h">${h}</span><span class="d-t">${t}</span><span class="d-o">${o}</span>
-      </div>`;
+      `<div class="digits">${digitsHtml}</div>`;
     return div;
   }
 
@@ -1322,8 +1394,8 @@
     document.getElementById('pendingTarget').textContent =
       state.pendingDraw>0 ? state.players[state.current].name : '';
     document.getElementById('pendingLevelNote').textContent =
-      state.pendingLevel>=4 ? '(ドロー4でしか重ねられません)' :
-      state.pendingLevel>=3 ? '(ドロー2では重ねられません)' : '';
+      state.pendingLevel>=6 ? '(ドロー6でしか重ねられません)' :
+      state.pendingLevel>=4 ? (DECK_WIDTH===4 ? '(ドロー4か6でしか重ねられません)' : '(ドロー4でしか重ねられません)') : '';
 
     const interruptBanner = document.getElementById('interruptBanner');
     const iAmVictim = state.skipInterrupt && state.skipInterrupt.victim===mySeat;
@@ -1648,12 +1720,12 @@
   const MODE_ORDER = ['rate','free','online'];
   const MODE_NOTE = {
     rate: '勝敗がレートに反映されます(CPU対戦)',
-    free: 'レートに影響しません。人数・初手枚数・ドロー制限を変えられます',
+    free: 'レートに影響しません。人数・初手枚数・ドロー制限・カードの桁数を変えられます',
     online: '2人で対戦(CPUも追加可)。レートには反映されません'
   };
   const SETTING_DEFAULTS = {
     rate:   { multiDump:true, interrupt:true, bothCancel:true, cpu:2 },
-    free:   { multiDump:true, interrupt:true, bothCancel:true, players:3, handSize:7, unlimitedDraw:false },
+    free:   { multiDump:true, interrupt:true, bothCancel:true, players:3, handSize:7, unlimitedDraw:false, digits:3 },
     online: { multiDump:true, interrupt:true, bothCancel:true, cpu:0 }
   };
   function loadModeSettings(){
@@ -1692,6 +1764,8 @@
     document.getElementById('freePlayersVal').textContent = f.players;
     document.getElementById('freeHandVal').textContent = f.handSize;
     document.getElementById('unlimitedDrawToggle').checked = !!f.unlimitedDraw;
+    f.digits = f.digits===4 ? 4 : 3;
+    document.querySelectorAll('#digitSelect .cpu-btn').forEach(b=> b.classList.toggle('selected', Number(b.dataset.d)===f.digits));
   }
   function syncBothCancelRow(){
     const on = document.getElementById('interruptToggle').checked;
@@ -1750,6 +1824,13 @@
       saveModeSettings();
     });
   });
+  document.querySelectorAll('#digitSelect .cpu-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      modeSettings.free.digits = Number(btn.dataset.d);
+      refreshFreeUi();
+      saveModeSettings();
+    });
+  });
   document.querySelectorAll('.stepBtn').forEach(btn=>{
     btn.addEventListener('click', ()=>{
       const f = modeSettings.free;
@@ -1792,7 +1873,7 @@
     document.getElementById('startScreen').style.display='none';
     document.getElementById('layout').classList.add('active');
     if(currentMode==='free'){
-      newGame(st.players-1, null, { mode:'free', handSize:st.handSize, unlimitedDraw:st.unlimitedDraw });
+      newGame(st.players-1, null, { mode:'free', handSize:st.handSize, unlimitedDraw:st.unlimitedDraw, digits:st.digits });
     } else {
       lastNumCpu = st.cpu;
       newGame(st.cpu, null, { mode:'rate' });
@@ -2159,6 +2240,7 @@
         mySeat = 1;
         onlineGameActive = true;
         document.body.dataset.mode = 'online';
+        setDeckWidth(3);
         enterGameLayout();
         applyRemoteState(msg.view);
         logSystem('MATCH START');
