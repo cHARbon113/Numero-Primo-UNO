@@ -30,7 +30,8 @@
   }
   /* each mode gets its own palette */
   body[data-mode="free"]{ --bg:#141c2e; --panel:#1e2b46; --panel-2:#2a3b5e; --bg-glow:#26395e; --mode-accent:#7fb0ec; }
-  body[data-mode="online"]{ --bg:#191640; --panel:#27246a; --panel-2:#37358f; --bg-glow:#4540b0; --mode-accent:#aeb0ff; }
+  body[data-mode="online"]{ --bg:#29151f; --panel:#3d1f2f; --panel-2:#502b3e; --bg-glow:#4f263c; --mode-accent:#e06caa; }
+  body[data-mode="prime"]{ --bg:#292215; --panel:#3d331f; --panel-2:#50432b; --bg-glow:#4f4126; --mode-accent:#e0b96c; }
   *{box-sizing:border-box; touch-action:manipulation;}
   html,body{
     -webkit-user-select:none; user-select:none;
@@ -105,7 +106,7 @@
   .tableCenter{
     position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
     display:flex; align-items:center; gap:12px;
-    background:radial-gradient(ellipse at center, #223a2c 0%, #14231d 80%);
+    background:radial-gradient(ellipse at center, var(--panel-2) 0%, var(--bg) 85%);
     border-radius:14px; padding:10px 12px; border:1px solid rgba(255,255,255,0.08);
   }
   .tableCenter .card{ width:52px; height:74px; }
@@ -266,25 +267,25 @@
 
   /* mode toggle (big segmented switch) */
   .modeToggle{
-    position:relative; display:grid; grid-template-columns:repeat(3,1fr);
+    position:relative; display:grid; grid-template-columns:repeat(4,1fr);
     background:rgba(0,0,0,0.3); border-radius:20px; padding:5px; margin:0 0 8px; --idx:0;
   }
   .modeThumb{
-    position:absolute; top:5px; bottom:5px; left:5px; width:calc((100% - 10px)/3);
+    position:absolute; top:5px; bottom:5px; left:5px; width:calc((100% - 10px)/4);
     border-radius:15px; background:var(--mode-accent);
     transform:translateX(calc(var(--idx) * 100%)); transition:transform .25s ease, background .25s;
     box-shadow:0 4px 14px rgba(0,0,0,0.35);
   }
   .modeBtn{
     position:relative; z-index:1; background:transparent; border:0; color:var(--ink-dim);
-    padding:13px 4px 11px; border-radius:15px; cursor:pointer; font-family:inherit;
+    padding:12px 2px 10px; border-radius:15px; cursor:pointer; font-family:inherit;
     display:flex; flex-direction:column; align-items:center; gap:2px; transition:color .2s;
   }
-  .modeBtn .mTitle{ font-size:17px; font-weight:900; letter-spacing:0.02em; }
-  .modeBtn .mSub{ font-size:10.5px; opacity:0.8; }
+  .modeBtn .mTitle{ font-size:14px; font-weight:900; letter-spacing:0; white-space:nowrap; }
+  .modeBtn .mSub{ font-size:9.5px; opacity:0.8; white-space:nowrap; }
   .modeBtn.selected{ color:#10170f; }
   .modeToggle.locked .modeBtn:not(.selected){ opacity:0.4; cursor:default; }
-  .modeNote{ font-size:12.5px; color:var(--ink-dim); margin:0 0 14px; min-height:1.4em; }
+  .modeNote{ font-size:12.5px; color:var(--ink-dim); margin:0 0 14px; height:1.4em; line-height:1.4em; white-space:nowrap; overflow:hidden; }
 
   /* rule toggles (switch style) */
   .swRow{
@@ -323,6 +324,39 @@
     position:sticky; top:0; z-index:5; margin:0; padding:10px 0 8px;
     background:var(--panel); box-shadow:0 1px 0 rgba(255,255,255,0.08);
   }
+  .lockBadge{
+    margin:8px auto 0; padding:6px 12px; max-width:340px; text-align:center; font-size:12.5px;
+    color:var(--ink-dim); border:1px solid rgba(255,255,255,0.1); border-radius:999px;
+  }
+  .lockBadge.on{ color:#10170f; background:var(--hundreds); border-color:transparent; font-weight:700; }
+  .primeBox{ text-align:left; }
+  .primeLegend{ font-size:11.5px; line-height:1.7; color:var(--ink-dim); margin:0 0 12px; }
+  .primeLegend b{ color:var(--ink); white-space:nowrap; }
+  .pfRow{ display:flex; flex-wrap:wrap; gap:6px; margin:0 0 8px; }
+  .pfBtn{
+    background:var(--panel-2); color:var(--ink-dim); border:1px solid rgba(255,255,255,0.12);
+    border-radius:999px; padding:5px 10px; font-size:12px; cursor:pointer; font-family:inherit;
+  }
+  .pfBtn span{ margin-left:4px; font-family:'Space Mono',monospace; font-size:10.5px; opacity:0.75; }
+  .pfBtn.selected{ background:var(--mode-accent); color:#10170f; border-color:transparent; font-weight:700; }
+  .primeSearch{ display:flex; gap:8px; align-items:center; margin:10px 0; }
+  .primeSearch input{
+    width:130px; background:var(--panel-2); border:1px solid rgba(255,255,255,0.14); border-radius:8px;
+    padding:8px 10px; color:var(--ink); font-family:'Space Mono',monospace; font-size:14px;
+  }
+  .primeSearchResult{ font-size:12px; color:var(--ink-dim); flex:1; }
+  .primeCount{ font-size:12px; color:var(--ink-dim); margin:2px 0 8px; }
+  .primeGrid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(70px, 1fr)); gap:6px; }
+  .pchip{
+    position:relative; background:rgba(0,0,0,0.28); border:1px solid rgba(255,255,255,0.1);
+    border-top:3px solid var(--pc, rgba(255,255,255,0.12)); border-radius:8px; padding:6px 2px 4px;
+    text-align:center; font-family:'Space Mono',monospace; font-weight:700; font-size:14.5px;
+  }
+  .pchip .d-k{ color:var(--thousands); } .pchip .d-h{ color:var(--hundreds); }
+  .pchip .d-t{ color:var(--tens); } .pchip .d-o{ color:var(--ones); }
+  .pchip .pnum span.lz{ opacity:0.3; }
+  .pchip .ptag{ display:block; font-size:9px; letter-spacing:.04em; margin-top:2px; color:var(--pc, transparent); min-height:11px; }
+  .pc-skip{ --pc:var(--skip); } .pc-reverse{ --pc:var(--reverse); } .pc-draw2{ --pc:var(--draw2); } .pc-draw4{ --pc:var(--draw4); }
   .nameRow{ margin:6px 0 0; }
   .nameRow input[type=text]{
     width:100%; background:var(--panel-2); border:1px solid rgba(255,255,255,0.14); border-radius:8px;
@@ -397,6 +431,7 @@
     <button class="modeBtn" data-mode="rate"><span class="mTitle">レート</span><span class="mSub">戦績を記録</span></button>
     <button class="modeBtn" data-mode="free"><span class="mTitle">フリー</span><span class="mSub">自由に設定</span></button>
     <button class="modeBtn" data-mode="online"><span class="mTitle">オンライン</span><span class="mSub">2人・P2P</span></button>
+    <button class="modeBtn" data-mode="prime"><span class="mTitle">プライム</span><span class="mSub">全カード表</span></button>
   </div>
   <p class="modeNote" id="modeNote"></p>
 
@@ -407,10 +442,11 @@
     ・カードは1〜3桁の素数(3桁表記でゼロ埋め。例: 2→002, 11→011)。全168枚、重複なし。<br>
     ・場のカードと<b>いずれか同じ位に同じ数字</b>があれば出せます。<br>
     ・出せるカードがあっても、あえて山札から引くことができます。引いた後は、出せるカードがあっても出さずにパスできます(1ターンに最低1回、引くか出すかのアクションが必要です)。<br>
-    <span data-modes="free">
+    <span data-modes="free prime">
     ・<b>4桁デッキ(フリーモード・試験中)</b>: カードは「数字の組み合わせごとに、並べ替えてできる素数のうち最大の1枚だけ」の443枚です(例: 1279・1297…は9721だけ、113・131・311は0311だけ。頭の0は組み合わせに数えません)。1〜4桁をすべて4桁表記でゼロ埋めし(0002など)、その0も位の一致に数えます。特殊カードはこの4桁デッキ専用で、重ならないように決まっています。<br>
     　<b>ドロー系</b>: 1・3・7・9の数字が合わせて1個以下のカード(8623など)。2つ同じなら<b>ドロー2</b>(8863など)、3つ同じなら<b>ドロー4</b>(0002など)。同じ数字がないカードは通常カードです。ドロー4にはドロー4でしか重ねられません。<br>
-    　<b>スキップ</b>: 両端の数字が同じ(頭の0は数えない)。<b>リバース</b>: 数字がすべて1・3・7・9(頭の0は数えない)。それ以外は通常カードです。重ね出しの条件(2つの位が一致)は3桁と同じです。<br>
+    　<b>桁ロック</b>: 4桁より短いカード(特殊カードも含む)が出されると、その桁数が「上限」になり、上限より桁数が多い特殊カードは出せなくなります(通常カードは何桁でも出せます)。4桁の通常カードを出すと解除されます。ドローを積むときは上限を無視できますが、出した短いカードで上限は下がります。まとめて出すときは出す順番にも効きます(特殊カードは桁が多い順、通常カードは4桁を最後にすると解除できます)。<br>
+    　<b>スキップ</b>: 両端の数字が同じ(頭の0は数えない)。<b>リバース</b>: 数字がすべて1・3・7・9で、同じ数字が被っているカード(頭の0は数えない。スキップが優先)。それ以外は通常カードです。重ね出しの条件(2つの位が一致)は3桁と同じです。<br>
     </span>
     ・<b>モード</b>: レート(CPU対戦。勝敗がレートに反映されます) / フリー(レートに影響しません。人数・初手の枚数・ドローの回数制限を変えられます) / オンライン(2人・P2P)。ルール設定はモードごとに保存されます。<br>
     ・<span class="eff-tag tag-skip">スキップ</span> 回文素数(131, 373など)<br>
@@ -447,13 +483,13 @@
   </div>
 </div>
 
-  <div>
+  <div data-modes="rate free online">
     <p class="settingTitle">共通ルール設定</p>
     <div class="settingGroup">
       <label class="swRow"><span>まとめて出す(重ね出し)機能</span><span class="sw"><input type="checkbox" id="multiDumpToggle" checked><span class="swSlider"></span></span></label>
     </div>
   </div>
-  <div>
+  <div data-modes="rate free online">
     <p class="settingTitle">2人対戦だけのルール設定</p>
     <div class="settingGroup">
       <label class="swRow" id="interruptRow"><span>リバース打ち消し</span><span class="sw"><input type="checkbox" id="interruptToggle" checked><span class="swSlider"></span></span></label>
@@ -536,6 +572,20 @@
 
   <div data-modes="rate"><button class="ghost" id="rankingBtn" style="margin-top:12px;">ランキングを見る</button></div>
 
+  <div class="primeBox" data-modes="prime">
+    <p class="primeLegend">
+      4桁デッキの全カードです(数字の組み合わせごとに最大の素数だけ。1〜3桁は頭に0を足して表示)。<br>
+      <b>ドロー2</b>=1,3,7,9が合わせて1個以下で2桁被り ・ <b>ドロー4</b>=同じで3桁被り ・ <b>スキップ</b>=両端が同じ ・ <b>リバース</b>=全部1,3,7,9で被りあり ・ 他は通常
+    </p>
+    <div class="pfRow" id="primeEffectFilter"></div>
+    <div class="pfRow" id="primeDigitFilter"></div>
+    <div class="primeSearch">
+      <input type="text" inputmode="numeric" id="primeSearchInput" placeholder="数字を調べる" maxlength="4">
+      <div class="primeSearchResult" id="primeSearchResult"></div>
+    </div>
+    <div class="primeCount" id="primeCount"></div>
+    <div class="primeGrid" id="primeGrid"></div>
+  </div>
   <div class="onlineBox" data-modes="online">
     <p style="font-size:12.5px;color:var(--ink-dim);margin:0 0 8px;">オンライン対戦(2人・P2P、試験実装)</p>
     <button class="ghost" id="consentSettingsBtn" style="font-size:12px; padding:6px 14px; margin-bottom:10px;">P2P利用について(同意設定)</button>
@@ -591,6 +641,7 @@
       </div>
     </div>
 
+    <div class="lockBadge" id="lockBadge" style="display:none;"></div>
     <div class="pendingBanner" id="pendingBanner">
       <div class="msg"><b id="pendingTarget"></b>に <b id="pendingCount">0</b>枚 積み上げ中 <span id="pendingLevelNote" style="color:var(--draw4);"></span></div>
       <button class="accept" id="acceptBtn">引き受ける</button>
@@ -720,7 +771,7 @@
   //  - draws: 1,3,7,9 appear at most once in total (zero-padded string; zeros are not 1/3/7/9)
   //      a pair of equal digits -> +2, three equal digits -> +4 (all different = plain)
   //  - skip: first and last digit are the same (leading zeros not counted)
-  //  - reverse: every digit of the number (leading zeros not counted) is 1, 3, 7 or 9
+  //  - reverse: every digit of the number (leading zeros not counted) is 1, 3, 7 or 9 AND a digit repeats (skip wins if both apply)
   //  - everything else is a plain card
   function classify4(n){
     const padded = String(n).padStart(4,'0');
@@ -732,8 +783,9 @@
       const same = Math.max(...Object.values(counts));
       return same>=3 ? 'draw4' : same===2 ? 'draw2' : 'plain';
     }
-    if(real[0]===real[real.length-1]) return 'skip';
-    if(real.split('').every(c=> '1379'.includes(c))) return 'reverse';
+    if(real[0]===real[real.length-1]) return 'skip';          // skip comes first
+    const hasDup = new Set(real.split('')).size < real.length; // leading zeros not counted
+    if(hasDup && real.split('').every(c=> '1379'.includes(c))) return 'reverse';
     return 'plain';
   }
 
@@ -807,7 +859,7 @@
       interruptEnabled: document.getElementById('interruptToggle').checked,
       bothCancelDrawEnabled: document.getElementById('bothCancelDrawToggle').checked,
       multiDumpEnabled: document.getElementById('multiDumpToggle').checked,
-      mode, unlimitedDraw: !!opts.unlimitedDraw,
+      mode, unlimitedDraw: !!opts.unlimitedDraw, digitCeiling: 4,
       multiSelection: [],
       multiMode: false
     };
@@ -822,6 +874,25 @@
 
   function matches(card, top){ return card.digits.some((d,i)=> d===top.digits[i]); }
 
+  // ---- digit lock (4-digit deck only) ----
+  // playing a card with fewer than 4 digits (special cards too) lowers the "ceiling" to that
+  // many digits; special cards with more digits than the ceiling can't be played (plain cards
+  // of any size can, and stacking a draw ignores the check). A 4-digit PLAIN card lifts it.
+  function realDigits(card){ return String(card.value).length; }
+  function ceilingNow(){ return (state && state.digitCeiling) || 4; }
+  function blockedByLock(card, ceiling){
+    return DECK_WIDTH===4 && card.effect!=='plain' && realDigits(card) > ceiling;
+  }
+  function ceilingAfterPlay(card, ceiling){
+    if(DECK_WIDTH!==4) return ceiling;
+    const L = realDigits(card);
+    if(L<4) return Math.min(ceiling, L);
+    return card.effect==='plain' ? 4 : ceiling;
+  }
+  function applyLock(card){
+    if(DECK_WIDTH===4) state.digitCeiling = ceilingAfterPlay(card, ceilingNow());
+  }
+
   // last card in hand must be a 'plain' card to be playable (can't finish on a special card)
   function canPlay(card, hand, top){
     const wouldWin = hand.length===1;
@@ -829,7 +900,7 @@
     if(state.pendingDraw>0){
       return IS_STACK_TYPE(card.effect) && stackLevel(card.effect) >= state.pendingLevel;
     }
-    return matches(card, top);
+    return matches(card, top) && !blockedByLock(card, ceilingNow());
   }
 
   // ---- multi-card dump: same-type cards sharing enough digits with each other ----
@@ -866,6 +937,14 @@
     const stacking = state.pendingDraw>0;
     if(stacking && !canStackOnPending(card)) return [];
     const candidate = selected.concat([card]);
+    if(!stacking && DECK_WIDTH===4){
+      // cards are played in this order, each one lowering (or lifting) the ceiling for the next
+      let c = ceilingNow();
+      for(const x of candidate){
+        if(blockedByLock(x, c)) return [];
+        c = ceilingAfterPlay(x, c);
+      }
+    }
     const shared = sharedPositions(candidate);
     if(shared.length < requiredMatchCount()) return [];
     if(!stacking){
@@ -981,6 +1060,7 @@
     p.hand = p.hand.filter(c=>c.id!==card.id);
     state.discardPile.push(card);
     logPlay(p.name, card, p.hand.length);
+    applyLock(card);
 
     if(p.hand.length===0){
       state.over = true; render(); showWin(playerIdx); return;
@@ -1082,6 +1162,7 @@
     p.hand = p.hand.filter(c=>c.id!==card.id);
     state.discardPile.push(card);
     logPlay(p.name, card, p.hand.length);
+    applyLock(card);
 
     if(p.hand.length===0){ state.over = true; render(); showWin(playerIdx); return; }
     if(p.hand.length===1) announceUno(p.name);
@@ -1155,6 +1236,7 @@
     if(!isValidCombo(playerIdx, selected)) return false;
     p.hand = remaining;
     selected.forEach(c=> state.discardPile.push(c));
+    selected.forEach(c=> applyLock(c));
     logMultiPlay(p.name, selected, p.hand.length);
     if(playerIdx===mySeat){ state.multiMode = false; state.multiSelection = []; }
 
@@ -1233,6 +1315,7 @@
         hand.forEach(c=>{
           if(COMBO_GROUP[c.effect]!==comboGroup) return;
           if(stacking && !canStackOnPending(c)) return;
+          if(!stacking && blockedByLock(c, ceilingNow())) return;
           const key = posSet.map(i=>c.digits[i]).join(',');
           (buckets[key] = buckets[key] || []).push(c);
         });
@@ -1247,6 +1330,12 @@
         });
       });
     });
+    if(best && DECK_WIDTH===4){
+      // special cards: biggest first (each short card lowers the ceiling);
+      // plain cards: smallest first so a 4-digit plain card comes last and lifts the lock
+      best = best.slice().sort((a,b)=> best[0].effect==='plain'
+        ? realDigits(a)-realDigits(b) : realDigits(b)-realDigits(a));
+    }
     return best;
   }
 
@@ -1375,6 +1464,13 @@
     }
 
     document.getElementById('drawCount').textContent = state.drawPile.length;
+    const lockEl = document.getElementById('lockBadge');
+    if(DECK_WIDTH===4){
+      const c = ceilingNow();
+      lockEl.style.display = 'block';
+      lockEl.classList.toggle('on', c<4);
+      lockEl.textContent = c<4 ? `🔒 桁ロック中: 特殊カードは${c}桁まで(4桁の通常カードで解除)` : '🔓 桁ロックなし';
+    } else lockEl.style.display = 'none';
 
     const top = state.discardPile[state.discardPile.length-1];
     const discardTop = document.getElementById('discardTop');
@@ -1711,16 +1807,18 @@
   });
 
   // ---- modes (rate / free / online): every mode keeps its own settings ----
-  const MODE_ORDER = ['rate','free','online'];
+  const MODE_ORDER = ['rate','free','online','prime'];
   const MODE_NOTE = {
     rate: '勝敗がレートに反映されます(CPU対戦)',
-    free: 'レートに影響しません。人数・初手枚数・ドロー制限・カードの桁数を変えられます',
-    online: '2人で対戦(CPUも追加可)。レートには反映されません'
+    free: 'レートに影響しません。ルールを自由に設定',
+    online: '2人で対戦(CPU追加可)。レートに影響なし',
+    prime: '4桁デッキの全カードを一覧で見られます'
   };
   const SETTING_DEFAULTS = {
     rate:   { multiDump:true, interrupt:true, bothCancel:true, cpu:2 },
     free:   { multiDump:true, interrupt:true, bothCancel:true, players:3, handSize:7, unlimitedDraw:false, digits:3 },
-    online: { multiDump:true, interrupt:true, bothCancel:true, cpu:0 }
+    online: { multiDump:true, interrupt:true, bothCancel:true, cpu:0 },
+    prime:  { effect:'all', digits:0 }
   };
   function loadModeSettings(){
     let saved = null;
@@ -1735,7 +1833,7 @@
     const out = {};
     MODE_ORDER.forEach(m=>{
       const base = Object.assign({}, SETTING_DEFAULTS[m]);
-      if(!saved){
+      if(!saved && m!=='prime'){
         Object.assign(base, legacy);
         if(m==='rate') base.cpu = legacyCpu;
         if(m==='free') base.players = legacyCpu + 1;
@@ -1781,6 +1879,7 @@
     });
     document.getElementById('modeNote').textContent = MODE_NOTE[mode];
     const st = modeSettings[mode];
+    if(mode==='prime'){ renderPrimeTable(); return; }
     document.getElementById('multiDumpToggle').checked = !!st.multiDump;
     document.getElementById('interruptToggle').checked = !!st.interrupt;
     document.getElementById('bothCancelDrawToggle').checked = !!st.bothCancel;
@@ -1789,6 +1888,59 @@
     if(mode==='free') refreshFreeUi();
     if(mode==='online'){ onlineExtraCpu = st.cpu; selectCpuButtons('#onlineCpuSelect', st.cpu); }
   }
+  // ---- prime mode: browse every card of the 4-digit deck ----
+  const PRIME_EFFECTS = [['all','すべて'],['plain','通常'],['draw2','ドロー2'],['draw4','ドロー4'],['skip','スキップ'],['reverse','リバース']];
+  const PRIME_DIGITS = [[0,'全桁'],[1,'1桁'],[2,'2桁'],[3,'3桁'],[4,'4桁']];
+  function deck4Cards(){
+    return deck4Values().map(n=>({ value:n, effect:classify4(n), len:String(n).length }));
+  }
+  function renderPrimeTable(){
+    const cards = deck4Cards();
+    const f = modeSettings.prime;
+    const byEffect = c=> f.effect==='all' || c.effect===f.effect;
+    const byDigits = c=> !f.digits || c.len===f.digits;
+    document.getElementById('primeEffectFilter').innerHTML = PRIME_EFFECTS.map(([k,label])=>{
+      const n = cards.filter(c=> (k==='all'||c.effect===k) && byDigits(c)).length;
+      return `<button class="pfBtn ${f.effect===k?'selected':''}" data-k="${k}">${label}<span>${n}</span></button>`;
+    }).join('');
+    document.getElementById('primeDigitFilter').innerHTML = PRIME_DIGITS.map(([k,label])=>{
+      const n = cards.filter(c=> byEffect(c) && (!k || c.len===k)).length;
+      return `<button class="pfBtn ${f.digits===k?'selected':''}" data-d="${k}">${label}<span>${n}</span></button>`;
+    }).join('');
+    const shown = cards.filter(c=> byEffect(c) && byDigits(c));
+    document.getElementById('primeCount').textContent = `${shown.length}枚を表示(全${cards.length}枚)`;
+    const placeClass = ['d-k','d-h','d-t','d-o'];
+    document.getElementById('primeGrid').innerHTML = shown.map(c=>{
+      const padded = String(c.value).padStart(4,'0');
+      const digits = padded.split('').map((d,i)=>
+        `<span class="${placeClass[i]}${i < 4-c.len ? ' lz' : ''}">${d}</span>`).join('');
+      return `<div class="pchip pc-${c.effect}"><span class="pnum">${digits}</span><span class="ptag">${c.effect==='plain' ? '' : EFFECT_TAG[c.effect]}</span></div>`;
+    }).join('');
+  }
+  document.getElementById('primeEffectFilter').addEventListener('click', e=>{
+    const b = e.target.closest('.pfBtn'); if(!b) return;
+    modeSettings.prime.effect = b.dataset.k; saveModeSettings(); renderPrimeTable();
+  });
+  document.getElementById('primeDigitFilter').addEventListener('click', e=>{
+    const b = e.target.closest('.pfBtn'); if(!b) return;
+    modeSettings.prime.digits = Number(b.dataset.d); saveModeSettings(); renderPrimeTable();
+  });
+  // type a number to see which card it belongs to
+  document.getElementById('primeSearchInput').addEventListener('input', e=>{
+    const out = document.getElementById('primeSearchResult');
+    const raw = e.target.value.replace(/[^0-9]/g,'');
+    e.target.value = raw;
+    if(!raw){ out.textContent = ''; return; }
+    const n = Number(raw);
+    if(!isPrime(n)){ out.textContent = `${n}は素数ではありません`; return; }
+    const key = String(n).split('').sort().join('');
+    const best = deck4Cards().filter(c=> String(c.value).split('').sort().join('')===key).pop();
+    const label = c=> String(c.value).padStart(4,'0') + (c.effect==='plain' ? '(通常)' : `(${EFFECT_LABEL[c.effect]})`);
+    out.textContent = best.value===n
+      ? `${label(best)} のカードです`
+      : `${String(n).padStart(4,'0')}は ${label(best)} に統合されます(同じ数字で最大の素数)`;
+  });
+
   function modeSwitchLocked(){ return typeof onlineRoomState!=='undefined' && onlineRoomState!=='idle'; }
   function updateModeLock(){
     document.getElementById('modeToggle').classList.toggle('locked', modeSwitchLocked());
@@ -1797,7 +1949,7 @@
     btn.addEventListener('click', ()=>{
       if(btn.dataset.mode===currentMode) return;
       if(modeSwitchLocked()){
-        document.getElementById('modeNote').textContent = 'オンライン接続中はモードを切り替えられません(先に切断してください)';
+        document.getElementById('modeNote').textContent = '接続中はモードを切り替えられません';
         return;
       }
       applyMode(btn.dataset.mode);
