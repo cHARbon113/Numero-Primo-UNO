@@ -33,8 +33,8 @@
   }
   /* each mode gets its own palette */
   body[data-mode="free"]{ --bg:#141c2e; --panel:#1e2b46; --panel-2:#2a3b5e; --bg-glow:#26395e; --mode-accent:#7fb0ec; }
-  body[data-mode="online"]{ --bg:#291615; --panel:#3d211f; --panel-2:#502e2b; --bg-glow:#4f2a26; --mode-accent:#ea7267; }
-  body[data-mode="prime"]{ --bg:#292215; --panel:#3d321f; --panel-2:#50432b; --bg-glow:#4f4126; --mode-accent:#f0bc5c; }
+  body[data-mode="online"]{ --bg:#221b1c; --panel:#352a2b; --panel-2:#473a3b; --bg-glow:#4a3436; --ink-dim:#eadcd9; --mode-accent:#ea7267; }
+  body[data-mode="prime"]{ --bg:#221f17; --panel:#352f23; --panel-2:#463f2f; --bg-glow:#4a412b; --ink-dim:#ece4cf; --mode-accent:#f0bc5c; }
   *{box-sizing:border-box; touch-action:manipulation;}
   html,body{
     -webkit-user-select:none; user-select:none;
@@ -47,7 +47,7 @@
     font-family:'Zen Kaku Gothic New', sans-serif;
     color:var(--ink);
     font-size:16px;
-    font-weight:500;
+    font-weight:700;
     background:
       repeating-linear-gradient(0deg, var(--bg-line) 0px, var(--bg-line) 1px, transparent 1px, transparent 34px),
       repeating-linear-gradient(90deg, var(--bg-line) 0px, var(--bg-line) 1px, transparent 1px, transparent 34px),
@@ -57,6 +57,7 @@
     padding:12px 14px 16px;
   }
   .mono{ font-family:'Space Mono', monospace; }
+  button, input, textarea, select{ font-weight:700; }
 
   header{ text-align:center; margin-bottom:8px; }
   header h1{ font-size:clamp(24px, 4.5vw, 34px); margin:0; letter-spacing:0.02em; font-weight:900; }
@@ -102,7 +103,7 @@
 
   #game{ display:flex; flex-direction:column; align-items:center; gap:10px; min-width:0; }
 
-  .tableWrap{ position:relative; width:min(320px, 62vw); aspect-ratio:1; margin:0 auto; }
+  .tableWrap{ position:relative; width:min(360px, 70vw); aspect-ratio:1; margin:0 auto; }
   .circleGuide{
     position:absolute; inset:9%; border:2px dashed rgba(255,255,255,0.13); border-radius:50%;
   }
@@ -112,8 +113,10 @@
     background:radial-gradient(ellipse at center, var(--panel-2) 0%, var(--bg) 85%);
     border-radius:14px; padding:10px 12px; border:1px solid rgba(255,255,255,0.08);
   }
-  .tableCenter .card{ width:52px; height:74px; }
-  .tableCenter .digits{ font-size:15px; margin-top:3px; }
+  .tableCenter .card{ width:72px; height:102px; }
+  .tableCenter .card.back{ width:56px; height:80px; }
+  .tableCenter .digits{ font-size:26px; margin-top:8px; }
+  body.deck4 .tableCenter .digits{ font-size:22px; }
   .pile{ display:flex; flex-direction:column; align-items:center; gap:6px; }
   .pile-label{ font-size:11.5px; color:var(--ink-dim); letter-spacing:.05em;}
 
@@ -148,36 +151,32 @@
   }
 
   .card{
-    width:66px; height:94px; background:var(--panel-2); border-radius:var(--radius);
+    width:66px; height:94px; background:#0a0c0b; border-radius:var(--radius);
     display:flex; flex-direction:column; align-items:center; justify-content:center;
     box-shadow:0 5px 12px rgba(0,0,0,0.4); position:relative;
-    border:1px solid rgba(255,255,255,0.09); user-select:none; flex-shrink:0;
+    border:1px solid rgba(255,255,255,0.16); user-select:none; flex-shrink:0;
     overflow:hidden;
     touch-action: manipulation; -webkit-tap-highlight-color: transparent; outline: none;
   }
   .card.back{
-    background: repeating-linear-gradient(45deg, #33513f 0, #33513f 7px, #2a4335 7px, #2a4335 14px);
-    border:1px solid rgba(255,255,255,0.12);
+    background: repeating-linear-gradient(45deg, #0a0c0b 0, #0a0c0b 7px, #1b211e 7px, #1b211e 14px);
+    border:1px solid rgba(255,255,255,0.16);
   }
-  .card .digits{ display:flex; font-family:'Space Mono',monospace; font-weight:700; font-size:20px; margin-top:5px;}
-  .card .digits span{ padding:0 2px; border-bottom:3px solid transparent; }
+  .card .digits{ display:flex; font-family:'Space Mono',monospace; font-weight:700; font-size:24px; margin-top:7px;}
+  .card .digits span{ padding:0 1px; }
   /* digit colours: 0 purple, 2/4/5/6/8 red, 1/3/7/9 blue; a repeated digit turns red->yellow, blue->green */
-  .card .digits span.c-red, .pchip .c-red{ color:var(--c-red); border-color:var(--c-red); }
-  .card .digits span.c-blue, .pchip .c-blue{ color:var(--c-blue); border-color:var(--c-blue); }
-  .card .digits span.c-green, .pchip .c-green{ color:var(--c-green); border-color:var(--c-green); }
-  .card .digits span.c-yellow, .pchip .c-yellow{ color:var(--c-yellow); border-color:var(--c-yellow); }
-  .card .digits span.c-purple, .pchip .c-purple{ color:var(--c-purple); border-color:var(--c-purple); }
-  .card.fxPlain::before{ content:''; position:absolute; top:0; left:0; right:0; height:5px; background:var(--plain); }
-  /* 4-digit cards: slightly smaller digits so they fit the same card */
-  body.deck4 .card .digits{ font-size:16.5px; }
-  body.deck4 .card .digits span{ padding:0 1px; }
-  body.deck4 .tableCenter .digits{ font-size:12px; }
+  .c-red{ color:var(--c-red); } .c-blue{ color:var(--c-blue); } .c-green{ color:var(--c-green); }
+  .c-yellow{ color:var(--c-yellow); } .c-purple{ color:var(--c-purple); }
+  /* 4-digit cards: as big as the card width allows */
+  body.deck4 .card .digits{ font-size:22px; }
+  body.deck4 .card .digits span{ padding:0; }
 
   .card .strip{
     position:absolute; top:0; left:0; right:0; height:19px;
     display:flex; align-items:center; justify-content:center;
-    font-size:9.5px; font-weight:700; letter-spacing:0.03em; color:#1a1a1a;
+    font-size:10.5px; font-weight:900; letter-spacing:0.04em; color:#14110a;
   }
+  .strip-plain{ background:var(--plain); }
   .strip-skip{ background:var(--skip); }
   .strip-reverse{ background:var(--reverse); }
   .strip-draw2{ background:var(--draw2); }
@@ -353,15 +352,24 @@
   }
   .primeSearchResult{ font-size:12px; color:var(--ink-dim); flex:1; }
   .primeCount{ font-size:12px; color:var(--ink-dim); margin:2px 0 8px; }
-  .primeGrid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(70px, 1fr)); gap:6px; }
+  .primeGrid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(72px, 1fr)); gap:6px; }
   .pchip{
-    position:relative; background:rgba(0,0,0,0.28); border:1px solid rgba(255,255,255,0.1);
-    border-top:3px solid var(--pc, rgba(255,255,255,0.12)); border-radius:8px; padding:6px 2px 4px;
-    text-align:center; font-family:'Space Mono',monospace; font-weight:700; font-size:19px;
+    position:relative; overflow:hidden; background:#0a0c0b; border:1px solid rgba(255,255,255,0.16);
+    border-radius:8px; padding:17px 2px 4px; text-align:center;
   }
-  .pchip .pnum span.lz{ opacity:0.3; }
-  .pchip .ptag{ display:block; font-size:9.5px; letter-spacing:.04em; margin-top:2px; color:var(--pc, transparent); min-height:11px; }
+  .pchip .pstrip{
+    position:absolute; top:0; left:0; right:0; height:14px; line-height:14px;
+    font-size:9px; font-weight:900; letter-spacing:0.04em; color:#14110a; background:var(--pc);
+  }
+  .pchip .pnum{ display:flex; justify-content:center; font-family:'Space Mono',monospace; font-weight:700; font-size:22px; line-height:1.15; }
+  .pchip .pnum span.lz{ opacity:0.45; }
   .pc-plain{ --pc:var(--plain); } .pc-skip{ --pc:var(--skip); } .pc-reverse{ --pc:var(--reverse); } .pc-draw2{ --pc:var(--draw2); } .pc-draw4{ --pc:var(--draw4); }
+  .rankBtn{
+    background:var(--mode-accent); color:#10170f; border:none; font-weight:900; font-size:15.5px;
+    padding:11px 28px; border-radius:999px; cursor:pointer; font-family:inherit;
+    box-shadow:0 6px 16px rgba(0,0,0,0.3);
+  }
+  .rankBtn:active{ transform:translateY(1px); }
   .nameRow{ margin:6px 0 0; }
   .nameRow input[type=text]{
     width:100%; background:var(--panel-2); border:1px solid rgba(255,255,255,0.14); border-radius:8px;
@@ -411,8 +419,10 @@
   }
   @media (max-width:560px){
     body{ font-size:15px; }
-    .tableCenter .card{ width:46px; height:66px; }
-    .tableCenter .digits{ font-size:13px; }
+    .tableCenter .card{ width:68px; height:96px; }
+    .tableCenter .card.back{ width:52px; height:74px; }
+    .tableCenter .digits{ font-size:24px; margin-top:7px; }
+    body.deck4 .tableCenter .digits{ font-size:20.5px; }
     .seatChip{ font-size:10.5px; padding:4px 9px; }
     .flowArrow{ font-size:15px; }
   }
@@ -530,6 +540,7 @@
   </div>
 
   <button class="primary" id="startBtn" data-modes="rate free" style="margin:14px 0;">ゲーム開始</button>
+  <div data-modes="rate" style="margin:-4px 0 14px;"><button class="rankBtn" id="rankingBtn">ランキングを見る</button></div>
 
   <div class="ratingSetup" data-modes="rate">
     <div style="display:flex; align-items:center; gap:8px; justify-content:center; flex-wrap:wrap;">
@@ -576,7 +587,7 @@
     </div>
   </div>
 
-  <div data-modes="rate"><button class="ghost" id="rankingBtn" style="margin-top:12px;">ランキングを見る</button></div>
+  
 
   <div class="primeBox" data-modes="prime">
     <p class="primeLegend">
@@ -587,9 +598,10 @@
     <div class="pfRow" id="primeDigitFilter"></div>
     <div class="pfRow" id="primeOrderFilter"></div>
     <div class="primeSearch">
-      <input type="text" inputmode="text" id="primeSearchInput" placeholder="並びで探す(例: 1,23,5)" maxlength="16">
-      <div class="primeSearchResult" id="primeSearchResult"></div>
+      <input type="text" inputmode="text" id="primeSearchInput" placeholder="数字で探す(例: 1,2,7,9)" maxlength="16">
+      <button class="ghost" id="primeSearchClear" style="padding:7px 12px; font-size:12.5px; flex:none;">クリア</button>
     </div>
+    <div class="primeSearchResult" id="primeSearchResult" style="margin:-4px 0 8px; min-height:1.2em;"></div>
     <div class="primeCount" id="primeCount"></div>
     <div class="primeGrid" id="primeGrid"></div>
   </div>
@@ -806,6 +818,7 @@
     hand.sort((a,b)=> (EFFECT_SORT_ORDER[a.effect]-EFFECT_SORT_ORDER[b.effect]) || (a.value-b.value));
   }
   const EFFECT_STRIP = {
+    plain:'<div class="strip strip-plain">NOR</div>',
     skip:'<div class="strip strip-skip">SKIP</div>',
     reverse:'<div class="strip strip-reverse">REV</div>',
     draw2:'<div class="strip strip-draw2">+2</div>',
@@ -1427,11 +1440,10 @@
     if(opts.multiSelected) cls += ' multiSelected';
     else if(opts.playable && opts.multiFaded===false) cls += ' multiPickable';
     if(opts.multiFaded) cls += ' multiFaded';
-    if(card.effect==='plain') cls += ' fxPlain';
     div.className = cls;
     const colorCls = digitColorClasses(card.digits);
     const digitsHtml = card.digits.map((d,i)=> `<span class="${colorCls[i]}">${d}</span>`).join('');
-    div.innerHTML = (card.effect!=='plain' ? EFFECT_STRIP[card.effect] : '') +
+    div.innerHTML = EFFECT_STRIP[card.effect] +
       (opts.multiSelected ? '<div class="multiCheck">✓</div>' : '') +
       `<div class="digits">${digitsHtml}</div>`;
     return div;
@@ -1918,8 +1930,26 @@
   function deck4Cards(){
     return deck4Values().map(n=>({ value:n, effect:classify4(n), len:String(n).length }));
   }
-  // search: "1,23,5" = cards whose digits contain 1, then 23, then 5 in that order
-  // (digits inside one group must be next to each other; a comma allows anything between)
+  // search: "1,2,7,9" = cards that contain a 1, a 2, a 7 and a 9 in any order (9721 ...).
+  // digits written together ("23") must sit next to each other; groups can't share a position.
+  function primeMatchGroups(str, groups){
+    const used = new Array(str.length).fill(false);
+    const place = i=>{
+      if(i===groups.length) return true;
+      const g = groups[i];
+      for(let pos=0; pos+g.length<=str.length; pos++){
+        if(str.substr(pos, g.length)!==g) continue;
+        let free = true;
+        for(let k=pos;k<pos+g.length;k++) if(used[k]){ free = false; break; }
+        if(!free) continue;
+        for(let k=pos;k<pos+g.length;k++) used[k] = true;
+        if(place(i+1)) return true;
+        for(let k=pos;k<pos+g.length;k++) used[k] = false;
+      }
+      return false;
+    };
+    return place(0);
+  }
   function primeQueryTokens(q){
     return q.split(/[,，、\s]+/).map(t=> t.replace(/[^0-9]/g,'')).filter(Boolean);
   }
@@ -1929,10 +1959,10 @@
     const input = document.getElementById('primeSearchInput');
     if(syncInput) input.value = f.query || '';
     const tokens = primeQueryTokens(f.query || '');
-    const re = tokens.length ? new RegExp(tokens.join('.*')) : null;
+    const match = tokens.length ? (str=> primeMatchGroups(str, tokens)) : null;
     const byEffect = c=> f.effect==='all' || c.effect===f.effect;
     const byDigits = c=> !f.digits || c.len===f.digits;
-    const bySearch = c=> !re || re.test(String(c.value).padStart(4,'0'));
+    const bySearch = c=> !match || match(String(c.value).padStart(4,'0'));
     document.getElementById('primeEffectFilter').innerHTML = PRIME_EFFECTS.map(([k,label])=>{
       const n = cards.filter(c=> (k==='all'||c.effect===k) && byDigits(c) && bySearch(c)).length;
       return `<button class="pfBtn ${f.effect===k?'selected':''}" data-k="${k}">${label}<span>${n}</span></button>`;
@@ -1946,14 +1976,14 @@
         `<button class="pfBtn ${f.order===k?'selected':''}" data-o="${k}">${label}</button>`).join('');
     const shown = cards.filter(c=> byEffect(c) && byDigits(c) && bySearch(c));
     if(f.order==='desc') shown.reverse();
-    document.getElementById('primeSearchResult').textContent = tokens.length ? tokens.join(' → ') + ' の順' : '';
+    document.getElementById('primeSearchResult').textContent = tokens.length ? tokens.join('・') + ' を含む(順不同)' : '';
     document.getElementById('primeCount').textContent = `${shown.length}枚を表示(全${cards.length}枚)`;
     document.getElementById('primeGrid').innerHTML = shown.map(c=>{
       const padded = String(c.value).padStart(4,'0');
       const colorCls = digitColorClasses(padded.split('').map(Number));
       const digits = padded.split('').map((d,i)=>
         `<span class="${colorCls[i]}${i < 4-c.len ? ' lz' : ''}">${d}</span>`).join('');
-      return `<div class="pchip pc-${c.effect}"><span class="pnum">${digits}</span><span class="ptag">${c.effect==='plain' ? '' : EFFECT_TAG[c.effect]}</span></div>`;
+      return `<div class="pchip pc-${c.effect}"><div class="pstrip">${c.effect==='plain' ? 'NOR' : EFFECT_TAG[c.effect]}</div><div class="pnum">${digits}</div></div>`;
     }).join('');
   }
   document.getElementById('primeEffectFilter').addEventListener('click', e=>{
@@ -1967,6 +1997,10 @@
   document.getElementById('primeOrderFilter').addEventListener('click', e=>{
     const b = e.target.closest('.pfBtn'); if(!b) return;
     modeSettings.prime.order = b.dataset.o; saveModeSettings(); renderPrimeTable();
+  });
+  document.getElementById('primeSearchClear').addEventListener('click', ()=>{
+    const input = document.getElementById('primeSearchInput');
+    input.value = ''; modeSettings.prime.query = ''; saveModeSettings(); renderPrimeTable(); input.focus();
   });
   document.getElementById('primeSearchInput').addEventListener('input', e=>{
     e.target.value = e.target.value.replace(/[^0-9,，、\s]/g,'');
