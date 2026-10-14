@@ -12,14 +12,22 @@
     --bg-line: rgba(255,255,255,0.05);
     --panel: #1f352b;
     --panel-2: #2a4235;
-    --ink: #f5f9f4;
-    --ink-dim: #cbdbd0;
+    --ink: #ffffff;
+    --ink-dim: #f2f2f2;
     --hundreds: #f0bc5c;
     --tens: #ea7267;
     --ones: #5ed1ab;
     /* card types: plain purple / skip blue / reverse green / draw2 red / draw4 yellow */
     --c-red: #ea7267; --c-blue: #7fb0ec; --c-green: #5ed1ab; --c-yellow: #f0bc5c; --c-purple: #d79ce6;
     --plain: var(--c-purple);
+    /* glow: playable cards shine, greyed-out cards lose the glow but keep their colours */
+    /* digit colours are a little brighter than the card-type colours */
+    --c-red-hi: #ff8075; --c-blue-hi: #8fc7ff; --c-green-hi: #6af2c6; --c-yellow-hi: #ffd36e; --c-purple-hi: #eab8ff;
+    --tg: none; --sgr: 0px; --sf: none;
+    --dis: grayscale(0.3) brightness(0.8) saturate(0.85);
+    /* card contrast tuning (colours only) */
+    --face-base: #0c1012; --face-mix: 0%; --frame-base: rgba(255,255,255,0.34); --frame-mix: 78%; --frame-w: 2px;
+    --shine: 0.28; --shade: 0.16;
     --skip: var(--c-blue);
     --reverse: var(--c-green);
     --draw2: var(--c-red);
@@ -33,8 +41,8 @@
   }
   /* each mode gets its own palette */
   body[data-mode="free"]{ --bg:#141c2e; --panel:#1e2b46; --panel-2:#2a3b5e; --bg-glow:#26395e; --mode-accent:#7fb0ec; }
-  body[data-mode="online"]{ --bg:#2a1a19; --panel:#3d2624; --panel-2:#543531; --bg-glow:#522d28; --ink:#ffffff; --ink-dim:#f4f1f0; --mode-accent:#ea7267; }
-  body[data-mode="prime"]{ --bg:#2a2519; --panel:#3d3524; --panel-2:#544931; --bg-glow:#524628; --ink:#ffffff; --ink-dim:#f6f3ec; --mode-accent:#f0bc5c; }
+  body[data-mode="online"]{ --bg:#2c1816; --panel:#412320; --panel-2:#59302c; --bg-glow:#572923; --mode-accent:#ea7267; }
+  body[data-mode="prime"]{ --bg:#2c2616; --panel:#413720; --panel-2:#594b2c; --bg-glow:#574723; --mode-accent:#f0bc5c; }
   *{box-sizing:border-box; touch-action:manipulation;}
   html,body{
     -webkit-user-select:none; user-select:none;
@@ -177,8 +185,10 @@
   .card .digits{ display:flex; font-family:'Space Mono',monospace; font-weight:700; font-size:24px; margin-top:7px;}
   .card .digits span{ padding:0 1px; }
   /* digit colours: 0 purple, 2/4/5/6/8 red, 1/3/7/9 blue; a repeated digit turns red->yellow, blue->green */
-  .c-red{ color:var(--c-red); } .c-blue{ color:var(--c-blue); } .c-green{ color:var(--c-green); }
-  .c-yellow{ color:var(--c-yellow); } .c-purple{ color:var(--c-purple); }
+  .c-red{ color:var(--c-red-hi); } .c-blue{ color:var(--c-blue-hi); } .c-green{ color:var(--c-green-hi); }
+  .c-yellow{ color:var(--c-yellow-hi); } .c-purple{ color:var(--c-purple-hi); }
+  .card:not(.disabled) .digits span, .pchip .pnum span{ text-shadow:var(--tg); }
+  .card:not(.disabled) .strip, .pchip .pstrip{ box-shadow:0 0 var(--sgr) var(--sc, transparent); filter:var(--sf); }
   /* 4-digit cards: as big as the card width allows */
   body.deck4 .card .digits{ font-size:22px; }
   body.deck4 .card .digits span{ padding:0; }
@@ -188,18 +198,31 @@
     display:flex; align-items:center; justify-content:center;
     font-size:10.5px; font-weight:900; letter-spacing:0.04em; color:#14110a;
   }
-  .strip-plain{ background:var(--plain); }
-  .strip-skip{ background:var(--skip); }
-  .strip-reverse{ background:var(--reverse); }
-  .strip-draw2{ background:var(--draw2); }
-  .strip-draw4{ background:var(--draw4); }
-  .strip-both{ background:linear-gradient(90deg, var(--reverse), var(--draw2)); }
+  .strip-plain{ background:var(--plain); --sc:var(--plain); }
+  .strip-skip{ background:var(--skip); --sc:var(--skip); }
+  .strip-reverse{ background:var(--reverse); --sc:var(--reverse); }
+  .strip-draw2{ background:var(--draw2); --sc:var(--draw2); }
+  .strip-draw4{ background:var(--draw4); --sc:var(--draw4); }
+  .strip-both{ background:linear-gradient(90deg, var(--reverse), var(--draw2)); --sc:var(--reverse); }
 
   .card.playable{ cursor:pointer; transition:transform .12s, box-shadow .12s; }
   @media (hover: hover){
     .card.playable:hover{ transform:translateY(-8px); box-shadow:0 14px 22px rgba(0,0,0,0.5); }
   }
-  .card.disabled{ filter:grayscale(0.6) brightness(0.65); cursor:default; }
+  .card.disabled{ filter:var(--dis); cursor:default; }
+  .card, .pchip{ --tc:var(--plain); }
+  .card.fx-skip, .pchip.pc-skip{ --tc:var(--skip); }
+  .card.fx-reverse, .card.fx-both, .pchip.pc-reverse{ --tc:var(--reverse); }
+  .card.fx-draw2, .pchip.pc-draw2{ --tc:var(--draw2); }
+  .card.fx-draw4, .pchip.pc-draw4{ --tc:var(--draw4); }
+  .card:not(.back), .pchip{
+    background:linear-gradient(180deg, color-mix(in srgb, var(--tc) var(--face-mix), var(--face-base)) 0%, var(--face-base) 78%);
+    border:var(--frame-w) solid color-mix(in srgb, var(--tc) var(--frame-mix), var(--frame-base));
+  }
+  .card .strip::after, .pchip .pstrip::after{
+    content:''; position:absolute; inset:0; pointer-events:none;
+    background:linear-gradient(180deg, rgba(255,255,255,var(--shine)), rgba(0,0,0,var(--shade)));
+  }
   .card.stackable{ box-shadow:0 0 0 3px var(--draw4), 0 5px 12px rgba(0,0,0,0.4); cursor:pointer; }
   .card.multiPickable{ cursor:pointer; }
   .card.multiSelected{
@@ -368,20 +391,39 @@
   @media (min-width:600px){ .primeGrid{ grid-template-columns:repeat(auto-fill, minmax(76px, 1fr)); } }
   .pchip{
     position:relative; overflow:hidden; background:#0a0c0b; border:1px solid rgba(255,255,255,0.16);
-    border-radius:7px; padding:15px 1px 11px; text-align:center;
+    border-radius:7px; padding:15px 1px 12px; text-align:center;
   }
   .primeGrid.brushing .pchip{ cursor:pointer; }
   .pchip .pstrip{
     position:absolute; top:0; left:0; right:0; height:14px; line-height:14px;
-    font-size:9px; font-weight:900; letter-spacing:0.04em; color:#14110a; background:var(--pc);
+    font-size:9px; font-weight:900; letter-spacing:0.04em; color:#14110a; background:var(--pc); --sc:var(--pc);
   }
   .pchip .pnum{ display:flex; justify-content:center; font-family:'Space Mono',monospace; font-weight:700; font-size:22px; line-height:1.1; }
-  .pchip .pmarks{ position:absolute; left:0; right:0; bottom:1px; height:11px; line-height:11px; font-size:9.5px; display:flex; justify-content:center; gap:3px; }
+  .pchip .pmarks{ position:absolute; left:0; right:0; bottom:1px; height:12px; line-height:12px; font-size:11px; display:flex; justify-content:center; gap:3px; }
   .mk-check{ color:var(--c-green); } .mk-star{ color:var(--c-yellow); } .mk-heart{ color:var(--c-red); } .mk-diamond{ color:var(--c-blue); }
   .pfBtn.selected .mk{ color:#10170f; }
   .pfLabel{ font-size:11px; color:var(--ink-dim); align-self:center; min-width:3.2em; }
   .pfBtn.mkBtn{ padding:5px 11px; font-size:13px; }
   .dlRow{ display:flex; gap:8px; margin:0 0 8px; }
+  body.markOpen .primeBox{ padding-bottom:150px; }
+  .markDrawer{
+    position:fixed; left:50%; bottom:0; width:min(520px,100%); z-index:40;
+    transform:translate(-50%,110%); transition:transform .26s cubic-bezier(.2,.8,.2,1);
+    background:var(--panel-2); border-radius:20px 20px 0 0; border-top:1px solid rgba(255,255,255,0.22);
+    box-shadow:0 -10px 30px rgba(0,0,0,0.5); padding:12px 14px calc(14px + env(safe-area-inset-bottom));
+    text-align:center;
+  }
+  .markDrawer.open{ transform:translate(-50%,0); }
+  .mdHead{ display:flex; justify-content:space-between; align-items:center; font-size:14px; font-weight:900; margin-bottom:10px; }
+  .mdClose{ background:transparent; color:var(--ink); border:1px solid rgba(255,255,255,0.3); border-radius:999px; padding:5px 14px; font-size:12.5px; cursor:pointer; font-family:inherit; }
+  .mdRow{ display:flex; gap:10px; }
+  .mdBtn{
+    flex:1; height:58px; border-radius:16px; background:var(--panel); border:2px solid rgba(255,255,255,0.22);
+    font-size:32px; line-height:1; cursor:pointer; font-family:inherit; padding:0;
+  }
+  .mdBtn.selected{ background:var(--mode-accent); border-color:transparent; box-shadow:0 0 14px var(--mode-accent); }
+  .mdBtn.selected .mk{ color:#10170f; }
+  .mdHint{ margin-top:8px; font-size:11.5px; color:var(--ink-dim); }
   .dlBtn{
     flex:1; background:var(--panel-2); color:var(--ink); border:1px solid rgba(255,255,255,0.18);
     border-radius:8px; padding:8px 6px; font-size:12.5px; cursor:pointer; font-family:inherit;
@@ -474,7 +516,7 @@
   </div>
   <p class="modeNote" id="modeNote"></p>
 
-<div class="rulesWrap">
+<div class="rulesWrap" data-modes="rate free online">
   <h2 class="rulesHead">ルール <button class="ghost" id="rulesToggleBtn" style="padding:4px 12px; font-size:12px; margin-left:6px;">表示</button></h2>
   <div class="rules" id="rulesBody" style="display:none;">
     <details class="rl" open><summary>基本</summary><ul>
@@ -484,7 +526,7 @@
       <li><b>色</b>: 種類は 通常=紫 / スキップ=青 / リバース=緑 / ドロー2=赤 / ドロー4=黄。数字は 0=紫、2・4・5・6・8=赤、1・3・7・9=青で、同じ数字が被ると赤→黄、青→緑(0は紫のまま)。</li>
       <li><b>モード</b>: レート(CPU戦・レートに反映) / フリー(人数・初手枚数・ドロー制限・桁数を設定) / オンライン(2人・P2P) / プライム(4桁デッキの全カード表)。設定はモードごとに保存されます。</li>
     </ul></details>
-    <details class="rl"><summary>特殊カードと積み(3桁デッキ)</summary><ul>
+    <details class="rl"><summary>特殊カードと積み(3桁デッキ・レート/オンライン)</summary><ul>
       <li><span class="eff-tag tag-skip">スキップ</span> 回文素数(131・373など)</li>
       <li><span class="eff-tag tag-rev">リバース</span> エマープ(107→701など)</li>
       <li><span class="eff-tag tag-d2">ドロー2</span> 隣り合う位が同じ(113・599など)</li>
@@ -502,11 +544,12 @@
       <li><b>2人</b>: リバースはスキップ扱い。飛ばされる側は、手札のリバース(かリバース+ドロー2)を捨てて<b>打ち消し</b>、番を取り戻せます(設定でオフ可)。リバース+ドロー2で打ち消すと、元の相手にドロー2を返せます(設定でオンオフ)。</li>
       <li><b>3人以上</b>: リバースは向きを変えます。リバース+ドロー2は方向転換と積み上げが同時に起き、ドロー2と同格です。</li>
     </ul></details>
-    <details class="rl" data-modes="free prime"><summary>4桁デッキ(フリー・試験中)</summary><ul>
+    <details class="rl" data-modes="free"><summary>フリーの分類と4桁デッキ(試験中)</summary><ul>
+      <li>フリーモードは、3桁デッキも4桁デッキも<b>同じ分類</b>です(下の特殊カードの条件)。レート/オンラインは従来の分類です。</li>
       <li>カードは「数字の組み合わせごとに、並べ替えてできる<b>最大の素数1枚</b>」の443枚です(1279・1297…は9721だけ、113・131・311は0311だけ)。1〜4桁を4桁のゼロ埋め(0002など)で表示し、0も位の一致に数えます。</li>
       <li><b>ドロー系</b>: 1・3・7・9が合わせて1個以下のカード。同じ数字が2つで<span class="eff-tag tag-d2">ドロー2</span>(8863)、3つで<span class="eff-tag tag-d4">ドロー4</span>(0002)。被りがなければ通常カードです。</li>
       <li><span class="eff-tag tag-skip">スキップ</span> 両端が同じ。 <span class="eff-tag tag-rev">リバース</span> 全部1・3・7・9で被りあり(スキップ優先)。どちらも頭の0は数えません。</li>
-      <li><b>桁ロック</b>: 4桁未満のカードが出ると(特殊カードも)その桁数が上限になり、上限より桁数が多い特殊カードは出せません(通常カードは出せる。積みでは上限を無視)。4桁の通常カードで解除されます。重ね出しは順番も効き、特殊カードは桁の多い順、通常カードは4桁を最後にすると解除できます。</li>
+      <li><b>桁ロック</b>(フリーの3桁・4桁どちらも): デッキの桁数(3桁デッキは3、4桁デッキは4)より短いカードが出ると(特殊カードも)その桁数が上限になり、上限より桁数が多い特殊カードは出せません(通常カードは出せる。積みでは上限を無視)。最大桁数の通常カードで解除されます。重ね出しは順番も効き、特殊カードは桁の多い順、通常カードは最大桁数を最後にすると解除できます。</li>
     </ul></details>
     <details class="rl" data-modes="rate"><summary>レートの変動幅</summary>
       <table>
@@ -516,6 +559,30 @@
         <tr><td>4人対戦</td><td style="text-align:right;">+25</td><td style="text-align:right;">-16</td></tr>
       </table>
     </details>
+  </div>
+</div>
+
+<div class="rulesWrap usageWrap" data-modes="prime">
+  <h2 class="rulesHead">使い方 <button class="ghost" id="usageToggleBtn" style="padding:4px 12px; font-size:12px; margin-left:6px;">表示</button></h2>
+  <div class="rules" id="usageBody" style="display:none;">
+    <details class="rl" open><summary>見る・並べる</summary><ul>
+      <li>4桁デッキ全443枚の一覧です。<b>効果</b>と<b>桁数</b>のボタンで絞り込み、<b>昇順/降順</b>で並べ替えます(ボタンの数字は今の条件での枚数)。</li>
+      <li>1〜3桁のカードは頭に0を足して4桁で表示し、薄い0は桁数に数えません。</li>
+    </ul></details>
+    <details class="rl" open><summary>検索の書き方</summary><ul>
+      <li><b>1,2,7,9</b> のようにカンマで区切ると、順番は問わず全部含むカード(9721など)。続けて書いた数字は並びのまま探します(<b>97</b> は 9 の次が 7)。</li>
+      <li><b>(1,3,7,9)</b> は「この中のどれか<b>1つの数字</b>」として扱います。数字と続けて書けるので、<b>148(1,3,7,9)</b> は 1481・1483・1487・1489(4つ子素数)を探せます。</li>
+      <li><b>x・y・z</b> は「何でもよい1桁」。同じ文字は同じ数字です。<b>9xy1</b> は千の位9・一の位1(位置を指定)、<b>x,x</b> は同じ数字が2つ、<b>x,x,x</b> は3つ。</li>
+      <li><b>t=10・j=11・q=12・k=13</b> として読み取ります(<b>k9</b> は 139)。大文字・小文字・全角は区別しません。</li>
+      <li>書き方は組み合わせられます(例: <b>(1,3),x,x</b>)。検索欄の下に「読み取り」が出ます。入力は保存されます。</li>
+    </ul></details>
+    <details class="rl"><summary>マーク</summary><ul>
+      <li>「マークをつける」を押すと下からパネルが出ます。✔★♥◆を選んでカードをタップすると付け外しできます(1枚に複数OK)。</li>
+      <li>「しぼる」は押すたびに ー → あり → なし → ー。<b>押した時点のマークで判定して一覧を固定</b>します(後からマークを変えても、押し直すまで変わりません)。</li>
+    </ul></details>
+    <details class="rl"><summary>保存</summary><ul>
+      <li>「画像で保存」「表(CSV)で保存」で、今表示している一覧をファイルにできます(画像にはマークも入ります)。</li>
+    </ul></details>
   </div>
 </div>
 
@@ -543,7 +610,7 @@
   <div data-modes="free">
     <p class="settingTitle">フリーモードの設定</p>
     <div class="cpu-select" id="digitSelect" style="margin-bottom:14px;">
-      <div class="cpu-btn selected" data-d="3">3桁<br><span style="font-size:10.5px;opacity:0.7;">168枚・今まで通り</span></div>
+      <div class="cpu-btn selected" data-d="3">3桁<br><span style="font-size:10.5px;opacity:0.7;">168枚・分類は4桁と同じ</span></div>
       <div class="cpu-btn" data-d="4">4桁(試験)<br><span style="font-size:10.5px;opacity:0.7;">443枚・特殊カード変更</span></div>
     </div>
     <div class="settingGroup">
@@ -610,17 +677,13 @@
   
 
   <div class="primeBox" data-modes="prime">
-    <p class="primeLegend">
-      4桁デッキの全カードです(数字の組み合わせごとに最大の素数だけ。1〜3桁は頭に0を足して表示)。<br>
-      <b>ドロー2</b>=1,3,7,9が合わせて1個以下で2桁被り ・ <b>ドロー4</b>=同じで3桁被り ・ <b>スキップ</b>=両端が同じ ・ <b>リバース</b>=全部1,3,7,9で被りあり ・ 他は通常
-    </p>
     <div class="pfRow" id="primeEffectFilter"></div>
     <div class="pfRow" id="primeDigitFilter"></div>
     <div class="pfRow" id="primeOrderFilter"></div>
     <div class="pfRow" id="primeBrushRow"></div>
     <div class="pfRow" id="primeMarkFilter"></div>
     <div class="primeSearch">
-      <input type="text" inputmode="text" id="primeSearchInput" placeholder="数字で探す(例: 1,2,7,9)" maxlength="16">
+      <input type="text" inputmode="text" id="primeSearchInput" placeholder="例: 1,2,7,9 / 9xy1 / 148(1,3,7,9)" maxlength="40" autocapitalize="none" autocorrect="off" spellcheck="false" enterkeyhint="search">
       <button class="ghost" id="primeSearchClear" style="padding:7px 12px; font-size:12.5px; flex:none;">クリア</button>
     </div>
     <div class="primeSearchResult" id="primeSearchResult" style="margin:-4px 0 8px; min-height:1.2em;"></div>
@@ -630,6 +693,11 @@
       <button class="dlBtn" id="primeDlCsv">表(CSV)で保存</button>
     </div>
     <div class="primeGrid" id="primeGrid"></div>
+    <div class="markDrawer" id="markDrawer">
+      <div class="mdHead"><span>マークをつける</span><button class="mdClose" id="markDrawerClose">閉じる</button></div>
+      <div class="mdRow" id="markDrawerBtns"></div>
+      <div class="mdHint">マークを選んで、カードをタップ(もう一度タップで外れます)</div>
+    </div>
   </div>
   <div class="onlineBox" data-modes="online">
     <p style="font-size:12.5px;color:var(--ink-dim);margin:0 0 8px;">オンライン対戦(2人・P2P、試験実装)</p>
@@ -774,6 +842,9 @@
 
   // how many digits the cards of the current game have (3 = normal deck, 4 = free-mode 4-digit deck)
   let DECK_WIDTH = 3;
+  // 'new' = the 4-digit classification (also used by the free-mode 3-digit deck), 'old' = original 3-digit classes
+  let DECK_RULES = 'old';
+  function setDeckRules(r){ DECK_RULES = r; }
   function setDeckWidth(w){
     DECK_WIDTH = w;
     document.body.classList.toggle('deck4', w===4);
@@ -865,7 +936,7 @@
     const values = DECK_WIDTH===4 ? deck4Values() : allPrimes;
     const deck = values.map(n=>({
       id: Math.random().toString(36).slice(2), value:n, digits:digitsOf(n),
-      effect: DECK_WIDTH===4 ? classify4(n) : classify(n)
+      effect: (DECK_WIDTH===4 || DECK_RULES==='new') ? classify4(n) : classify(n)
     }));
     return shuffle(deck);
   }
@@ -889,6 +960,7 @@
     const handSize = Math.max(1, Math.min(opts.handSize || 7, Math.floor(160/seats)));
     document.body.dataset.mode = mode;
     setDeckWidth(opts.digits===4 ? 4 : 3);
+    setDeckRules((opts.digits===4 || mode==='free') ? 'new' : 'old');
     const deck = buildDeck();
     const players = [{name: myDisplayName(), human:true, hand:[]}];
     if(onlineGuestName) players.push({name: onlineGuestName, human:true, hand:[]});
@@ -905,7 +977,7 @@
       interruptEnabled: document.getElementById('interruptToggle').checked,
       bothCancelDrawEnabled: document.getElementById('bothCancelDrawToggle').checked,
       multiDumpEnabled: document.getElementById('multiDumpToggle').checked,
-      mode, unlimitedDraw: !!opts.unlimitedDraw, digitCeiling: 4,
+      mode, unlimitedDraw: !!opts.unlimitedDraw, digitCeiling: DECK_WIDTH,
       multiSelection: [],
       multiMode: false
     };
@@ -925,19 +997,20 @@
   // many digits; special cards with more digits than the ceiling can't be played (plain cards
   // of any size can, and stacking a draw ignores the check). A 4-digit PLAIN card lifts it.
   function realDigits(card){ return String(card.value).length; }
-  function ceilingNow(){ return (state && state.digitCeiling) || 4; }
+  function lockEnabled(){ return DECK_RULES==='new'; }   // free mode (3 and 4 digit decks)
+  function ceilingNow(){ return (state && state.digitCeiling) || DECK_WIDTH; }
   function blockedByLock(card, ceiling){
-    return DECK_WIDTH===4 && card.effect!=='plain' && realDigits(card) > ceiling;
+    return lockEnabled() && card.effect!=='plain' && realDigits(card) > ceiling;
   }
   function ceilingAfterPlay(card, ceiling){
-    if(DECK_WIDTH!==4) return ceiling;
+    if(!lockEnabled()) return ceiling;
     const L = realDigits(card);
-    if(L<4) return Math.min(ceiling, L);
-    return card.effect==='plain' ? 4 : ceiling;
+    if(L<DECK_WIDTH) return Math.min(ceiling, L);
+    return card.effect==='plain' ? DECK_WIDTH : ceiling;
   }
   // log "LOCK（n）" whenever the ceiling changes
   function applyLock(card){
-    if(DECK_WIDTH!==4) return;
+    if(!lockEnabled()) return;
     const before = ceilingNow();
     state.digitCeiling = ceilingAfterPlay(card, before);
     if(state.digitCeiling!==before) logSystem('LOCK', String(state.digitCeiling));
@@ -987,7 +1060,7 @@
     const stacking = state.pendingDraw>0;
     if(stacking && !canStackOnPending(card)) return [];
     const candidate = selected.concat([card]);
-    if(!stacking && DECK_WIDTH===4){
+    if(!stacking && lockEnabled()){
       // cards are played in this order, each one lowering (or lifting) the ceiling for the next
       let c = ceilingNow();
       for(const x of candidate){
@@ -1287,9 +1360,9 @@
     p.hand = remaining;
     selected.forEach(c=> state.discardPile.push(c));
     const lockBefore = ceilingNow();
-    selected.forEach(c=>{ if(DECK_WIDTH===4) state.digitCeiling = ceilingAfterPlay(c, ceilingNow()); });
+    selected.forEach(c=>{ if(lockEnabled()) state.digitCeiling = ceilingAfterPlay(c, ceilingNow()); });
     logMultiPlay(p.name, selected, p.hand.length);
-    if(DECK_WIDTH===4 && state.digitCeiling!==lockBefore) logSystem('LOCK', String(state.digitCeiling));
+    if(lockEnabled() && state.digitCeiling!==lockBefore) logSystem('LOCK', String(state.digitCeiling));
     if(playerIdx===mySeat){ state.multiMode = false; state.multiSelection = []; }
 
     if(p.hand.length===0){
@@ -1382,7 +1455,7 @@
         });
       });
     });
-    if(best && DECK_WIDTH===4){
+    if(best && lockEnabled()){
       // special cards: biggest first (each short card lowers the ceiling);
       // plain cards: smallest first so a 4-digit plain card comes last and lifts the lock
       best = best.slice().sort((a,b)=> best[0].effect==='plain'
@@ -1466,6 +1539,7 @@
     if(opts.multiSelected) cls += ' multiSelected';
     else if(opts.playable && opts.multiFaded===false) cls += ' multiPickable';
     if(opts.multiFaded) cls += ' multiFaded';
+    cls += ' fx-' + card.effect;
     div.className = cls;
     const colorCls = digitColorClasses(card.digits);
     const digitsHtml = card.digits.map((d,i)=> `<span class="${colorCls[i]}">${d}</span>`).join('');
@@ -1527,10 +1601,10 @@
 
     document.getElementById('drawCount').textContent = state.drawPile.length;
     const lockEl = document.getElementById('lockBadge');
-    if(DECK_WIDTH===4){
+    if(lockEnabled()){
       const c = ceilingNow();
       lockEl.style.display = 'block';
-      lockEl.classList.toggle('on', c<4);
+      lockEl.classList.toggle('on', c<DECK_WIDTH);
       lockEl.innerHTML = `桁ロック：<b>${c}</b>`;
     } else lockEl.style.display = 'none';
 
@@ -1905,6 +1979,7 @@
     return out;
   }
   let modeSettings = loadModeSettings();
+  modeSettings.prime.brush = '';   // the marking panel always starts closed
   let currentMode = MODE_ORDER.includes(localStorage.getItem('primeUnoMode')) ? localStorage.getItem('primeUnoMode') : 'rate';
   let lastNumCpu = 2;
   function saveModeSettings(){
@@ -1941,6 +2016,7 @@
     });
     document.getElementById('modeNote').textContent = MODE_NOTE[mode];
     const st = modeSettings[mode];
+    if(mode!=='prime') closeMarkDrawer();
     if(mode==='prime'){ renderPrimeTable(true); return; }
     document.getElementById('multiDumpToggle').checked = !!st.multiDump;
     document.getElementById('interruptToggle').checked = !!st.interrupt;
@@ -1968,40 +2044,101 @@
   function renderMarkControls(){
     const f = modeSettings.prime;
     document.getElementById('primeBrushRow').innerHTML = '<span class="pfLabel">つける</span>' +
-      PRIME_MARKS.map(m=> `<button class="pfBtn mkBtn ${f.brush===m.key?'selected':''}" data-b="${m.key}"><span class="mk mk-${m.key}">${m.glyph}</span></button>`).join('') +
-      `<button class="pfBtn" data-b="" style="${f.brush?'':'display:none;'}">やめる</button>` +
-      `<button class="pfBtn" data-clear="1">全消去</button>`;
+      `<button class="pfBtn ${f.brush?'selected':''}" id="markOpenBtn">マークをつける</button>` +
+      '<button class="pfBtn" data-clear="1">全消去</button>';
+    document.getElementById('markDrawerBtns').innerHTML = PRIME_MARKS.map(m=>
+      `<button class="mdBtn ${f.brush===m.key?'selected':''}" data-b="${m.key}" aria-label="${m.name}"><span class="mk mk-${m.key}">${m.glyph}</span></button>`).join('');
     document.getElementById('primeMarkFilter').innerHTML = '<span class="pfLabel">しぼる</span>' +
       PRIME_MARKS.map(m=>{
         const st = f.markFilter[m.key] ? f.markFilter[m.key].mode : '';
         return `<button class="pfBtn mkBtn ${st?'selected':''}" data-m="${m.key}"><span class="mk mk-${m.key}">${m.glyph}</span> ${st==='has'?'あり':st==='not'?'なし':'－'}</button>`;
       }).join('');
   }
+  function openMarkDrawer(){
+    document.getElementById('markDrawer').classList.add('open');
+    document.body.classList.add('markOpen');
+    if(!modeSettings.prime.brush) modeSettings.prime.brush = PRIME_MARKS[0].key;
+    renderPrimeTable();
+  }
+  function closeMarkDrawer(){
+    modeSettings.prime.brush = '';
+    document.getElementById('markDrawer').classList.remove('open');
+    document.body.classList.remove('markOpen');
+    if(document.body.dataset.mode==='prime') renderPrimeTable();
+  }
   function deck4Cards(){
     return deck4Values().map(n=>({ value:n, effect:classify4(n), len:String(n).length }));
   }
-  // search: "1,2,7,9" = cards that contain a 1, a 2, a 7 and a 9 in any order (9721 ...).
-  // digits written together ("23") must sit next to each other; groups can't share a position.
-  function primeMatchGroups(str, groups){
-    const used = new Array(str.length).fill(false);
-    const place = i=>{
-      if(i===groups.length) return true;
-      const g = groups[i];
-      for(let pos=0; pos+g.length<=str.length; pos++){
-        if(str.substr(pos, g.length)!==g) continue;
+  // ---- search language ----
+  //  1,2,7,9      each comma-separated term can sit anywhere, in any order (9721 ...)
+  //  97 / 23,1    digits written together stay together
+  //  (1,3,7,9)    any ONE of these digits
+  //  x y z        any digit; the same letter is always the same digit (9xy1, x,x = a repeated digit)
+  const RANK_DIGITS = { t:'10', j:'11', q:'12', k:'13' };   // like card ranks
+  function parsePrimeQuery(raw){
+    const q = String(raw||'').normalize('NFKC').replace(/[、，]/g,',').toLowerCase();
+    const terms = []; let cur = [], depth = 0, alt = '', alts = null;
+    const flush = ()=>{ if(cur.length){ terms.push(cur); cur = []; } };
+    for(const ch of q){
+      if(depth>0){
+        if(ch===')'){
+          depth = 0; if(alt) alts.push(alt); alt = '';
+          if(alts.length) cur.push({ t:'any', alts }); alts = null;
+        } else if(/[0-9]/.test(ch)) alt += ch;
+        else if(ch in RANK_DIGITS) alt += RANK_DIGITS[ch];
+        else if(ch===',' || /\s/.test(ch)){ if(alt){ alts.push(alt); alt = ''; } }
+      } else if(ch==='('){ depth = 1; alt = ''; alts = []; }
+      else if(ch===')') return { error:true };
+      else if(/[0-9]/.test(ch)) cur.push({ t:'d', v:ch });
+      else if(ch in RANK_DIGITS) RANK_DIGITS[ch].split('').forEach(d=> cur.push({ t:'d', v:d }));
+      else if(/[xyz]/.test(ch)) cur.push({ t:'v', n:ch });
+      else if(ch===',' || /\s/.test(ch)) flush();
+    }
+    if(depth>0) return { error:true };
+    flush();
+    return { terms };
+  }
+  function primeQueryText(terms){
+    return terms.map(t=> t.map(a=> a.t==='d' ? a.v : a.t==='v' ? a.n : '(' + a.alts.join('|') + ')').join('')).join(' ・ ');
+  }
+  // every term must be placed on its own, unused, consecutive digits of the card
+  function primeMatchQuery(str, terms){
+    const n = str.length, used = new Array(n).fill(false), bind = {};
+    const runTerm = ti=>{
+      if(ti===terms.length) return true;
+      for(let s0=0; s0<n; s0++) if(consume(ti, 0, s0)) return true;
+      return false;
+    };
+    const consume = (ti, ai, pos)=>{
+      const term = terms[ti];
+      if(ai===term.length) return runTerm(ti+1);
+      if(pos>=n || used[pos]) return false;
+      const atom = term[ai];
+      if(atom.t==='d'){
+        if(str[pos]!==atom.v) return false;
+        used[pos] = true; const r = consume(ti, ai+1, pos+1); used[pos] = false; return r;
+      }
+      if(atom.t==='v'){
+        const had = atom.n in bind;
+        if(had && str[pos]!==bind[atom.n]) return false;
+        if(!had) bind[atom.n] = str[pos];
+        used[pos] = true; const r = consume(ti, ai+1, pos+1); used[pos] = false;
+        if(!r && !had) delete bind[atom.n];
+        return r;
+      }
+      for(const alt of atom.alts){
+        if(pos+alt.length>n || str.substr(pos, alt.length)!==alt) continue;
         let free = true;
-        for(let k=pos;k<pos+g.length;k++) if(used[k]){ free = false; break; }
+        for(let k=pos;k<pos+alt.length;k++) if(used[k]){ free = false; break; }
         if(!free) continue;
-        for(let k=pos;k<pos+g.length;k++) used[k] = true;
-        if(place(i+1)) return true;
-        for(let k=pos;k<pos+g.length;k++) used[k] = false;
+        for(let k=pos;k<pos+alt.length;k++) used[k] = true;
+        const r = consume(ti, ai+1, pos+alt.length);
+        for(let k=pos;k<pos+alt.length;k++) used[k] = false;
+        if(r) return true;
       }
       return false;
     };
-    return place(0);
-  }
-  function primeQueryTokens(q){
-    return q.split(/[,，、\s]+/).map(t=> t.replace(/[^0-9]/g,'')).filter(Boolean);
+    return runTerm(0);
   }
   function renderPrimeTable(syncInput){
     const cards = deck4Cards();
@@ -2009,8 +2146,8 @@
     f.marks = f.marks || {}; f.markFilter = f.markFilter || {};
     const input = document.getElementById('primeSearchInput');
     if(syncInput) input.value = f.query || '';
-    const tokens = primeQueryTokens(f.query || '');
-    const match = tokens.length ? (str=> primeMatchGroups(str, tokens)) : null;
+    const parsed = parsePrimeQuery(f.query || '');
+    const match = (parsed.terms && parsed.terms.length) ? (str=> primeMatchQuery(str, parsed.terms)) : null;
     const byEffect = c=> f.effect==='all' || c.effect===f.effect;
     const byDigits = c=> !f.digits || c.len===f.digits;
     const bySearch = c=> !match || match(String(c.value).padStart(4,'0'));
@@ -2031,7 +2168,7 @@
     const shown = cards.filter(c=> byEffect(c) && byDigits(c) && bySearch(c) && byMarks(c));
     if(f.order==='desc') shown.reverse();
     primeShown = shown;
-    document.getElementById('primeSearchResult').textContent = tokens.length ? tokens.join('・') + ' を含む(順不同)' : '';
+    document.getElementById('primeSearchResult').textContent = parsed.error ? '( ) の対応を確認してください' : (match ? '読み取り: ' + primeQueryText(parsed.terms) : '');
     document.getElementById('primeCount').textContent = `${shown.length}枚を表示(全${cards.length}枚)`;
     document.getElementById('primeGrid').innerHTML = shown.map(c=>{
       const padded = String(c.value).padStart(4,'0');
@@ -2050,9 +2187,15 @@
       if(confirm('すべてのマークを消しますか?')){ f.marks = {}; saveModeSettings(); renderPrimeTable(); }
       return;
     }
-    f.brush = (b.dataset.b && f.brush!==b.dataset.b) ? b.dataset.b : '';
-    saveModeSettings(); renderPrimeTable();
+    if(b.id==='markOpenBtn'){ document.getElementById('markDrawer').classList.contains('open') ? closeMarkDrawer() : openMarkDrawer(); }
   });
+  document.getElementById('markDrawerBtns').addEventListener('click', e=>{
+    const b = e.target.closest('.mdBtn'); if(!b) return;
+    modeSettings.prime.brush = b.dataset.b;
+    renderMarkControls();
+    document.getElementById('primeGrid').classList.add('brushing');
+  });
+  document.getElementById('markDrawerClose').addEventListener('click', closeMarkDrawer);
   // press = look at the marks right now and keep that list: later marking doesn't change what is shown
   // until the button is pressed again (none -> あり -> なし -> none)
   document.getElementById('primeMarkFilter').addEventListener('click', e=>{
@@ -2096,12 +2239,19 @@
     const input = document.getElementById('primeSearchInput');
     input.value = ''; modeSettings.prime.query = ''; saveModeSettings(); renderPrimeTable(); input.focus();
   });
-  document.getElementById('primeSearchInput').addEventListener('input', e=>{
-    e.target.value = e.target.value.replace(/[^0-9,，、\s]/g,'');
-    modeSettings.prime.query = e.target.value;
+  // works with Japanese keyboards too: while a character is still being composed the text box is left
+  // alone and the search runs on the cleaned-up copy
+  const primeSearchBox = document.getElementById('primeSearchInput');
+  function applyPrimeSearch(commit){
+    const raw = primeSearchBox.value;
+    const clean = raw.normalize('NFKC').replace(/、/g,',').toLowerCase().replace(/[^0-9,\s()xyztjqk]/g,'');
+    if(commit && clean!==raw) primeSearchBox.value = clean;
+    modeSettings.prime.query = clean;
     saveModeSettings();
     renderPrimeTable();
-  });
+  }
+  primeSearchBox.addEventListener('input', e=> applyPrimeSearch(!e.isComposing));
+  primeSearchBox.addEventListener('compositionend', ()=> applyPrimeSearch(true));
 
   // ---- download what is shown: PNG picture and CSV table ----
   function downloadBlob(blob, filename){
@@ -2119,8 +2269,7 @@
     const f = modeSettings.prime, parts = [];
     if(f.effect!=='all') parts.push(PRIME_EFFECTS.find(x=>x[0]===f.effect)[1]);
     if(f.digits) parts.push(f.digits + '桁');
-    const tk = primeQueryTokens(f.query||'');
-    if(tk.length) parts.push('検索 ' + tk.join(','));
+    if((f.query||'').trim()) parts.push('検索 ' + f.query.trim());
     PRIME_MARKS.forEach(m=>{ if(f.markFilter[m.key]) parts.push(m.glyph + (f.markFilter[m.key].mode==='has' ? 'あり' : 'なし')); });
     parts.push(f.order==='desc' ? '降順' : '昇順');
     return parts.join(' / ');
@@ -2139,7 +2288,7 @@
   document.getElementById('primeDlImage').addEventListener('click', ()=>{
     const cs = getComputedStyle(document.body);
     const css = n=> cs.getPropertyValue(n).trim();
-    const colors = { 'c-red':css('--c-red'), 'c-blue':css('--c-blue'), 'c-green':css('--c-green'), 'c-yellow':css('--c-yellow'), 'c-purple':css('--c-purple') };
+    const colors = { 'c-red':css('--c-red-hi'), 'c-blue':css('--c-blue-hi'), 'c-green':css('--c-green-hi'), 'c-yellow':css('--c-yellow-hi'), 'c-purple':css('--c-purple-hi') };
     const effColor = { plain:css('--plain'), skip:css('--skip'), reverse:css('--reverse'), draw2:css('--draw2'), draw4:css('--draw4') };
     const markColor = { check:css('--c-green'), star:css('--c-yellow'), heart:css('--c-red'), diamond:css('--c-blue') };
     const f = modeSettings.prime;
@@ -2510,6 +2659,13 @@
   ['mousedown','touchstart'].forEach(ev=> resetHoldBtn.addEventListener(ev, (e)=>{ e.preventDefault(); startResetHold(); }));
   ['mouseup','mouseleave','touchend','touchcancel'].forEach(ev=> resetHoldBtn.addEventListener(ev, cancelResetHold));
 
+  document.getElementById('usageToggleBtn').addEventListener('click', ()=>{
+    const body = document.getElementById('usageBody');
+    const btn = document.getElementById('usageToggleBtn');
+    const show = body.style.display==='none';
+    body.style.display = show ? 'block' : 'none';
+    btn.textContent = show ? '閉じる' : '表示';
+  });
   document.getElementById('rulesToggleBtn').addEventListener('click', ()=>{
     const body = document.getElementById('rulesBody');
     const btn = document.getElementById('rulesToggleBtn');
@@ -2625,6 +2781,7 @@
         onlineGameActive = true;
         document.body.dataset.mode = 'online';
         setDeckWidth(3);
+        setDeckRules('old');
         enterGameLayout();
         applyRemoteState(msg.view);
         logSystem('MATCH START');
