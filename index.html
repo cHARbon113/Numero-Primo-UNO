@@ -33,8 +33,8 @@
   }
   /* each mode gets its own palette */
   body[data-mode="free"]{ --bg:#141c2e; --panel:#1e2b46; --panel-2:#2a3b5e; --bg-glow:#26395e; --mode-accent:#7fb0ec; }
-  body[data-mode="online"]{ --bg:#221b1c; --panel:#352a2b; --panel-2:#473a3b; --bg-glow:#4a3436; --ink-dim:#eadcd9; --mode-accent:#ea7267; }
-  body[data-mode="prime"]{ --bg:#221f17; --panel:#352f23; --panel-2:#463f2f; --bg-glow:#4a412b; --ink-dim:#ece4cf; --mode-accent:#f0bc5c; }
+  body[data-mode="online"]{ --bg:#2a1a19; --panel:#3d2624; --panel-2:#543531; --bg-glow:#522d28; --ink:#ffffff; --ink-dim:#f4f1f0; --mode-accent:#ea7267; }
+  body[data-mode="prime"]{ --bg:#2a2519; --panel:#3d3524; --panel-2:#544931; --bg-glow:#524628; --ink:#ffffff; --ink-dim:#f6f3ec; --mode-accent:#f0bc5c; }
   *{box-sizing:border-box; touch-action:manipulation;}
   html,body{
     -webkit-user-select:none; user-select:none;
@@ -46,7 +46,7 @@
     margin:0;
     font-family:'Zen Kaku Gothic New', sans-serif;
     color:var(--ink);
-    font-size:16px;
+    font-size:15px;
     font-weight:700;
     background:
       repeating-linear-gradient(0deg, var(--bg-line) 0px, var(--bg-line) 1px, transparent 1px, transparent 34px),
@@ -66,14 +66,26 @@
 
   #startScreen{
     background:var(--panel); border-radius:16px; box-shadow:var(--shadow);
-    padding:32px 28px; max-width:520px; width:100%; text-align:center;
+    padding:24px 20px; max-width:520px; width:100%; text-align:center;
     border:1px solid rgba(255,255,255,0.07);
   }
   #startScreen h2{ margin-top:0; font-size:20px; }
   #startScreen .rules{
-    text-align:left; font-size:14.5px; line-height:2.15; color:var(--ink-dim);
-    background:rgba(0,0,0,0.2); border-radius:10px; padding:16px 18px; margin:18px 0;
+    text-align:left; font-size:12.5px; line-height:1.65; font-weight:500; color:var(--ink-dim);
+    background:rgba(0,0,0,0.2); border-radius:10px; padding:6px 12px; margin:10px 0 14px;
   }
+  .rules details.rl{ border-bottom:1px solid rgba(255,255,255,0.08); padding:4px 0; }
+  .rules details.rl:last-child{ border-bottom:none; }
+  .rules summary{ cursor:pointer; font-size:13.5px; font-weight:900; color:var(--ink); padding:6px 0; list-style:none; }
+  .rules summary::-webkit-details-marker{ display:none; }
+  .rules summary::before{ content:'▸'; display:inline-block; width:1.1em; color:var(--mode-accent); transition:transform .15s; }
+  .rules details[open] > summary::before{ transform:rotate(90deg); }
+  .rules ul{ margin:0 0 6px; padding:0 0 0 1.1em; }
+  .rules li{ margin:0 0 3px; }
+  .rules b{ color:var(--ink); font-weight:900; }
+  .rules table{ width:100%; border-collapse:collapse; font-size:12px; }
+  .rules th, .rules td{ padding:3px 6px; }
+
   #startScreen .rules b{ color:var(--ink); }
   .eff-tag{ display:inline-block; font-family:'Space Mono', monospace; font-weight:700; padding:1px 7px; border-radius:5px; font-size:13px;}
   .tag-skip{ background:rgba(127,176,236,0.22); color:var(--skip); }
@@ -286,8 +298,8 @@
     padding:12px 2px 10px; border-radius:15px; cursor:pointer; font-family:inherit;
     display:flex; flex-direction:column; align-items:center; gap:2px; transition:color .2s;
   }
-  .modeBtn .mTitle{ font-size:14px; font-weight:900; letter-spacing:0; white-space:nowrap; }
-  .modeBtn .mSub{ font-size:9.5px; opacity:0.8; white-space:nowrap; }
+  .modeBtn .mTitle{ font-size:13px; font-weight:900; letter-spacing:0; white-space:nowrap; }
+  .modeBtn .mSub{ font-size:9px; opacity:0.85; white-space:nowrap; }
   .modeBtn.selected{ color:#10170f; }
   .modeToggle.locked .modeBtn:not(.selected){ opacity:0.4; cursor:default; }
   .modeNote{ font-size:12.5px; color:var(--ink-dim); margin:0 0 14px; height:1.4em; line-height:1.4em; white-space:nowrap; overflow:hidden; }
@@ -310,8 +322,8 @@
   }
   .sw input:checked + .swSlider{ background:var(--mode-accent); border-color:transparent; }
   .sw input:checked + .swSlider::after{ transform:translateX(21px); background:#10170f; }
-  .settingGroup{ display:flex; flex-direction:column; gap:10px; align-items:center; margin:0 auto 16px; font-size:13px; color:var(--ink-dim); }
-  .settingTitle{ font-size:13px; color:var(--ink-dim); margin:0 0 8px; }
+  .settingGroup{ display:flex; flex-direction:column; gap:8px; align-items:center; margin:0 auto 12px; font-size:13px; color:var(--ink-dim); }
+  .settingTitle{ font-size:12px; color:var(--ink-dim); margin:0 0 6px; }
 
   /* steppers (free mode) */
   .stepRow{ display:flex; align-items:center; justify-content:space-between; gap:12px; width:100%; max-width:360px; text-align:left; }
@@ -352,16 +364,28 @@
   }
   .primeSearchResult{ font-size:12px; color:var(--ink-dim); flex:1; }
   .primeCount{ font-size:12px; color:var(--ink-dim); margin:2px 0 8px; }
-  .primeGrid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(72px, 1fr)); gap:6px; }
+  .primeGrid{ display:grid; grid-template-columns:repeat(4, 1fr); gap:4px; }
+  @media (min-width:600px){ .primeGrid{ grid-template-columns:repeat(auto-fill, minmax(76px, 1fr)); } }
   .pchip{
     position:relative; overflow:hidden; background:#0a0c0b; border:1px solid rgba(255,255,255,0.16);
-    border-radius:8px; padding:17px 2px 4px; text-align:center;
+    border-radius:7px; padding:15px 1px 11px; text-align:center;
   }
+  .primeGrid.brushing .pchip{ cursor:pointer; }
   .pchip .pstrip{
     position:absolute; top:0; left:0; right:0; height:14px; line-height:14px;
     font-size:9px; font-weight:900; letter-spacing:0.04em; color:#14110a; background:var(--pc);
   }
-  .pchip .pnum{ display:flex; justify-content:center; font-family:'Space Mono',monospace; font-weight:700; font-size:22px; line-height:1.15; }
+  .pchip .pnum{ display:flex; justify-content:center; font-family:'Space Mono',monospace; font-weight:700; font-size:22px; line-height:1.1; }
+  .pchip .pmarks{ position:absolute; left:0; right:0; bottom:1px; height:11px; line-height:11px; font-size:9.5px; display:flex; justify-content:center; gap:3px; }
+  .mk-check{ color:var(--c-green); } .mk-star{ color:var(--c-yellow); } .mk-heart{ color:var(--c-red); } .mk-diamond{ color:var(--c-blue); }
+  .pfBtn.selected .mk{ color:#10170f; }
+  .pfLabel{ font-size:11px; color:var(--ink-dim); align-self:center; min-width:3.2em; }
+  .pfBtn.mkBtn{ padding:5px 11px; font-size:13px; }
+  .dlRow{ display:flex; gap:8px; margin:0 0 8px; }
+  .dlBtn{
+    flex:1; background:var(--panel-2); color:var(--ink); border:1px solid rgba(255,255,255,0.18);
+    border-radius:8px; padding:8px 6px; font-size:12.5px; cursor:pointer; font-family:inherit;
+  }
   .pchip .pnum span.lz{ opacity:0.45; }
   .pc-plain{ --pc:var(--plain); } .pc-skip{ --pc:var(--skip); } .pc-reverse{ --pc:var(--reverse); } .pc-draw2{ --pc:var(--draw2); } .pc-draw4{ --pc:var(--draw4); }
   .rankBtn{
@@ -418,7 +442,7 @@
     .logPanel{ height:220px; max-height:none; }
   }
   @media (max-width:560px){
-    body{ font-size:15px; }
+    body{ font-size:14px; }
     .tableCenter .card{ width:68px; height:96px; }
     .tableCenter .card.back{ width:52px; height:74px; }
     .tableCenter .digits{ font-size:24px; margin-top:7px; }
@@ -453,49 +477,45 @@
 <div class="rulesWrap">
   <h2 class="rulesHead">ルール <button class="ghost" id="rulesToggleBtn" style="padding:4px 12px; font-size:12px; margin-left:6px;">表示</button></h2>
   <div class="rules" id="rulesBody" style="display:none;">
-    <p style="margin:0 0 6px; font-weight:700; color:var(--ink);">共通ルール</p>
-    ・カードは1〜3桁の素数(3桁表記でゼロ埋め。例: 2→002, 11→011)。全168枚、重複なし。<br>
-    ・場のカードと<b>いずれか同じ位に同じ数字</b>があれば出せます。<br>
-    ・出せるカードがあっても、あえて山札から引くことができます。引いた後は、出せるカードがあっても出さずにパスできます(1ターンに最低1回、引くか出すかのアクションが必要です)。<br>
-    <span data-modes="free prime">
-    ・<b>4桁デッキ(フリーモード・試験中)</b>: カードは「数字の組み合わせごとに、並べ替えてできる素数のうち最大の1枚だけ」の443枚です(例: 1279・1297…は9721だけ、113・131・311は0311だけ。頭の0は組み合わせに数えません)。1〜4桁をすべて4桁表記でゼロ埋めし(0002など)、その0も位の一致に数えます。特殊カードはこの4桁デッキ専用で、重ならないように決まっています。<br>
-    　<b>ドロー系</b>: 1・3・7・9の数字が合わせて1個以下のカード(8623など)。2つ同じなら<b>ドロー2</b>(8863など)、3つ同じなら<b>ドロー4</b>(0002など)。同じ数字がないカードは通常カードです。ドロー4にはドロー4でしか重ねられません。<br>
-    　<b>桁ロック</b>: 4桁より短いカード(特殊カードも含む)が出されると、その桁数が「上限」になり、上限より桁数が多い特殊カードは出せなくなります(通常カードは何桁でも出せます)。4桁の通常カードを出すと解除されます。ドローを積むときは上限を無視できますが、出した短いカードで上限は下がります。まとめて出すときは出す順番にも効きます(特殊カードは桁が多い順、通常カードは4桁を最後にすると解除できます)。<br>
-    　<b>スキップ</b>: 両端の数字が同じ(頭の0は数えない)。<b>リバース</b>: 数字がすべて1・3・7・9で、同じ数字が被っているカード(頭の0は数えない。スキップが優先)。それ以外は通常カードです。重ね出しの条件(2つの位が一致)は3桁と同じです。<br>
-    </span>
-    ・<b>色</b>: カードの種類は 通常=紫 / スキップ=青 / リバース=緑 / ドロー2=赤 / ドロー4=黄。数字の色は 0=紫、2・4・5・6・8=赤、1・3・7・9=青で、同じ数字が被ると赤は黄色、青は緑になります(0は被っても紫)。<br>
-    ・<b>モード</b>: レート(CPU対戦。勝敗がレートに反映されます) / フリー(レートに影響しません。人数・初手の枚数・ドローの回数制限を変えられます) / オンライン(2人・P2P)。ルール設定はモードごとに保存されます。<br>
-    ・<span class="eff-tag tag-skip">スキップ</span> 回文素数(131, 373など)<br>
-    ・<span class="eff-tag tag-rev">リバース</span> エマープ/可逆素数(107→701など)<br>
-    ・<span class="eff-tag tag-d2">ドロー2</span> 隣接する位が同じ数字(113, 599など)<br>
-    ・<span class="eff-tag tag-d4">ドロー4</span> 002・003・005・007(1桁素数)<br>
-    ・ドロー2/ドロー4は<b>積み可能</b>。同じ位が揃っていなくても重ねられ、枚数は加算されます(+2の上に+4で6枚)。<b>ドロー4はドロー4でしか対抗できません</b>(ドロー2では返せません)。積まずに引き受けると番が終わります。<br>
-    ・リバースとドロー2が両方該当するカードがあります(エマープかつ隣接ペア)。効果の出方は人数によって異なります。<br>
-    ・<b>最後の1枚は「通常カード」でしか上がれません</b>(特殊カードでは勝てません)。<br>
-    ・<b>まとめて出す(重ね出し)</b>: いつでも使えます(ドロー2/ドロー4の積みの最中も含みます)。同じ種類のカード同士で、2つの位の数字が全員一致していて、そのうち1つが場と合っていれば、まとめて出せます。積みの最中は、場との一致は不要で、積める強さのカード同士であれば出せます。ドロー2とリバース+ドロー2は同じ種類として扱われ、混ぜてまとめて出せます。誰かが「残り1枚」の状態の間は、必要な一致が1つの位でよくなります。効果は出した枚数分そのまま繰り返し発動します(ドロー2を3枚まとめれば+6、ドロー4を2枚まとめれば+8、スキップを2枚まとめれば2人分飛ばす、など。2人対戦では、何枚出しても飛ばされるのは相手だけです)。まとめて出しても手札は種類を問わず最低1枚残る必要があり、重ね出しだけで上がることはできません(設定でオフ可)。
-
-    <p style="margin:14px 0 6px; font-weight:700; color:var(--ink);">2人対戦だけのルール</p>
-    ・リバースはスキップとして扱われます(2人だと方向転換の意味が無いため)。ただし「リバース+ドロー2」の同時発動カードは<b>ドローのみ発動</b>し、スキップにはなりません。積みの強さもドロー2と同格です。<br>
-    ・スキップされる側は、手札のリバース(またはリバース+ドロー2)を1枚捨てることで打ち消して自分の番を取り戻せます(リバース打ち消しを有効にする設定がオンの場合。手元にどちらも無ければそのままスキップされます。打ち消した後、通常通り任意で山札から引くこともできます)。<br>
-    ・<b>リバース+ドロー2で打ち消した場合</b>、その場でドロー2を仕掛けた側(元のプレイヤー)に発動させることもできます(設定でオンオフ可能)。
-
-    <p style="margin:14px 0 6px; font-weight:700; color:var(--ink);">3人以上だけのルール</p>
-    ・リバースは通常通り順番の向きを変えます。<br>
-    ・リバースとドロー2が両方該当するカードは、<b>リバースとドロー2が同時に発動</b>します(方向転換+積み上げ)。<br>
-    ・積みの強さはドロー2とリバース+ドロー2が同格(どちらでも重ねられる)で、ドロー4だけが別格です。
-
-    <p style="margin:14px 0 6px; font-weight:700; color:var(--ink);">レートの変動幅</p>
-    <table style="width:100%; border-collapse:collapse; font-size:13px;">
-      <tr style="border-bottom:1px solid rgba(255,255,255,0.12);">
-        <th style="text-align:left; padding:4px 6px;">対戦人数</th>
-        <th style="text-align:right; padding:4px 6px; color:var(--reverse);">勝ち</th>
-        <th style="text-align:right; padding:4px 6px; color:var(--danger);">負け</th>
-      </tr>
-      <tr><td style="padding:4px 6px;">2人対戦</td><td style="text-align:right; padding:4px 6px;">+15</td><td style="text-align:right; padding:4px 6px;">-10</td></tr>
-      <tr><td style="padding:4px 6px;">3人対戦</td><td style="text-align:right; padding:4px 6px;">+20</td><td style="text-align:right; padding:4px 6px;">-13</td></tr>
-      <tr><td style="padding:4px 6px;">4人対戦</td><td style="text-align:right; padding:4px 6px;">+25</td><td style="text-align:right; padding:4px 6px;">-16</td></tr>
-    </table>
-    <p style="font-size:12px; color:var(--ink-dim); margin-top:6px;">人数が多いほど勝った時の増加が大きく、負けた時の減少は相対的に小さくなります。</p>
+    <details class="rl" open><summary>基本</summary><ul>
+      <li>場のカードと<b>どれか1つの位に同じ数字</b>があれば出せます(1〜3桁の素数。3桁表記でゼロ埋め 例: 2→002)。</li>
+      <li>出せても山札から引けます。引いたあとは出さずにパスできます(1ターンに最低1回は引くか出す)。</li>
+      <li><b>最後の1枚は通常カード</b>でしか上がれません。</li>
+      <li><b>色</b>: 種類は 通常=紫 / スキップ=青 / リバース=緑 / ドロー2=赤 / ドロー4=黄。数字は 0=紫、2・4・5・6・8=赤、1・3・7・9=青で、同じ数字が被ると赤→黄、青→緑(0は紫のまま)。</li>
+      <li><b>モード</b>: レート(CPU戦・レートに反映) / フリー(人数・初手枚数・ドロー制限・桁数を設定) / オンライン(2人・P2P) / プライム(4桁デッキの全カード表)。設定はモードごとに保存されます。</li>
+    </ul></details>
+    <details class="rl"><summary>特殊カードと積み(3桁デッキ)</summary><ul>
+      <li><span class="eff-tag tag-skip">スキップ</span> 回文素数(131・373など)</li>
+      <li><span class="eff-tag tag-rev">リバース</span> エマープ(107→701など)</li>
+      <li><span class="eff-tag tag-d2">ドロー2</span> 隣り合う位が同じ(113・599など)</li>
+      <li><span class="eff-tag tag-d4">ドロー4</span> 1桁素数(002・003・005・007)</li>
+      <li>リバースとドロー2の両方に当たるカードは、3人以上では同時発動、2人ではドローのみです。</li>
+      <li><b>積み</b>: ドロー2/4は場と合わなくても重ねられ、枚数は加算されます(+2に+4で6枚)。<b>ドロー4はドロー4でしか返せません</b>。積まずに引き受けると番が終わります。</li>
+    </ul></details>
+    <details class="rl"><summary>まとめて出す(重ね出し)</summary><ul>
+      <li>同じ種類のカードで、<b>2つの位が全員一致</b>し、そのうち1つが場と合っていれば出せます(積み中は場との一致は不要)。</li>
+      <li>誰かが<b>残り1枚</b>の間は、一致は1つの位でOKです。ドロー2とリバース+ドロー2は混ぜて出せます。</li>
+      <li>効果は枚数分そのまま重なります(+2を3枚で+6、スキップ2枚で2人飛ばす)。2人対戦では何枚でも飛ばされるのは相手だけです。</li>
+      <li>手札は最低1枚残す必要があり、重ね出しだけでは上がれません(設定でオフ可)。</li>
+    </ul></details>
+    <details class="rl"><summary>2人対戦 / 3人以上</summary><ul>
+      <li><b>2人</b>: リバースはスキップ扱い。飛ばされる側は、手札のリバース(かリバース+ドロー2)を捨てて<b>打ち消し</b>、番を取り戻せます(設定でオフ可)。リバース+ドロー2で打ち消すと、元の相手にドロー2を返せます(設定でオンオフ)。</li>
+      <li><b>3人以上</b>: リバースは向きを変えます。リバース+ドロー2は方向転換と積み上げが同時に起き、ドロー2と同格です。</li>
+    </ul></details>
+    <details class="rl" data-modes="free prime"><summary>4桁デッキ(フリー・試験中)</summary><ul>
+      <li>カードは「数字の組み合わせごとに、並べ替えてできる<b>最大の素数1枚</b>」の443枚です(1279・1297…は9721だけ、113・131・311は0311だけ)。1〜4桁を4桁のゼロ埋め(0002など)で表示し、0も位の一致に数えます。</li>
+      <li><b>ドロー系</b>: 1・3・7・9が合わせて1個以下のカード。同じ数字が2つで<span class="eff-tag tag-d2">ドロー2</span>(8863)、3つで<span class="eff-tag tag-d4">ドロー4</span>(0002)。被りがなければ通常カードです。</li>
+      <li><span class="eff-tag tag-skip">スキップ</span> 両端が同じ。 <span class="eff-tag tag-rev">リバース</span> 全部1・3・7・9で被りあり(スキップ優先)。どちらも頭の0は数えません。</li>
+      <li><b>桁ロック</b>: 4桁未満のカードが出ると(特殊カードも)その桁数が上限になり、上限より桁数が多い特殊カードは出せません(通常カードは出せる。積みでは上限を無視)。4桁の通常カードで解除されます。重ね出しは順番も効き、特殊カードは桁の多い順、通常カードは4桁を最後にすると解除できます。</li>
+    </ul></details>
+    <details class="rl" data-modes="rate"><summary>レートの変動幅</summary>
+      <table>
+        <tr style="border-bottom:1px solid rgba(255,255,255,0.12);"><th style="text-align:left;">対戦人数</th><th style="text-align:right; color:var(--reverse);">勝ち</th><th style="text-align:right; color:var(--danger);">負け</th></tr>
+        <tr><td>2人対戦</td><td style="text-align:right;">+15</td><td style="text-align:right;">-10</td></tr>
+        <tr><td>3人対戦</td><td style="text-align:right;">+20</td><td style="text-align:right;">-13</td></tr>
+        <tr><td>4人対戦</td><td style="text-align:right;">+25</td><td style="text-align:right;">-16</td></tr>
+      </table>
+    </details>
   </div>
 </div>
 
@@ -597,12 +617,18 @@
     <div class="pfRow" id="primeEffectFilter"></div>
     <div class="pfRow" id="primeDigitFilter"></div>
     <div class="pfRow" id="primeOrderFilter"></div>
+    <div class="pfRow" id="primeBrushRow"></div>
+    <div class="pfRow" id="primeMarkFilter"></div>
     <div class="primeSearch">
       <input type="text" inputmode="text" id="primeSearchInput" placeholder="数字で探す(例: 1,2,7,9)" maxlength="16">
       <button class="ghost" id="primeSearchClear" style="padding:7px 12px; font-size:12.5px; flex:none;">クリア</button>
     </div>
     <div class="primeSearchResult" id="primeSearchResult" style="margin:-4px 0 8px; min-height:1.2em;"></div>
     <div class="primeCount" id="primeCount"></div>
+    <div class="dlRow">
+      <button class="dlBtn" id="primeDlImage">画像で保存</button>
+      <button class="dlBtn" id="primeDlCsv">表(CSV)で保存</button>
+    </div>
     <div class="primeGrid" id="primeGrid"></div>
   </div>
   <div class="onlineBox" data-modes="online">
@@ -818,7 +844,7 @@
     hand.sort((a,b)=> (EFFECT_SORT_ORDER[a.effect]-EFFECT_SORT_ORDER[b.effect]) || (a.value-b.value));
   }
   const EFFECT_STRIP = {
-    plain:'<div class="strip strip-plain">NOR</div>',
+    plain:'<div class="strip strip-plain"></div>',
     skip:'<div class="strip strip-skip">SKIP</div>',
     reverse:'<div class="strip strip-reverse">REV</div>',
     draw2:'<div class="strip strip-draw2">+2</div>',
@@ -1854,7 +1880,7 @@
     rate:   { multiDump:true, interrupt:true, bothCancel:true, cpu:2 },
     free:   { multiDump:true, interrupt:true, bothCancel:true, players:3, handSize:7, unlimitedDraw:false, digits:3 },
     online: { multiDump:true, interrupt:true, bothCancel:true, cpu:0 },
-    prime:  { effect:'all', digits:0, order:'asc', query:'' }
+    prime:  { effect:'all', digits:0, order:'asc', query:'', brush:'', marks:{}, markFilter:{} }
   };
   function loadModeSettings(){
     let saved = null;
@@ -1927,6 +1953,30 @@
   // ---- prime mode: browse every card of the 4-digit deck ----
   const PRIME_EFFECTS = [['all','すべて'],['plain','通常'],['draw2','ドロー2'],['draw4','ドロー4'],['skip','スキップ'],['reverse','リバース']];
   const PRIME_DIGITS = [[0,'全桁'],[1,'1桁'],[2,'2桁'],[3,'3桁'],[4,'4桁']];
+  // ---- marks (✔ ★ ♥ ◆): several per card, filters judge at the moment they are pressed ----
+  const PRIME_MARKS = [
+    { key:'check',   glyph:'\u2714\uFE0E', name:'チェック' },
+    { key:'star',    glyph:'\u2605',        name:'スター' },
+    { key:'heart',   glyph:'\u2665\uFE0E', name:'ハート' },
+    { key:'diamond', glyph:'\u25C6',        name:'ダイヤ' }
+  ];
+  let primeShown = [];
+  function marksHtml(value){
+    const have = modeSettings.prime.marks[value] || [];
+    return PRIME_MARKS.filter(m=> have.includes(m.key)).map(m=> `<span class="mk mk-${m.key}">${m.glyph}</span>`).join('');
+  }
+  function renderMarkControls(){
+    const f = modeSettings.prime;
+    document.getElementById('primeBrushRow').innerHTML = '<span class="pfLabel">つける</span>' +
+      PRIME_MARKS.map(m=> `<button class="pfBtn mkBtn ${f.brush===m.key?'selected':''}" data-b="${m.key}"><span class="mk mk-${m.key}">${m.glyph}</span></button>`).join('') +
+      `<button class="pfBtn" data-b="" style="${f.brush?'':'display:none;'}">やめる</button>` +
+      `<button class="pfBtn" data-clear="1">全消去</button>`;
+    document.getElementById('primeMarkFilter').innerHTML = '<span class="pfLabel">しぼる</span>' +
+      PRIME_MARKS.map(m=>{
+        const st = f.markFilter[m.key] ? f.markFilter[m.key].mode : '';
+        return `<button class="pfBtn mkBtn ${st?'selected':''}" data-m="${m.key}"><span class="mk mk-${m.key}">${m.glyph}</span> ${st==='has'?'あり':st==='not'?'なし':'－'}</button>`;
+      }).join('');
+  }
   function deck4Cards(){
     return deck4Values().map(n=>({ value:n, effect:classify4(n), len:String(n).length }));
   }
@@ -1956,6 +2006,7 @@
   function renderPrimeTable(syncInput){
     const cards = deck4Cards();
     const f = modeSettings.prime;
+    f.marks = f.marks || {}; f.markFilter = f.markFilter || {};
     const input = document.getElementById('primeSearchInput');
     if(syncInput) input.value = f.query || '';
     const tokens = primeQueryTokens(f.query || '');
@@ -1963,19 +2014,23 @@
     const byEffect = c=> f.effect==='all' || c.effect===f.effect;
     const byDigits = c=> !f.digits || c.len===f.digits;
     const bySearch = c=> !match || match(String(c.value).padStart(4,'0'));
+    // mark filters work on a snapshot taken when the button was pressed (see the click handler)
+    const snaps = Object.values(f.markFilter).map(x=> new Set(x.ids));
+    const byMarks = c=> snaps.every(set=> set.has(c.value));
     document.getElementById('primeEffectFilter').innerHTML = PRIME_EFFECTS.map(([k,label])=>{
-      const n = cards.filter(c=> (k==='all'||c.effect===k) && byDigits(c) && bySearch(c)).length;
+      const n = cards.filter(c=> (k==='all'||c.effect===k) && byDigits(c) && bySearch(c) && byMarks(c)).length;
       return `<button class="pfBtn ${f.effect===k?'selected':''}" data-k="${k}">${label}<span>${n}</span></button>`;
     }).join('');
     document.getElementById('primeDigitFilter').innerHTML = PRIME_DIGITS.map(([k,label])=>{
-      const n = cards.filter(c=> byEffect(c) && (!k || c.len===k) && bySearch(c)).length;
+      const n = cards.filter(c=> byEffect(c) && (!k || c.len===k) && bySearch(c) && byMarks(c)).length;
       return `<button class="pfBtn ${f.digits===k?'selected':''}" data-d="${k}">${label}<span>${n}</span></button>`;
     }).join('');
     document.getElementById('primeOrderFilter').innerHTML =
       [['asc','昇順'],['desc','降順']].map(([k,label])=>
         `<button class="pfBtn ${f.order===k?'selected':''}" data-o="${k}">${label}</button>`).join('');
-    const shown = cards.filter(c=> byEffect(c) && byDigits(c) && bySearch(c));
+    const shown = cards.filter(c=> byEffect(c) && byDigits(c) && bySearch(c) && byMarks(c));
     if(f.order==='desc') shown.reverse();
+    primeShown = shown;
     document.getElementById('primeSearchResult').textContent = tokens.length ? tokens.join('・') + ' を含む(順不同)' : '';
     document.getElementById('primeCount').textContent = `${shown.length}枚を表示(全${cards.length}枚)`;
     document.getElementById('primeGrid').innerHTML = shown.map(c=>{
@@ -1983,9 +2038,48 @@
       const colorCls = digitColorClasses(padded.split('').map(Number));
       const digits = padded.split('').map((d,i)=>
         `<span class="${colorCls[i]}${i < 4-c.len ? ' lz' : ''}">${d}</span>`).join('');
-      return `<div class="pchip pc-${c.effect}"><div class="pstrip">${c.effect==='plain' ? 'NOR' : EFFECT_TAG[c.effect]}</div><div class="pnum">${digits}</div></div>`;
+      return `<div class="pchip pc-${c.effect}" data-v="${c.value}"><div class="pstrip">${c.effect==='plain' ? '' : EFFECT_TAG[c.effect]}</div><div class="pnum">${digits}</div><div class="pmarks">${marksHtml(c.value)}</div></div>`;
     }).join('');
+    document.getElementById('primeGrid').classList.toggle('brushing', !!f.brush);
+    renderMarkControls();
   }
+  document.getElementById('primeBrushRow').addEventListener('click', e=>{
+    const b = e.target.closest('.pfBtn'); if(!b) return;
+    const f = modeSettings.prime;
+    if(b.dataset.clear){
+      if(confirm('すべてのマークを消しますか?')){ f.marks = {}; saveModeSettings(); renderPrimeTable(); }
+      return;
+    }
+    f.brush = (b.dataset.b && f.brush!==b.dataset.b) ? b.dataset.b : '';
+    saveModeSettings(); renderPrimeTable();
+  });
+  // press = look at the marks right now and keep that list: later marking doesn't change what is shown
+  // until the button is pressed again (none -> あり -> なし -> none)
+  document.getElementById('primeMarkFilter').addEventListener('click', e=>{
+    const b = e.target.closest('.pfBtn'); if(!b || !b.dataset.m) return;
+    const f = modeSettings.prime, key = b.dataset.m;
+    const cur = f.markFilter[key] ? f.markFilter[key].mode : '';
+    const next = cur==='' ? 'has' : cur==='has' ? 'not' : '';
+    if(!next){ delete f.markFilter[key]; }
+    else {
+      const ids = deck4Cards().filter(c=>{
+        const has = (f.marks[c.value]||[]).includes(key);
+        return next==='has' ? has : !has;
+      }).map(c=> c.value);
+      f.markFilter[key] = { mode: next, ids };
+    }
+    saveModeSettings(); renderPrimeTable();
+  });
+  document.getElementById('primeGrid').addEventListener('click', e=>{
+    const f = modeSettings.prime;
+    const chip = e.target.closest('.pchip'); if(!chip || !f.brush) return;
+    const v = Number(chip.dataset.v);
+    const have = f.marks[v] || [];
+    const next = have.includes(f.brush) ? have.filter(k=> k!==f.brush) : have.concat([f.brush]);
+    if(next.length) f.marks[v] = next; else delete f.marks[v];
+    chip.querySelector('.pmarks').innerHTML = marksHtml(v);   // only this chip changes; the list is not re-judged
+    saveModeSettings();
+  });
   document.getElementById('primeEffectFilter').addEventListener('click', e=>{
     const b = e.target.closest('.pfBtn'); if(!b) return;
     modeSettings.prime.effect = b.dataset.k; saveModeSettings(); renderPrimeTable();
@@ -2007,6 +2101,82 @@
     modeSettings.prime.query = e.target.value;
     saveModeSettings();
     renderPrimeTable();
+  });
+
+  // ---- download what is shown: PNG picture and CSV table ----
+  function downloadBlob(blob, filename){
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=> URL.revokeObjectURL(url), 5000);
+  }
+  function stamp(){
+    const d = new Date(), z = n=> String(n).padStart(2,'0');
+    return `${d.getFullYear()}${z(d.getMonth()+1)}${z(d.getDate())}_${z(d.getHours())}${z(d.getMinutes())}`;
+  }
+  function primeFilterSummary(){
+    const f = modeSettings.prime, parts = [];
+    if(f.effect!=='all') parts.push(PRIME_EFFECTS.find(x=>x[0]===f.effect)[1]);
+    if(f.digits) parts.push(f.digits + '桁');
+    const tk = primeQueryTokens(f.query||'');
+    if(tk.length) parts.push('検索 ' + tk.join(','));
+    PRIME_MARKS.forEach(m=>{ if(f.markFilter[m.key]) parts.push(m.glyph + (f.markFilter[m.key].mode==='has' ? 'あり' : 'なし')); });
+    parts.push(f.order==='desc' ? '降順' : '昇順');
+    return parts.join(' / ');
+  }
+  document.getElementById('primeDlCsv').addEventListener('click', ()=>{
+    const f = modeSettings.prime;
+    const labels = { plain:'通常', skip:'スキップ', reverse:'リバース', draw2:'ドロー2', draw4:'ドロー4' };
+    const rows = [['カード','数値','桁数','効果','マーク']];
+    primeShown.forEach(c=>{
+      const have = PRIME_MARKS.filter(m=> (f.marks[c.value]||[]).includes(m.key)).map(m=> m.name).join(' ');
+      rows.push([String(c.value).padStart(4,'0'), c.value, c.len, labels[c.effect], have]);
+    });
+    const csv = '\uFEFF' + rows.map(r=> r.map(v=> /[",\n]/.test(String(v)) ? '"' + String(v).replace(/"/g,'""') + '"' : v).join(',')).join('\r\n');
+    downloadBlob(new Blob([csv], { type:'text/csv;charset=utf-8' }), `prime_uno_cards_${stamp()}.csv`);
+  });
+  document.getElementById('primeDlImage').addEventListener('click', ()=>{
+    const cs = getComputedStyle(document.body);
+    const css = n=> cs.getPropertyValue(n).trim();
+    const colors = { 'c-red':css('--c-red'), 'c-blue':css('--c-blue'), 'c-green':css('--c-green'), 'c-yellow':css('--c-yellow'), 'c-purple':css('--c-purple') };
+    const effColor = { plain:css('--plain'), skip:css('--skip'), reverse:css('--reverse'), draw2:css('--draw2'), draw4:css('--draw4') };
+    const markColor = { check:css('--c-green'), star:css('--c-yellow'), heart:css('--c-red'), diamond:css('--c-blue') };
+    const f = modeSettings.prime;
+    const cols = Math.max(4, Math.min(8, primeShown.length)), cw = 104, ch = 60, gap = 6, pad = 16, head = 62;
+    const rows = Math.max(1, Math.ceil(primeShown.length / cols));
+    const W = pad*2 + cols*cw + (cols-1)*gap, H = head + pad + rows*ch + (rows-1)*gap + pad;
+    const scale = Math.min(2, Math.sqrt(12e6 / (W*H)));
+    const cv = document.createElement('canvas');
+    cv.width = Math.round(W*scale); cv.height = Math.round(H*scale);
+    const g = cv.getContext('2d'); g.scale(scale, scale);
+    g.fillStyle = css('--bg') || '#14231d'; g.fillRect(0,0,W,H);
+    g.fillStyle = css('--ink') || '#fff'; g.textBaseline = 'alphabetic';
+    g.font = '700 20px sans-serif'; g.fillText(`素数UNO 4桁デッキ  ${primeShown.length}枚`, pad, 30);
+    g.font = '500 12px sans-serif'; g.fillStyle = css('--ink-dim') || '#ddd'; g.fillText(primeFilterSummary(), pad, 50);
+    const rr = (x,y,w,h,r)=>{ g.beginPath(); g.moveTo(x+r,y); g.arcTo(x+w,y,x+w,y+h,r); g.arcTo(x+w,y+h,x,y+h,r); g.arcTo(x,y+h,x,y,r); g.arcTo(x,y,x+w,y,r); g.closePath(); };
+    primeShown.forEach((c,i)=>{
+      const x = pad + (i % cols)*(cw+gap), y = head + pad + Math.floor(i/cols)*(ch+gap);
+      g.save(); rr(x,y,cw,ch,7); g.fillStyle = '#0a0c0b'; g.fill(); g.clip();
+      g.fillStyle = effColor[c.effect]; g.fillRect(x,y,cw,15);
+      if(c.effect!=='plain'){
+        g.fillStyle = '#14110a'; g.font = '900 10px sans-serif'; g.textAlign = 'center'; g.fillText(EFFECT_TAG[c.effect], x+cw/2, y+11);
+      }
+      const padded = String(c.value).padStart(4,'0');
+      const cls = digitColorClasses(padded.split('').map(Number));
+      g.font = '700 26px "Space Mono", monospace'; g.textAlign = 'left';
+      const dw = g.measureText('0').width, startX = x + (cw - dw*4)/2;
+      padded.split('').forEach((d,k)=>{
+        g.globalAlpha = k < 4-c.len ? 0.45 : 1;
+        g.fillStyle = colors[cls[k]]; g.fillText(d, startX + k*dw, y+43);
+      });
+      g.globalAlpha = 1;
+      const have = PRIME_MARKS.filter(m=> (f.marks[c.value]||[]).includes(m.key));
+      g.font = '700 11px sans-serif'; g.textAlign = 'center';
+      have.forEach((m,k)=>{ g.fillStyle = markColor[m.key]; g.fillText(m.glyph, x + cw/2 + (k - (have.length-1)/2)*13, y+ch-3); });
+      g.restore();
+    });
+    cv.toBlob(blob=> downloadBlob(blob, `prime_uno_cards_${stamp()}.png`), 'image/png');
   });
 
   function modeSwitchLocked(){ return typeof onlineRoomState!=='undefined' && onlineRoomState!=='idle'; }
