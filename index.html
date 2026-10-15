@@ -27,7 +27,9 @@
     --dis: grayscale(0.3) brightness(0.8) saturate(0.85);
     /* card contrast tuning (colours only) */
     --face-base: #0c1012; --face-mix: 0%; --frame-base: rgba(255,255,255,0.34); --frame-mix: 78%; --frame-w: 2px;
-    --shine: 0.28; --shade: 0.16;
+    --shine: 0; --shade: 0;
+    --ds3: 24px; --ds4: 22px; --tstroke: 0px;
+    --plate-bg: transparent; --plate-bw: 0px; --plate-frame: transparent; --plate-pad: 0px;
     --skip: var(--c-blue);
     --reverse: var(--c-green);
     --draw2: var(--c-red);
@@ -182,7 +184,11 @@
     background: repeating-linear-gradient(45deg, #0a0c0b 0, #0a0c0b 7px, #1b211e 7px, #1b211e 14px);
     border:1px solid rgba(255,255,255,0.16);
   }
-  .card .digits{ display:flex; font-family:'Space Mono',monospace; font-weight:700; font-size:24px; margin-top:7px;}
+  .card .digits{
+    display:flex; font-family:'Space Mono',monospace; font-weight:700; font-size:var(--ds3); margin-top:7px;
+    background:var(--plate-bg); border:var(--plate-bw) solid var(--plate-frame); border-radius:8px; padding:var(--plate-pad);
+  }
+  .card .digits span, .pchip .pnum span{ -webkit-text-stroke:var(--tstroke) currentColor; }
   .card .digits span{ padding:0 1px; }
   /* digit colours: 0 purple, 2/4/5/6/8 red, 1/3/7/9 blue; a repeated digit turns red->yellow, blue->green */
   .c-red{ color:var(--c-red-hi); } .c-blue{ color:var(--c-blue-hi); } .c-green{ color:var(--c-green-hi); }
@@ -190,7 +196,7 @@
   .card:not(.disabled) .digits span, .pchip .pnum span{ text-shadow:var(--tg); }
   .card:not(.disabled) .strip, .pchip .pstrip{ box-shadow:0 0 var(--sgr) var(--sc, transparent); filter:var(--sf); }
   /* 4-digit cards: as big as the card width allows */
-  body.deck4 .card .digits{ font-size:22px; }
+  body.deck4 .card .digits{ font-size:var(--ds4); }
   body.deck4 .card .digits span{ padding:0; }
 
   .card .strip{
@@ -219,6 +225,7 @@
     background:linear-gradient(180deg, color-mix(in srgb, var(--tc) var(--face-mix), var(--face-base)) 0%, var(--face-base) 78%);
     border:var(--frame-w) solid color-mix(in srgb, var(--tc) var(--frame-mix), var(--frame-base));
   }
+  .card.disabled{ border-color:transparent; }
   .card .strip::after, .pchip .pstrip::after{
     content:''; position:absolute; inset:0; pointer-events:none;
     background:linear-gradient(180deg, rgba(255,255,255,var(--shine)), rgba(0,0,0,var(--shade)));
@@ -398,12 +405,13 @@
     position:absolute; top:0; left:0; right:0; height:14px; line-height:14px;
     font-size:9px; font-weight:900; letter-spacing:0.04em; color:#14110a; background:var(--pc); --sc:var(--pc);
   }
-  .pchip .pnum{ display:flex; justify-content:center; font-family:'Space Mono',monospace; font-weight:700; font-size:22px; line-height:1.1; }
+  .pchip .pnum{ display:flex; justify-content:center; font-family:'Space Mono',monospace; font-weight:700; font-size:var(--ds4); line-height:1.1; }
   .pchip .pmarks{ position:absolute; left:0; right:0; bottom:1px; height:12px; line-height:12px; font-size:11px; display:flex; justify-content:center; gap:3px; }
   .mk-check{ color:var(--c-green); } .mk-star{ color:var(--c-yellow); } .mk-heart{ color:var(--c-red); } .mk-diamond{ color:var(--c-blue); }
   .pfBtn.selected .mk{ color:#10170f; }
   .pfLabel{ font-size:11px; color:var(--ink-dim); align-self:center; min-width:3.2em; }
-  .pfBtn.mkBtn{ padding:5px 11px; font-size:13px; }
+  .pfBtn.mkBtn{ padding:6px 14px; font-size:15px; display:inline-flex; align-items:center; gap:5px; }
+  .pfBtn.mkBtn .mk{ font-size:23px; line-height:1; }
   .dlRow{ display:flex; gap:8px; margin:0 0 8px; }
   body.markOpen .primeBox{ padding-bottom:150px; }
   .markDrawer{
@@ -566,7 +574,7 @@
   <h2 class="rulesHead">使い方 <button class="ghost" id="usageToggleBtn" style="padding:4px 12px; font-size:12px; margin-left:6px;">表示</button></h2>
   <div class="rules" id="usageBody" style="display:none;">
     <details class="rl" open><summary>見る・並べる</summary><ul>
-      <li>4桁デッキ全443枚の一覧です。<b>効果</b>と<b>桁数</b>のボタンで絞り込み、<b>昇順/降順</b>で並べ替えます(ボタンの数字は今の条件での枚数)。</li>
+      <li>4桁デッキ全443枚の一覧です。<b>効果</b>と<b>桁数</b>のボタンで絞り込み(「すべて」以外は<b>複数選べます</b>)、<b>昇順/降順</b>で並べ替えます。ボタンの数字は、他の条件と合わせたときの枚数です。</li>
       <li>1〜3桁のカードは頭に0を足して4桁で表示し、薄い0は桁数に数えません。</li>
     </ul></details>
     <details class="rl" open><summary>検索の書き方</summary><ul>
@@ -1954,7 +1962,7 @@
     rate:   { multiDump:true, interrupt:true, bothCancel:true, cpu:2 },
     free:   { multiDump:true, interrupt:true, bothCancel:true, players:3, handSize:7, unlimitedDraw:false, digits:3 },
     online: { multiDump:true, interrupt:true, bothCancel:true, cpu:0 },
-    prime:  { effect:'all', digits:0, order:'asc', query:'', brush:'', marks:{}, markFilter:{} }
+    prime:  { effects:[], digitsSel:[], order:'asc', query:'', brush:'', marks:{}, markFilter:{} }
   };
   function loadModeSettings(){
     let saved = null;
@@ -2144,23 +2152,28 @@
     const cards = deck4Cards();
     const f = modeSettings.prime;
     f.marks = f.marks || {}; f.markFilter = f.markFilter || {};
+    // settings saved before multi-select had a single effect / digit value
+    if(!Array.isArray(f.effects)) f.effects = (f.effect && f.effect!=='all') ? [f.effect] : [];
+    if(!Array.isArray(f.digitsSel)) f.digitsSel = f.digits ? [Number(f.digits)] : [];
     const input = document.getElementById('primeSearchInput');
     if(syncInput) input.value = f.query || '';
     const parsed = parsePrimeQuery(f.query || '');
     const match = (parsed.terms && parsed.terms.length) ? (str=> primeMatchQuery(str, parsed.terms)) : null;
-    const byEffect = c=> f.effect==='all' || c.effect===f.effect;
-    const byDigits = c=> !f.digits || c.len===f.digits;
+    const byEffect = c=> !f.effects.length || f.effects.includes(c.effect);
+    const byDigits = c=> !f.digitsSel.length || f.digitsSel.includes(c.len);
     const bySearch = c=> !match || match(String(c.value).padStart(4,'0'));
     // mark filters work on a snapshot taken when the button was pressed (see the click handler)
     const snaps = Object.values(f.markFilter).map(x=> new Set(x.ids));
     const byMarks = c=> snaps.every(set=> set.has(c.value));
     document.getElementById('primeEffectFilter').innerHTML = PRIME_EFFECTS.map(([k,label])=>{
       const n = cards.filter(c=> (k==='all'||c.effect===k) && byDigits(c) && bySearch(c) && byMarks(c)).length;
-      return `<button class="pfBtn ${f.effect===k?'selected':''}" data-k="${k}">${label}<span>${n}</span></button>`;
+      const on = k==='all' ? !f.effects.length : f.effects.includes(k);
+      return `<button class="pfBtn ${on?'selected':''}" data-k="${k}">${label}<span>${n}</span></button>`;
     }).join('');
     document.getElementById('primeDigitFilter').innerHTML = PRIME_DIGITS.map(([k,label])=>{
       const n = cards.filter(c=> byEffect(c) && (!k || c.len===k) && bySearch(c) && byMarks(c)).length;
-      return `<button class="pfBtn ${f.digits===k?'selected':''}" data-d="${k}">${label}<span>${n}</span></button>`;
+      const on = k===0 ? !f.digitsSel.length : f.digitsSel.includes(k);
+      return `<button class="pfBtn ${on?'selected':''}" data-d="${k}">${label}<span>${n}</span></button>`;
     }).join('');
     document.getElementById('primeOrderFilter').innerHTML =
       [['asc','昇順'],['desc','降順']].map(([k,label])=>
@@ -2225,11 +2238,17 @@
   });
   document.getElementById('primeEffectFilter').addEventListener('click', e=>{
     const b = e.target.closest('.pfBtn'); if(!b) return;
-    modeSettings.prime.effect = b.dataset.k; saveModeSettings(); renderPrimeTable();
+    const f = modeSettings.prime, k = b.dataset.k;
+    if(k==='all') f.effects = [];
+    else f.effects = f.effects.includes(k) ? f.effects.filter(x=> x!==k) : f.effects.concat([k]);
+    saveModeSettings(); renderPrimeTable();
   });
   document.getElementById('primeDigitFilter').addEventListener('click', e=>{
     const b = e.target.closest('.pfBtn'); if(!b) return;
-    modeSettings.prime.digits = Number(b.dataset.d); saveModeSettings(); renderPrimeTable();
+    const f = modeSettings.prime, k = Number(b.dataset.d);
+    if(k===0) f.digitsSel = [];
+    else f.digitsSel = f.digitsSel.includes(k) ? f.digitsSel.filter(x=> x!==k) : f.digitsSel.concat([k]);
+    saveModeSettings(); renderPrimeTable();
   });
   document.getElementById('primeOrderFilter').addEventListener('click', e=>{
     const b = e.target.closest('.pfBtn'); if(!b) return;
@@ -2267,8 +2286,8 @@
   }
   function primeFilterSummary(){
     const f = modeSettings.prime, parts = [];
-    if(f.effect!=='all') parts.push(PRIME_EFFECTS.find(x=>x[0]===f.effect)[1]);
-    if(f.digits) parts.push(f.digits + '桁');
+    if(f.effects.length) parts.push(f.effects.map(k=> PRIME_EFFECTS.find(x=>x[0]===k)[1]).join('+'));
+    if(f.digitsSel.length) parts.push(f.digitsSel.map(d=> d + '桁').join('+'));
     if((f.query||'').trim()) parts.push('検索 ' + f.query.trim());
     PRIME_MARKS.forEach(m=>{ if(f.markFilter[m.key]) parts.push(m.glyph + (f.markFilter[m.key].mode==='has' ? 'あり' : 'なし')); });
     parts.push(f.order==='desc' ? '降順' : '昇順');
