@@ -18,8 +18,8 @@
     --tens: #ff6f60;
     --ones: #2cf0b2;
     /* card types: plain purple / skip blue / reverse green / draw2 red / draw4 yellow */
-    --c-red: #fe7463; --c-blue: #5fa7fe; --c-green: #1be6a6; --c-yellow: #f6b924; --c-purple: #db75fe;
-    --plain: #db75fe;
+    --c-red: #fe8070; --c-blue: #6caefe; --c-green: #13d79b; --c-yellow: #f6b924; --c-purple: #dd7bfe;
+    --plain: #dd7bfe;
     /* glow: playable cards shine, greyed-out cards lose the glow but keep their colours */
     /* digit colours use exactly the same shades as the card-type strips (red=+2, blue=skip, green=reverse, yellow=+4, purple=plain) */
     --c-red-hi: var(--draw2); --c-blue-hi: var(--skip); --c-green-hi: var(--reverse); --c-yellow-hi: var(--draw4); --c-purple-hi: var(--plain);
@@ -30,9 +30,9 @@
     --shine: 0; --shade: 0;
     --ds3: 24px; --ds4: 22px; --tstroke: 0px;
     --plate-bg: transparent; --plate-bw: 0px; --plate-frame: transparent; --plate-pad: 0px;
-    --skip: #5fa7fe;
-    --reverse: #1be6a6;
-    --draw2: #fe7463;
+    --skip: #6caefe;
+    --reverse: #13d79b;
+    --draw2: #fe8070;
     --draw4: #f6b924;
     --thousands: #7fb2ff;
     --danger: #ff5d6e;
@@ -109,9 +109,9 @@
 
   #startScreen .rules b{ color:var(--ink); }
   .eff-tag{ display:inline-block; font-family:'B612 Mono','B612 Mono','Space Mono',monospace; font-weight:700; padding:1px 7px; border-radius:5px; font-size:13px;}
-  .tag-skip{ background:rgba(95,167,254,0.24); color:var(--skip); }
-  .tag-rev{ background:rgba(27,230,166,0.24); color:var(--reverse); }
-  .tag-d2{ background:rgba(254,116,99,0.24); color:var(--draw2); }
+  .tag-skip{ background:rgba(108,174,254,0.24); color:var(--skip); }
+  .tag-rev{ background:rgba(19,215,155,0.24); color:var(--reverse); }
+  .tag-d2{ background:rgba(254,128,112,0.24); color:var(--draw2); }
   .tag-d4{ background:rgba(246,185,36,0.26); color:var(--draw4); }
 
   .cpu-select{ display:flex; gap:10px; justify-content:center; margin:16px 0; }
@@ -175,7 +175,7 @@
     align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;
   }
   .pendingBanner.show{ display:flex; }
-  .interruptBanner{ border-color:var(--reverse); background:rgba(27,230,166,0.14); }
+  .interruptBanner{ border-color:var(--reverse); background:rgba(19,215,155,0.14); }
   .pendingBanner .msg{ font-weight:700; font-size:15.5px; }
   .pendingBanner .msg b{ color:var(--draw4); font-family:'B612 Mono','Space Mono',monospace; font-size:20px; }
   button.accept{
@@ -256,12 +256,12 @@
   }
   .card.multiFaded{ opacity:0.3; cursor:default; }
   button.ghost.emphasize{
-    border-color:var(--reverse); color:var(--reverse); box-shadow:0 0 0 2px rgba(27,230,166,0.25);
+    border-color:var(--reverse); color:var(--reverse); box-shadow:0 0 0 2px rgba(19,215,155,0.25);
     animation: emphasizePulse 1.6s ease-in-out infinite;
   }
   @keyframes emphasizePulse{
-    0%,100%{ box-shadow:0 0 0 2px rgba(27,230,166,0.25); }
-    50%{ box-shadow:0 0 0 5px rgba(27,230,166,0.12); }
+    0%,100%{ box-shadow:0 0 0 2px rgba(19,215,155,0.25); }
+    50%{ box-shadow:0 0 0 5px rgba(19,215,155,0.12); }
   }
   @media (prefers-reduced-motion: reduce){
     button.ghost.emphasize{ animation:none; }
@@ -546,13 +546,13 @@
      Only transitions and short CSS animations (<=0.26s): a new state or the next tap simply replaces them, input is never blocked ---- */
   :root{ --ease:cubic-bezier(.25,.8,.25,1); --spring:cubic-bezier(.34,1.56,.64,1); }
   button.primary, .rankBtn, button.accept, .cpu-btn, .stepBtn, .pfBtn, .dlBtn, button.ghost, .mdClose{
-    border-radius:8px; box-shadow:0 3px 0 rgba(0,0,0,0.5);
-    transition:transform .1s var(--ease), box-shadow .1s var(--ease), background-color .15s, color .15s, border-color .15s;
+    border-radius:8px; box-shadow:inset 0 1px 0 rgba(255,255,255,0.14), 0 3px 0 rgba(0,0,0,0.6);
+    transition:transform .04s linear, box-shadow .04s linear, background-color .15s, color .15s, border-color .15s;
   }
   button.ghost{ background:var(--panel-2); }
   button.primary:not(:disabled):active, .rankBtn:not(:disabled):active, button.accept:not(:disabled):active, .cpu-btn:not(:disabled):active, .stepBtn:not(:disabled):active,
   .pfBtn:not(:disabled):active, .dlBtn:not(:disabled):active, button.ghost:not(:disabled):active, .mdClose:not(:disabled):active{
-    transform:translateY(4px); box-shadow:0 0 0 rgba(0,0,0,0.5);
+    box-shadow:0 0 0 rgba(0,0,0,0.5);
   }
   /* a selected option stays pressed in (shadow gone, darker underside) */
   .cpu-btn.selected, .pfBtn.selected{ transform:translateY(3px); box-shadow:inset 0 -3px 0 rgba(0,0,0,0.25); }
@@ -598,6 +598,55 @@
   .cpu-select .cpu-btn.selected{ color:#241a06; }
   .publishToggle .sw input{ width:100%; height:100%; }
   .publishToggle{ max-width:none; }
+  /* ---- breaker panel: ON/OFF switches, + / - keys, collapsible body, digit dials, cover over reset ---- */
+  button.ghost, .dialBtn, .mkPos{ box-shadow:inset 0 1px 0 rgba(255,255,255,0.14), 0 3px 0 rgba(0,0,0,0.6); }
+  .dialPanel, .vtPanel{ margin:0 0 10px; background:rgba(0,0,0,0.25); border-radius:12px; border:1px solid color-mix(in srgb, var(--mode-accent) 35%, transparent); }
+  .dialPanel{ padding:8px 6px 10px; }
+  .dialCap{ font-size:11.5px; color:var(--ink-dim); margin:0 0 6px 4px; } .dialCap span{ opacity:0.7; }
+  .dialGrp{ justify-content:center; gap:12px; }
+  .vtBar{ display:flex; align-items:center; gap:8px; width:100%; margin:0; padding:10px 12px; border:0; border-radius:11px; background:transparent; color:var(--ink); font-family:inherit; font-size:14px; font-weight:900; text-align:left; cursor:pointer; box-shadow:none; }
+  .vtLamp{ flex:none; width:10px; height:10px; border-radius:2px; background:var(--reverse); } .vtLamp.warn{ background:var(--hundreds); }
+  .vtTitle{ flex:none; letter-spacing:0.1em; }
+  .vtSum{ flex:1; min-width:0; font-size:11.5px; font-weight:700; color:var(--ink-dim); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .vtArrow{ flex:none; transition:transform .22s var(--ease); } .vtPanel.open .vtArrow{ transform:rotate(180deg); }
+  .vtWrap{ display:grid; grid-template-rows:0fr; transition:grid-template-rows .22s var(--ease); }
+  .vtPanel.open .vtWrap{ grid-template-rows:1fr; }
+  .vtBody{ min-height:0; overflow:hidden; }
+  .vtInner{ display:flex; flex-direction:column; gap:10px; padding:2px 6px 10px; }
+  .vtRow{ display:flex; gap:8px; justify-content:center; }
+  .vtGrp{ display:flex; gap:2px; min-width:0; }
+  .vt, .mkCol{ flex:1 1 0; min-width:0; display:flex; flex-direction:column; align-items:center; --i:0; cursor:pointer; }
+  .vtHead{ width:100%; height:20px; line-height:20px; border-radius:5px; text-align:center; font-size:11px; font-weight:900; white-space:nowrap; overflow:hidden; color:var(--ink); }
+  .vtHead svg{ width:16px; height:16px; vertical-align:middle; }
+  .vtCount{ height:13px; line-height:13px; font-size:10px; color:var(--ink-dim); font-family:'B612 Mono','Space Mono',monospace; }
+  .vtTrack, .mkTrack{ position:relative; width:min(100%, 38px); height:62px; padding:3px; box-sizing:border-box; background:#0b100e; border-radius:9px; box-shadow:inset 0 3px 0 rgba(0,0,0,0.45); }
+  .vtPos{ display:block; width:100%; height:28px; line-height:28px; text-align:center; color:var(--ink-dim); opacity:0.5; font-size:10px; font-weight:700; position:relative; z-index:1; }
+  .vtThumb{ position:absolute; left:3px; right:3px; top:3px; height:28px; line-height:28px; text-align:center; border-radius:6px; font-size:10.5px; font-weight:900; color:#10170f; background:var(--reverse); transform:translateY(calc(var(--i) * 28px)); transition:transform .24s var(--spring), background-color .18s, color .18s; box-shadow:0 2px 0 rgba(0,0,0,0.5); pointer-events:none; z-index:2; }
+  .vt[data-s="on"]{ --i:0; } .vt[data-s="off"]{ --i:1; } .vt[data-s="asc"]{ --i:0; } .vt[data-s="desc"]{ --i:1; }
+  .vt[data-s="off"] .vtThumb{ background:#56635c; color:#e8f0ec; }
+  .vt[data-s="asc"] .vtThumb, .vt[data-s="desc"] .vtThumb{ background:var(--hundreds); }
+  .mkTrack{ display:flex; flex-direction:column; gap:2px; }
+  .mkPos{ display:block; width:100%; height:27px; margin:0; padding:0; border:0; border-radius:6px; background:#18211d; color:var(--ink-dim); font-family:inherit; font-size:18px; font-weight:900; line-height:27px; cursor:pointer; }
+  .mkPos.sel[data-v="has"]{ background:var(--reverse); color:#10170f; } .mkPos.sel[data-v="not"]{ background:var(--draw2); color:#10170f; }
+  .vtFoot{ align-items:center; justify-content:space-between; padding:0 4px; }
+  .mkMode{ display:flex; align-items:center; gap:6px; font-size:11.5px; color:var(--ink-dim); }
+  .mkMode button{ margin:0; padding:6px 10px; border:0; border-radius:6px; background:#18211d; color:var(--ink-dim); font-family:inherit; font-size:12px; font-weight:900; box-shadow:inset 0 1px 0 rgba(255,255,255,0.14), 0 3px 0 rgba(0,0,0,0.6); cursor:pointer; }
+  .mkMode button.sel{ background:var(--hundreds); color:#241a06; }
+  .safety{ position:relative; flex:none; perspective:260px; }
+  .safetyCover{ position:absolute; inset:-4px; z-index:3; display:flex; align-items:center; justify-content:center; border:2px solid var(--draw2); border-radius:9px; background:color-mix(in srgb, var(--draw2) 38%, #0b100e); color:var(--ink); font-size:11px; font-weight:900; letter-spacing:0.15em; cursor:pointer; transform-origin:50% 0; transition:transform .28s var(--ease); }
+  .safety.open .safetyCover{ transform:rotateX(-115deg); pointer-events:none; }
+  .safety:not(.open) #vtReset{ pointer-events:none; }
+  .dialRow{ align-items:flex-end; }
+  .dial{ width:46px; display:flex; flex-direction:column; align-items:center; gap:3px; }
+  .dial small{ font-size:10px; color:var(--ink-dim); }
+  .dialBtn{ width:100%; height:20px; padding:0; margin:0; border:0; border-radius:6px; background:var(--panel-2); color:var(--ink-dim); font-size:11px; line-height:20px; cursor:pointer; }
+  .dialWin{ width:100%; height:44px; border-radius:9px; background:#0b100e; box-shadow:inset 0 3px 0 rgba(0,0,0,0.45); display:flex; align-items:center; justify-content:center; overflow:hidden; touch-action:none; cursor:ns-resize; user-select:none; -webkit-user-select:none; font-family:'B612 Mono','Space Mono',monospace; font-weight:700; font-size:26px; color:var(--ink-dim); }
+  .dialWin.set{ color:var(--hundreds); }
+  .dialWin span{ display:block; }
+  .sLabel{ flex:none; width:2.8em; text-align:center; padding:7px 0; border-radius:6px; font-size:12px; font-weight:900; color:#10170f; }
+  .sLabel.yes{ background:var(--reverse); } .sLabel.no{ background:var(--draw2); }
+  .pfBtn[data-clear]{ position:relative; overflow:hidden; }
+  .pfBtn[data-clear]::after{ content:''; position:absolute; left:0; top:0; bottom:0; width:calc(var(--p, 0) * 100%); background:rgba(255,128,112,0.5); pointer-events:none; }
 </style>
 </head>
 <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
@@ -776,14 +825,31 @@
   
 
   <div class="primeBox" data-modes="prime">
-    <div class="pfRow" id="primeEffectFilter"></div>
-    <div class="pfRow" id="primeDigitFilter"></div>
-    <div class="pfRow" id="primeOrderFilter"></div>
+    <div class="dialPanel">
+      <div class="dialCap">桁ごとの検索 <span>(－は指定なし)</span></div>
+      <div class="vtGrp dialGrp" id="primeDials"></div>
+    </div>
+    <div class="vtPanel open" id="primeVt">
+      <button class="vtBar" id="vtBar" aria-expanded="true"><span class="vtLamp" id="vtLamp"></span><span class="vtTitle">配電盤</span><span class="vtSum" id="vtSum"></span><span class="vtArrow">▾</span></button>
+      <div class="vtWrap"><div class="vtBody"><div class="vtInner">
+        <div class="vtRow"><div class="vtGrp" id="vtEffect" style="flex:5;"></div><div class="vtGrp" id="vtOrder" style="flex:1;"></div></div>
+        <div class="vtRow"><div class="vtGrp" id="vtDigit" style="flex:4;"></div><div class="vtGrp" id="vtMark" style="flex:4;"></div></div>
+        <div class="vtRow vtFoot">
+          <div class="mkMode"><span>＋の合わせ方</span><button data-c="any">どれか</button><button data-c="all">全部</button></div>
+          <div class="safety" id="vtSafety"><button class="ghost" id="vtReset">リセット</button><div class="safetyCover" id="vtCover" role="button" aria-label="リセットのカバーを開ける">カバー</div></div>
+        </div>
+      </div></div></div>
+    </div>
     <div class="pfRow" id="primeBrushRow"></div>
-    <div class="pfRow nowrapRow" id="primeMarkFilter"></div>
     <div class="primeSearch">
+      <span class="sLabel yes">あり</span>
       <input type="text" inputmode="text" id="primeSearchInput" placeholder="例: 1,2,7,9 / 9xy1 / 148(1,3,7,9)" maxlength="40" autocapitalize="none" autocorrect="off" spellcheck="false" enterkeyhint="search">
       <button class="ghost" id="primeSearchClear" style="padding:7px 12px; font-size:12.5px; flex:none;">クリア</button>
+    </div>
+    <div class="primeSearch" style="margin-top:0;">
+      <span class="sLabel no">なし</span>
+      <input type="text" inputmode="text" id="primeSearchNotInput" placeholder="例: 5,5 / 0 (これに合うカードを除く)" maxlength="40" autocapitalize="none" autocorrect="off" spellcheck="false" enterkeyhint="search">
+      <button class="ghost" id="primeSearchNotClear" style="padding:7px 12px; font-size:12.5px; flex:none;">クリア</button>
     </div>
     <div class="primeSearchResult" id="primeSearchResult" style="margin:-4px 0 8px; min-height:1.2em;"></div>
     <div class="primeCount" id="primeCount"></div>
@@ -2199,14 +2265,9 @@
     const f = modeSettings.prime;
     document.getElementById('primeBrushRow').innerHTML = '<span class="pfLabel">つける</span>' +
       `<button class="pfBtn ${f.brush?'selected':''}" id="markOpenBtn">マークをつける</button>` +
-      '<button class="pfBtn" data-clear="1">全消去</button>';
+      '<button class="pfBtn" data-clear="1">表示中を消す(5秒長押し)</button>';
     document.getElementById('markDrawerBtns').innerHTML = PRIME_MARKS.map(m=>
       `<button class="mdBtn ${f.brush===m.key?'selected':''}" data-b="${m.key}" aria-label="${m.name}">${markIcon(m)}</button>`).join('');
-    document.getElementById('primeMarkFilter').innerHTML = '<span class="pfLabel">しぼる</span>' +
-      PRIME_MARKS.map(m=>{
-        const st = f.markFilter[m.key] ? f.markFilter[m.key].mode : '';
-        return `<button class="pfBtn mkBtn ${st?'selected':''}" data-m="${m.key}">${markIcon(m)}<span class="mkTxt">${st==='has'?'あり':st==='not'?'なし':'－'}</span></button>`;
-      }).join('');
   }
   function openMarkDrawer(){
     document.getElementById('markDrawer').classList.add('open');
@@ -2302,32 +2363,34 @@
     if(!Array.isArray(f.effects)) f.effects = (f.effect && f.effect!=='all') ? [f.effect] : [];
     if(!Array.isArray(f.digitsSel)) f.digitsSel = f.digits ? [Number(f.digits)] : [];
     const input = document.getElementById('primeSearchInput');
-    if(syncInput) input.value = f.query || '';
+    if(!Array.isArray(f.effectsNot)) f.effectsNot = []; if(!Array.isArray(f.digitsNot)) f.digitsNot = [];
+    if(!Array.isArray(f.dial) || f.dial.length!==4) f.dial = ['','','',''];
+    // older saves picked what to show; the panel now switches categories OFF instead
+    const ALL_EFF = ['plain','draw2','draw4','skip','reverse'];
+    if(f.effects.length){ f.effectsNot = ALL_EFF.filter(k=> !f.effects.includes(k)); f.effects = []; }
+    if(f.digitsSel.length){ f.digitsNot = [1,2,3,4].filter(d=> !f.digitsSel.includes(d)); f.digitsSel = []; }
+    if(f.markCombine!=='all') f.markCombine = 'any';
+    if(typeof f.queryNot!=='string') f.queryNot = '';
+    ensureVt();
+    if(syncInput){ input.value = f.query || ''; document.getElementById('primeSearchNotInput').value = f.queryNot || ''; }
     const parsed = parsePrimeQuery(f.query || '');
     const match = (parsed.terms && parsed.terms.length) ? (str=> primeMatchQuery(str, parsed.terms)) : null;
-    const byEffect = c=> !f.effects.length || f.effects.includes(c.effect);
-    const byDigits = c=> !f.digitsSel.length || f.digitsSel.includes(c.len);
-    const bySearch = c=> !match || match(String(c.value).padStart(4,'0'));
-    // mark filters work on a snapshot taken when the button was pressed (see the click handler)
-    const snaps = Object.values(f.markFilter).map(x=> new Set(x.ids));
-    const byMarks = c=> snaps.every(set=> set.has(c.value));
-    document.getElementById('primeEffectFilter').innerHTML = PRIME_EFFECTS.map(([k,label])=>{
-      const n = cards.filter(c=> (k==='all'||c.effect===k) && byDigits(c) && bySearch(c) && byMarks(c)).length;
-      const on = k==='all' ? !f.effects.length : f.effects.includes(k);
-      return `<button class="pfBtn ${on?'selected':''}" data-k="${k}">${label}<span class="pfCount">${n}</span></button>`;
-    }).join('');
-    document.getElementById('primeDigitFilter').innerHTML = PRIME_DIGITS.map(([k,label])=>{
-      const n = cards.filter(c=> byEffect(c) && (!k || c.len===k) && bySearch(c) && byMarks(c)).length;
-      const on = k===0 ? !f.digitsSel.length : f.digitsSel.includes(k);
-      return `<button class="pfBtn ${on?'selected':''}" data-d="${k}">${label}<span class="pfCount">${n}</span></button>`;
-    }).join('');
-    document.getElementById('primeOrderFilter').innerHTML =
-      [['asc','昇順'],['desc','降順']].map(([k,label])=>
-        `<button class="pfBtn ${f.order===k?'selected':''}" data-o="${k}">${label}</button>`).join('');
-    const shown = cards.filter(c=> byEffect(c) && byDigits(c) && bySearch(c) && byMarks(c));
+    const parsedNot = parsePrimeQuery(f.queryNot || '');
+    const matchNot = (parsedNot.terms && parsedNot.terms.length) ? (str=> primeMatchQuery(str, parsedNot.terms)) : null;
+    const byEffect = c=> !f.effectsNot.includes(c.effect);
+    const byDigits = c=> !f.digitsNot.includes(c.len);
+    const byDial = c=>{ const p = String(c.value).padStart(4,'0'); return f.dial.every((d,i)=> d==='' || p[i]===d); };
+    const bySearch = c=>{ const p = String(c.value).padStart(4,'0'); return (!match || match(p)) && (!matchNot || !matchNot(p)); };
+    // mark filters work on a snapshot taken when the toggle was set (see the click handler)
+    const plus = Object.values(f.markFilter).filter(x=> x.mode==='has').map(x=> new Set(x.ids));
+    const minus = Object.values(f.markFilter).filter(x=> x.mode==='not').map(x=> new Set(x.ids));
+    const byMarks = c=> minus.every(set=> set.has(c.value)) && (!plus.length || (f.markCombine==='all' ? plus.every(set=> set.has(c.value)) : plus.some(set=> set.has(c.value))));
+    const rest = (c, skip)=> (skip==='e' || byEffect(c)) && (skip==='d' || byDigits(c)) && byDial(c) && bySearch(c) && byMarks(c);
+    vtUpdate(cards, f, rest);
+    const shown = cards.filter(c=> rest(c));
     if(f.order==='desc') shown.reverse();
     primeShown = shown;
-    document.getElementById('primeSearchResult').textContent = parsed.error ? '( ) の対応を確認してください' : (match ? '読み取り: ' + primeQueryText(parsed.terms) : '');
+    document.getElementById('primeSearchResult').textContent = (parsed.error || parsedNot.error) ? '( ) の対応を確認してください' : [match ? 'あり: ' + primeQueryText(parsed.terms) : '', matchNot ? 'なし: ' + primeQueryText(parsedNot.terms) : ''].filter(Boolean).join(' ／ ');
     document.getElementById('primeCount').textContent = `${shown.length}枚を表示(全${cards.length}枚)`;
     document.getElementById('primeGrid').innerHTML = !shown.length ? '<div class="primeEmpty">条件に合うカードはありません</div>' : shown.map(c=>{
       const padded = String(c.value).padStart(4,'0');
@@ -2343,7 +2406,7 @@
     const b = e.target.closest('.pfBtn'); if(!b) return;
     const f = modeSettings.prime;
     if(b.dataset.clear){
-      if(confirm('すべてのマークを消しますか?')){ f.marks = {}; saveModeSettings(); renderPrimeTable(); }
+      flashPrimeMsg('いま表示しているカードのマークを消すには、このボタンを5秒間押し続けます');
       return;
     }
     if(b.id==='markOpenBtn'){ document.getElementById('markDrawer').classList.contains('open') ? closeMarkDrawer() : openMarkDrawer(); }
@@ -2355,23 +2418,6 @@
     document.getElementById('primeGrid').classList.add('brushing');
   });
   document.getElementById('markDrawerClose').addEventListener('click', closeMarkDrawer);
-  // press = look at the marks right now and keep that list: later marking doesn't change what is shown
-  // until the button is pressed again (none -> あり -> なし -> none)
-  document.getElementById('primeMarkFilter').addEventListener('click', e=>{
-    const b = e.target.closest('.pfBtn'); if(!b || !b.dataset.m) return;
-    const f = modeSettings.prime, key = b.dataset.m;
-    const cur = f.markFilter[key] ? f.markFilter[key].mode : '';
-    const next = cur==='' ? 'has' : cur==='has' ? 'not' : '';
-    if(!next){ delete f.markFilter[key]; }
-    else {
-      const ids = deck4Cards().filter(c=>{
-        const has = (f.marks[c.value]||[]).includes(key);
-        return next==='has' ? has : !has;
-      }).map(c=> c.value);
-      f.markFilter[key] = { mode: next, ids };
-    }
-    saveModeSettings(); renderPrimeTable();
-  });
   document.getElementById('primeGrid').addEventListener('click', e=>{
     const f = modeSettings.prime;
     const chip = e.target.closest('.pchip'); if(!chip || !f.brush) return;
@@ -2382,41 +2428,144 @@
     chip.querySelector('.pmarks').innerHTML = marksHtml(v);   // only this chip changes; the list is not re-judged
     saveModeSettings();
   });
-  document.getElementById('primeEffectFilter').addEventListener('click', e=>{
-    const b = e.target.closest('.pfBtn'); if(!b) return;
-    const f = modeSettings.prime, k = b.dataset.k;
-    if(k==='all') f.effects = [];
-    else f.effects = f.effects.includes(k) ? f.effects.filter(x=> x!==k) : f.effects.concat([k]);
-    saveModeSettings(); renderPrimeTable();
-  });
-  document.getElementById('primeDigitFilter').addEventListener('click', e=>{
-    const b = e.target.closest('.pfBtn'); if(!b) return;
-    const f = modeSettings.prime, k = Number(b.dataset.d);
-    if(k===0) f.digitsSel = [];
-    else f.digitsSel = f.digitsSel.includes(k) ? f.digitsSel.filter(x=> x!==k) : f.digitsSel.concat([k]);
-    saveModeSettings(); renderPrimeTable();
-  });
-  document.getElementById('primeOrderFilter').addEventListener('click', e=>{
-    const b = e.target.closest('.pfBtn'); if(!b) return;
-    modeSettings.prime.order = b.dataset.o; saveModeSettings(); renderPrimeTable();
-  });
-  document.getElementById('primeSearchClear').addEventListener('click', ()=>{
-    const input = document.getElementById('primeSearchInput');
-    input.value = ''; modeSettings.prime.query = ''; saveModeSettings(); renderPrimeTable(); input.focus();
-  });
-  // works with Japanese keyboards too: while a character is still being composed the text box is left
-  // alone and the search runs on the cleaned-up copy
-  const primeSearchBox = document.getElementById('primeSearchInput');
-  function applyPrimeSearch(commit){
-    const raw = primeSearchBox.value;
-    const clean = raw.normalize('NFKC').replace(/、/g,',').toLowerCase().replace(/[^0-9,\s()xyztjqk]/g,'');
-    if(commit && clean!==raw) primeSearchBox.value = clean;
-    modeSettings.prime.query = clean;
-    saveModeSettings();
-    renderPrimeTable();
+  // ---- breaker panel: ON/OFF switches (tap anywhere), + / - mark filters, clear shown marks by a 5 s hold ----
+  const VT_EFFECT = [['plain','通常','--plain'],['draw2','+2','--draw2'],['draw4','+4','--draw4'],['skip','SKIP','--skip'],['reverse','REV','--reverse']];
+  const DIAL_VALS = ['','0','1','2','3','4','5','6','7','8','9'];
+  function vtSw(g, k, head, headStyle, top, bottom, st){
+    return `<div class="vt" data-g="${g}" data-k="${k}" data-s="${st}"><div class="vtHead" style="${headStyle}">${head}</div><div class="vtCount"></div><div class="vtTrack"><span class="vtPos">${top}</span><span class="vtPos">${bottom}</span><div class="vtThumb"></div></div></div>`;
   }
-  primeSearchBox.addEventListener('input', e=> applyPrimeSearch(!e.isComposing));
-  primeSearchBox.addEventListener('compositionend', ()=> applyPrimeSearch(true));
+  function ensureVt(){
+    const e = document.getElementById('vtEffect'); if(e.children.length) return;
+    e.innerHTML = VT_EFFECT.map(([k,l,c])=> vtSw('effect', k, l, `background:var(${c});color:#14110a`, 'ON', 'OFF', 'on')).join('');
+    document.getElementById('vtDigit').innerHTML = [1,2,3,4].map(d=> vtSw('digit', d, d+'桁', '', 'ON', 'OFF', 'on')).join('');
+    document.getElementById('vtMark').innerHTML = PRIME_MARKS.map(m=>
+      `<div class="mkCol" data-k="${m.key}"><div class="vtHead">${markIcon(m)}</div><div class="vtCount"></div><div class="mkTrack"><button class="mkPos" data-v="has" aria-label="${m.name}のあるカードだけ">+</button><button class="mkPos" data-v="not" aria-label="${m.name}のないカードだけ">−</button></div></div>`).join('');
+    document.getElementById('vtOrder').innerHTML = vtSw('order', 'order', '並び', '', '昇順', '降順', 'asc');
+    document.getElementById('primeDials').innerHTML = ['千','百','十','一'].map((n,i)=>
+      `<div class="dial" data-i="${i}"><small>${n}</small><button class="dialBtn" data-step="1" aria-label="${n}の位を進める">▲</button><div class="dialWin" data-i="${i}"><span></span></div><button class="dialBtn" data-step="-1" aria-label="${n}の位を戻す">▼</button></div>`).join('');
+  }
+  function vtSummary(f){
+    const off = []; VT_EFFECT.forEach(([k,l])=>{ if(f.effectsNot.includes(k)) off.push(l); }); f.digitsNot.forEach(d=> off.push(d+'桁'));
+    const mk = []; PRIME_MARKS.forEach(m=>{ const x = f.markFilter[m.key]; if(x) mk.push(m.glyph + (x.mode==='has' ? '＋' : '－')); });
+    const parts = []; if(off.length) parts.push('OFF ' + off.join('・')); if(mk.length) parts.push(mk.join(' '));
+    return parts;
+  }
+  function vtUpdate(cards, f, rest){
+    const sw = (el, on, count)=>{ el.dataset.s = on ? 'on' : 'off'; el.querySelector('.vtThumb').textContent = on ? 'ON' : 'OFF'; el.querySelector('.vtCount').textContent = count; };
+    document.querySelectorAll('#vtEffect .vt').forEach(el=>{ const k = el.dataset.k; sw(el, !f.effectsNot.includes(k), String(cards.filter(c=> c.effect===k && rest(c,'e')).length)); });
+    document.querySelectorAll('#vtDigit .vt').forEach(el=>{ const k = Number(el.dataset.k); sw(el, !f.digitsNot.includes(k), String(cards.filter(c=> c.len===k && rest(c,'d')).length)); });
+    const od = document.querySelector('#vtOrder .vt'); od.dataset.s = f.order==='desc' ? 'desc' : 'asc'; od.querySelector('.vtThumb').textContent = f.order==='desc' ? '降順' : '昇順';
+    document.querySelectorAll('#vtMark .mkCol').forEach(el=>{
+      const k = el.dataset.k, st = f.markFilter[k] ? f.markFilter[k].mode : '';
+      el.querySelectorAll('.mkPos').forEach(b=> b.classList.toggle('sel', b.dataset.v===st));
+      el.querySelector('.vtCount').textContent = String(Object.keys(f.marks).filter(v=> (f.marks[v]||[]).includes(k)).length);
+    });
+    document.querySelectorAll('.mkMode button').forEach(b=> b.classList.toggle('sel', b.dataset.c===f.markCombine));
+    document.querySelectorAll('#primeDials .dialWin').forEach(w=>{
+      const d = f.dial[Number(w.dataset.i)];
+      w.firstChild.textContent = d==='' ? '－' : d; w.classList.toggle('set', d!=='');
+    });
+    const parts = vtSummary(f), open = f.panelOpen!==false;
+    document.getElementById('primeVt').classList.toggle('open', open);
+    document.getElementById('vtBar').setAttribute('aria-expanded', open ? 'true' : 'false');
+    document.getElementById('vtSum').textContent = parts.length ? parts.join(' / ') : 'すべてON';
+    document.getElementById('vtLamp').classList.toggle('warn', parts.length>0);
+  }
+  function flashPrimeMsg(t){
+    document.getElementById('primeSearchResult').textContent = t;
+    clearTimeout(flashPrimeMsg.t); flashPrimeMsg.t = setTimeout(()=> renderPrimeTable(), 3500);
+  }
+  document.getElementById('primeVt').addEventListener('click', e=>{
+    const f = modeSettings.prime;
+    if(e.target.closest('#vtBar')){ f.panelOpen = !(f.panelOpen!==false); saveModeSettings(); renderPrimeTable(); return; }
+    const mc = e.target.closest('.mkMode button');
+    if(mc){ f.markCombine = mc.dataset.c; saveModeSettings(); renderPrimeTable(); return; }
+    const mp = e.target.closest('.mkPos');
+    if(mp){
+      // + / - filter; pressing the selected one clears it. The list is kept as it was when set
+      const key = mp.closest('.mkCol').dataset.k, v = mp.dataset.v, cur = f.markFilter[key] ? f.markFilter[key].mode : '';
+      if(cur===v) delete f.markFilter[key];
+      else {
+        const ids = deck4Cards().filter(c=>{ const has = (f.marks[c.value]||[]).includes(key); return v==='has' ? has : !has; }).map(c=> c.value);
+        f.markFilter[key] = { mode:v, ids };
+      }
+      saveModeSettings(); renderPrimeTable(); return;
+    }
+    const vt = e.target.closest('.vt'); if(!vt) return;
+    const g = vt.dataset.g, k = vt.dataset.k;
+    if(g==='order') f.order = f.order==='desc' ? 'asc' : 'desc';
+    else if(g==='effect') f.effectsNot = f.effectsNot.includes(k) ? f.effectsNot.filter(x=> x!==k) : f.effectsNot.concat([k]);
+    else if(g==='digit'){ const d = Number(k); f.digitsNot = f.digitsNot.includes(d) ? f.digitsNot.filter(x=> x!==d) : f.digitsNot.concat([d]); }
+    saveModeSettings(); renderPrimeTable();
+  });
+  // hold the button 5 seconds: the marks on the cards shown right now are erased
+  (function(){
+    const row = document.getElementById('primeBrushRow'); let hold = null;
+    const stop = ()=>{ if(!hold) return; cancelAnimationFrame(hold.raf); hold.b.style.setProperty('--p', 0); hold.b.classList.remove('holding'); hold = null; };
+    row.addEventListener('pointerdown', e=>{
+      const b = e.target.closest('[data-clear]'); if(!b) return;
+      stop(); hold = { b, t0:performance.now(), raf:0 }; b.classList.add('holding');
+      const step = ()=>{
+        if(!hold) return;
+        const p = Math.min(1, (performance.now() - hold.t0) / 5000);
+        hold.b.style.setProperty('--p', p);
+        if(p>=1){
+          const f = modeSettings.prime; let n = 0;
+          primeShown.forEach(c=>{ if(f.marks[c.value]){ delete f.marks[c.value]; n++; } });
+          stop(); saveModeSettings(); renderPrimeTable(); flashPrimeMsg('表示中のカードのマークを消しました(' + n + '枚)'); return;
+        }
+        hold.raf = requestAnimationFrame(step);
+      };
+      step();
+    });
+    ['pointerup','pointercancel','pointerleave'].forEach(ev=> row.addEventListener(ev, stop));
+  })();
+  // reset sits under a cover: open the cover first, then press the button
+  (function(){
+    const box = document.getElementById('vtSafety'), cover = document.getElementById('vtCover'), btn = document.getElementById('vtReset'); let t = 0;
+    const close = ()=>{ box.classList.remove('open'); clearTimeout(t); };
+    cover.addEventListener('click', ()=>{ box.classList.add('open'); clearTimeout(t); t = setTimeout(close, 4000); });
+    btn.addEventListener('click', ()=>{
+      if(!box.classList.contains('open')) return;
+      const f = modeSettings.prime;
+      f.effectsNot = []; f.digitsNot = []; f.dial = ['','','','']; f.query = ''; f.queryNot = ''; f.markFilter = {};
+      close(); saveModeSettings(); renderPrimeTable(true);
+    });
+  })();
+  // ---- digit dials: tap = next, swipe up/down = turn, arrows = one step ----
+  function setDial(i, idx, dir){
+    const f = modeSettings.prime, n = ((idx % 11) + 11) % 11;
+    if(f.dial[i] === DIAL_VALS[n]) return;
+    f.dial[i] = DIAL_VALS[n]; saveModeSettings(); renderPrimeTable();
+    const sp = document.querySelector(`#primeDials .dialWin[data-i="${i}"] span`);
+    if(sp && sp.animate) sp.animate([{transform:`translateY(${dir*14}px)`, opacity:0.2},{transform:'none', opacity:1}], {duration:110, easing:'ease-out'});
+  }
+  (function(){
+    const root = document.getElementById('primeDials'); let st = null;
+    const cur = i=> DIAL_VALS.indexOf(modeSettings.prime.dial[i]);
+    root.addEventListener('click', e=>{ const b = e.target.closest('.dialBtn'); if(!b) return; const i = Number(b.closest('.dial').dataset.i), d = Number(b.dataset.step); setDial(i, cur(i)+d, d); });
+    root.addEventListener('pointerdown', e=>{ const w = e.target.closest('.dialWin'); if(!w) return; try{ w.setPointerCapture(e.pointerId); }catch(_){} const i = Number(w.dataset.i); st = { i, y:e.clientY, base:cur(i), moved:false }; });
+    root.addEventListener('pointermove', e=>{
+      if(!st) return; const dy = st.y - e.clientY; if(Math.abs(dy) > 6) st.moved = true;
+      if(st.moved){ const target = st.base + Math.round(dy/16), c = cur(st.i); if(((target%11)+11)%11 !== c) setDial(st.i, target, target > c ? 1 : -1); }
+    });
+    root.addEventListener('pointerup', ()=>{ if(st && !st.moved) setDial(st.i, cur(st.i)+1, 1); st = null; });
+    root.addEventListener('pointercancel', ()=>{ st = null; });
+  })();
+  // works with Japanese keyboards too: while a character is still being composed the text box is left
+  // alone and the search runs on the cleaned-up copy. Two boxes: cards that match (あり) / cards to leave out (なし)
+  function cleanQuery(raw){ return raw.normalize('NFKC').replace(/、/g,',').toLowerCase().replace(/[^0-9,\s()xyztjqk]/g,''); }
+  [['primeSearchInput','query','primeSearchClear'],['primeSearchNotInput','queryNot','primeSearchNotClear']].forEach(([id,key,clearId])=>{
+    const box = document.getElementById(id);
+    const apply = commit=>{
+      const raw = box.value, clean = cleanQuery(raw);
+      if(commit && clean!==raw) box.value = clean;
+      modeSettings.prime[key] = clean; saveModeSettings(); renderPrimeTable();
+    };
+    box.addEventListener('input', e=> apply(!e.isComposing));
+    box.addEventListener('compositionend', ()=> apply(true));
+    document.getElementById(clearId).addEventListener('click', ()=>{ box.value = ''; modeSettings.prime[key] = ''; saveModeSettings(); renderPrimeTable(); box.focus(); });
+  });
 
   // ---- download what is shown: PNG picture and CSV table ----
   function downloadBlob(blob, filename){
@@ -2432,10 +2581,14 @@
   }
   function primeFilterSummary(){
     const f = modeSettings.prime, parts = [];
-    if(f.effects.length) parts.push(f.effects.map(k=> PRIME_EFFECTS.find(x=>x[0]===k)[1]).join('+'));
-    if(f.digitsSel.length) parts.push(f.digitsSel.map(d=> d + '桁').join('+'));
-    if((f.query||'').trim()) parts.push('検索 ' + f.query.trim());
-    PRIME_MARKS.forEach(m=>{ if(f.markFilter[m.key]) parts.push(m.glyph + (f.markFilter[m.key].mode==='has' ? 'あり' : 'なし')); });
+    const nm = k=> PRIME_EFFECTS.find(x=>x[0]===k)[1];
+    if(f.effectsNot.length) parts.push(f.effectsNot.map(nm).join('+') + ' OFF');
+    if(f.digitsNot.length) parts.push(f.digitsNot.map(d=> d + '桁').join('+') + ' OFF');
+    const dl = (f.dial||[]).map(d=> d==='' ? '-' : d).join('');
+    if(dl && dl!=='----') parts.push('位 ' + dl);
+    if((f.query||'').trim()) parts.push('検索あり ' + f.query.trim());
+    if((f.queryNot||'').trim()) parts.push('検索なし ' + f.queryNot.trim());
+    PRIME_MARKS.forEach(m=>{ if(f.markFilter[m.key]) parts.push(m.glyph + (f.markFilter[m.key].mode==='has' ? '＋' : '－')); });
     parts.push(f.order==='desc' ? '降順' : '昇順');
     return parts.join(' / ');
   }
@@ -2448,6 +2601,11 @@
     const out = { marks:{}, markFilter:{} };
     out.effects = Array.isArray(p.effects) ? p.effects.filter(k=> effKeys.includes(k)) : [];
     out.digitsSel = Array.isArray(p.digitsSel) ? p.digitsSel.map(Number).filter(n=> n>=1 && n<=4) : [];
+    out.effectsNot = Array.isArray(p.effectsNot) ? p.effectsNot.filter(k=> effKeys.includes(k)) : [];
+    out.digitsNot = Array.isArray(p.digitsNot) ? p.digitsNot.map(Number).filter(n=> n>=1 && n<=4) : [];
+    out.dial = Array.isArray(p.dial) && p.dial.length===4 ? p.dial.map(d=> /^[0-9]$/.test(String(d)) ? String(d) : '') : ['','','',''];
+    out.queryNot = typeof p.queryNot==='string' ? p.queryNot.slice(0,200) : '';
+    out.markCombine = p.markCombine==='all' ? 'all' : 'any';
     out.order = p.order==='desc' ? 'desc' : 'asc';
     out.query = typeof p.query==='string' ? p.query.slice(0,200) : '';
     Object.keys(p.marks||{}).forEach(k=>{
@@ -2474,7 +2632,7 @@
     document.getElementById('primeIoClose').addEventListener('click', ()=> modal.classList.remove('show'));
     document.getElementById('primeIoExport').addEventListener('click', ()=>{
       const f = modeSettings.prime;
-      const text = JSON.stringify({ app:'primeUno', v:1, prime:{ effects:f.effects||[], digitsSel:f.digitsSel||[], order:f.order, query:f.query||'', marks:f.marks||{}, markFilter:f.markFilter||{} } });
+      const text = JSON.stringify({ app:'primeUno', v:1, prime:{ effects:f.effects||[], effectsNot:f.effectsNot||[], digitsSel:f.digitsSel||[], digitsNot:f.digitsNot||[], dial:f.dial||['','','',''], order:f.order, query:f.query||'', queryNot:f.queryNot||'', markCombine:f.markCombine||'any', marks:f.marks||{}, markFilter:f.markFilter||{} } });
       box.value = text; box.focus(); box.select();
       const n = Object.keys(f.marks||{}).filter(k=> (f.marks[k]||[]).length).length;
       const done = ()=> say('書き出しました(マークのあるカード '+n+'枚)。コピーしました。');
@@ -2490,7 +2648,7 @@
     document.getElementById('primeIoReplace').addEventListener('click', ()=>{
       const inc = read(); if(!inc) return;
       const f = modeSettings.prime;
-      f.marks = inc.marks; f.markFilter = inc.markFilter; f.effects = inc.effects; f.digitsSel = inc.digitsSel; f.order = inc.order; f.query = inc.query;
+      f.marks = inc.marks; f.markFilter = inc.markFilter; f.effects = inc.effects; f.effectsNot = inc.effectsNot; f.digitsSel = inc.digitsSel; f.digitsNot = inc.digitsNot; f.dial = inc.dial; f.order = inc.order; f.query = inc.query; f.queryNot = inc.queryNot; f.markCombine = inc.markCombine;
       finish('読み込みました(マークとしぼり込みの設定を置き換えました)。');
     });
   })();
@@ -3427,27 +3585,41 @@
 (function(){
   if(!Element.prototype.animate) return;
   var still = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
-  var running = [];
-  var SEL = 'button:not(:disabled), .swRow, .cpu-btn, .card.multiPickable, .card.multiSelected';
-  var JOLT = [{transform:'translate(0,0)'},{transform:'translate(-1.5px,2px)',offset:.3},{transform:'translate(1.5px,2px)',offset:.55},{transform:'translate(-.5px,1px)',offset:.8},{transform:'translate(0,0)'}];
+  var live = [], held = null;
+  var KEY = 'button:not(:disabled):not(.modeBtn), .card.multiPickable, .card.multiSelected';
   var SQUASH = [{transform:'scale(1)'},{transform:'scale(1.1,.82)',offset:.35},{transform:'scale(.97,1.05)',offset:.7},{transform:'scale(1)'}];
+  function stop(){ live.forEach(function(a){ try{ a.cancel(); }catch(_){} }); live = []; held = null; }
+  // a key goes straight down on press and comes back up on release (a tap shows the whole stroke)
+  function release(){
+    var h = held; held = null; if(!h) return;
+    h.down.finished.then(function(){
+      try{ h.down.cancel(); }catch(_){}
+      try{
+        var up = h.el.animate([{transform:'translateY(3px)'},{transform:'translateY(-.5px)',offset:.5},{transform:'translateY(0)'}], {duration:90, easing:'cubic-bezier(.2,.9,.3,1)', composite:'add'});
+        live.push(up); up.onfinish = function(){ live = live.filter(function(x){ return x!==up; }); };
+      }catch(_){}
+    }, function(){});
+  }
   document.addEventListener('pointerdown', function(e){
     if(still) return;
-    running.forEach(function(a){ try{ a.cancel(); }catch(_){} }); running = [];   // the next operation cuts the previous motion short
-    var t = e.target && e.target.closest ? e.target.closest(SEL) : null; if(!t) return;
-    var a;
+    stop();   // the next operation cuts the previous motion short
+    var tg = e.target; if(!tg || !tg.closest) return;
+    var sw = tg.closest('.swRow');
     try{
-      if(t.classList.contains('swRow')){
-        if(t.classList.contains('disabled') || t.querySelector('input:disabled')) return;
-        var sl = t.querySelector('.swSlider'); if(!sl) return;
-        a = sl.animate(SQUASH, {duration:240, easing:'ease-out'});
-      }else{
-        a = t.animate(JOLT, {duration:200, easing:'ease-out', composite:'add'});
+      if(sw){
+        if(sw.classList.contains('disabled') || sw.querySelector('input:disabled')) return;
+        var sl = sw.querySelector('.swSlider'); if(!sl) return;
+        var a = sl.animate(SQUASH, {duration:240, easing:'ease-out'}); live.push(a);
+        a.onfinish = function(){ live = live.filter(function(x){ return x!==a; }); };
+        return;
       }
-    }catch(_){ return; }
-    running.push(a);
-    a.onfinish = function(){ running = running.filter(function(x){ return x!==a; }); };
+      var t = tg.closest(KEY); if(!t) return;
+      var down = t.animate([{transform:'translateY(0)'},{transform:'translateY(3px)'}], {duration:45, easing:'cubic-bezier(.3,0,.6,1)', fill:'forwards', composite:'add'});
+      live.push(down); held = {el:t, down:down};
+    }catch(_){}
   }, {passive:true});
+  document.addEventListener('pointerup', release, true);
+  document.addEventListener('pointercancel', release, true);
 })();
 </script>
 </body>
