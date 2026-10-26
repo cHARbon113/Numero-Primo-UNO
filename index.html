@@ -683,9 +683,6 @@
   .lever, .dialWin, .pfBtn[data-clear], .glass, #vtReset{ -webkit-touch-callout:none; -webkit-user-select:none; user-select:none; }
   #discardTop{ position:relative; }
   #discardTop > .card:not(.under){ position:relative; z-index:2; }
-  #discardTop .card.under{ position:absolute; left:0; top:0; z-index:1; pointer-events:none; }
-  #discardTop .card.under[data-depth="1"]{ transform:translate(-14px,-2px) rotate(-6deg); filter:brightness(0.8); }
-  #discardTop .card.under[data-depth="2"]{ transform:translate(14px,-3px) rotate(7deg); filter:brightness(0.65); }
   /* quiz: an orange monitor */
   .crt{ position:relative; box-sizing:border-box; width:min(94vw, 380px); padding:14px 14px 24px; border-radius:22px; background:#2a1f15; border:2px solid #4a3523; box-shadow:inset 0 2px 0 rgba(255,255,255,0.07), 0 8px 0 rgba(0,0,0,0.55); }
   .crtScreen{ position:relative; overflow:hidden; padding:12px; border-radius:14px; background:#170c03; border:3px solid #0c0602; box-shadow:inset 0 0 0 2px #5a3412; color:#ff9d2e; font-family:'B612 Mono','Space Mono',monospace; text-align:center; }
@@ -706,9 +703,81 @@
   .qGhost{ position:fixed; z-index:2000; margin:0; pointer-events:none; transform:translate(-50%,-50%) scale(1.1); opacity:0.92; }
   .quizMsg{ min-height:3.4em; margin:2px 0 10px; font-size:13.5px; line-height:1.5; color:#c26a14; text-align:left; }
   .quizMsg.good{ color:#ffd9a0; } .quizMsg.mid{ color:#ff9d2e; } .quizMsg.bad{ color:#ff6a3a; }
-  .crtBtns{ display:flex; gap:10px; }
-  .crtBtn{ flex:1; margin:0; padding:12px 0; border:2px solid #ff9d2e; border-radius:10px; background:#2a1608; color:#ff9d2e; font-family:inherit; font-size:16px; font-weight:900; box-shadow:0 5px 0 #6b3a0d; cursor:pointer; }
-  .crtBtn.main{ background:#ff9d2e; color:#1a0d03; }
+  /* ---- v7 ---- */
+  .tableCenter{ flex-direction:column; align-items:center; gap:8px; }
+  .pilesRow{ display:flex; align-items:flex-start; gap:12px; }
+  /* panel lower part: digits | marks in a frame together with AND/OR | MEMO + reset */
+  .vtLower{ display:grid; grid-template-columns:minmax(0,1fr) 132px; grid-template-areas:"dg mk" "ft mk"; gap:8px; align-items:start; }
+  #vtDigit{ grid-area:dg; }
+  .markBox{ grid-area:mk; display:flex; flex-direction:column; align-items:center; gap:6px; padding:4px 3px 7px; border:1px solid color-mix(in srgb, var(--mode-accent) 50%, transparent); border-radius:10px; min-width:0; }
+  .markBox .vtGrp{ width:100%; }
+  .vtFootL{ grid-area:ft; display:flex; flex-wrap:wrap; align-items:center; gap:4px 4px; min-width:0; }
+  .memoLogo{ flex:none; padding:5px 7px; font-size:12.5px; letter-spacing:0; }
+  .redBtn{ padding:6px 8px; font-size:11.5px; }
+  .redBtn:disabled{ opacity:0.4; box-shadow:inset 0 1px 0 rgba(255,255,255,0.15), 0 5px 0 #4a1a15; cursor:default; }
+  .redBtn.latched:disabled{ opacity:1; }
+  /* the case is a sliding door: it slides into the wall and disappears */
+  .safety{ position:relative; flex:none; padding:4px 4px 8px; overflow:hidden; border-radius:11px; perspective:none; }
+  .safety::before{ content:''; position:absolute; inset:0; border:1px solid rgba(255,255,255,0.18); border-radius:11px; pointer-events:none; }
+  .glass{ inset:0; border-radius:11px; transform-origin:50% 50%; transform:translateX(0); transition:transform .24s var(--ease); }
+  .safety.open .glass{ transform:translateX(106%); pointer-events:none; }
+  .safety.disabled .glass{ opacity:0.45; cursor:default; }
+  .lever.disabled{ opacity:0.55; cursor:default; }
+  .lever.disabled .leverKnob{ transform:translateY(44px); }
+  button:disabled{ cursor:default; }
+  .primeSearch .ghost:disabled, #primeBrushRow .pfBtn:disabled{ opacity:0.4; box-shadow:none; }
+  /* quiz: physical buttons below the monitor, verdict on the screen */
+  .hwBtns{ display:flex; gap:12px; margin-top:16px; padding:0 4px; }
+  .hwBtn{ flex:1; margin:0; padding:14px 0; border:0; border-radius:10px; background:#d8ccb4; color:#2a1f15; font-family:inherit; font-size:16px; font-weight:900; letter-spacing:0.05em; box-shadow:inset 0 2px 0 rgba(255,255,255,0.5), 0 6px 0 #7a6c52; cursor:pointer; }
+  .hwBtn.main{ background:#e2873a; box-shadow:inset 0 2px 0 rgba(255,255,255,0.35), 0 6px 0 #8a4a14; }
+  .hwBtn:disabled{ opacity:0.45; box-shadow:0 6px 0 #4a4132; }
+  .quizVerdict{ min-height:34px; margin:2px 0 4px; font-size:22px; font-weight:900; line-height:1.3; color:#ffb24a; text-align:center; }
+  .quizVerdict.good{ color:#6be58a; } .quizVerdict.bad{ color:#ff5a4d; }
+  @keyframes stamp{ from{ transform:scale(1.7); opacity:0; } to{ transform:none; opacity:1; } }
+  .quizVerdict.stamp{ animation:stamp .16s ease-out 1; }
+  .quizMsg{ min-height:2.2em; text-align:left; }
+  .crtLed{ bottom:7px; }
+  .crt{ padding-bottom:26px; }
+  /* ---- v8 ---- */
+  /* switches and toggles: thick keycaps on recessed tracks (the sliding motion is the original one) */
+  .vtThumb{ box-shadow:inset 0 1px 0 rgba(255,255,255,0.3), inset 0 -4px 0 rgba(0,0,0,0.22), 0 4px 0 rgba(0,0,0,0.6); }
+  .modeThumb{ box-shadow:inset 0 1px 0 rgba(255,255,255,0.28), inset 0 -4px 0 rgba(0,0,0,0.2), 0 4px 0 rgba(0,0,0,0.6); }
+  .cpu-select::before{ box-shadow:inset 0 1px 0 rgba(255,255,255,0.28), inset 0 -4px 0 rgba(0,0,0,0.2), 0 4px 0 rgba(0,0,0,0.6); }
+  .andorThumb{ box-shadow:inset 0 1px 0 rgba(255,255,255,0.3), inset 0 -3px 0 rgba(0,0,0,0.2), 0 3px 0 rgba(0,0,0,0.6); }
+  .modeToggle, .cpu-select, .vtTrack, .mkTrack, .andor{ box-shadow:inset 0 3px 0 rgba(0,0,0,0.4); }
+  .swSlider{ box-shadow:inset 0 3px 0 rgba(0,0,0,0.35); }
+  .swSlider::after{ box-shadow:inset 0 1px 0 rgba(255,255,255,0.4), 0 3px 0 rgba(0,0,0,0.5); }
+  /* the table: the last three plays in a column, oldest on top */
+  .draw-pile .card{ margin-top:34px; }
+  #discardTop{ position:relative; width:78px; height:calc(3 * 40px + 2 * 14px); overflow:hidden; }
+  .dcStack{ display:flex; flex-direction:column; align-items:center; }
+  #discardTop .pchip{ flex:none; box-sizing:border-box; width:78px; height:40px; padding:12px 1px 2px; }
+  #discardTop .pchip .pstrip{ height:11px; line-height:11px; font-size:8.5px; }
+  #discardTop .pchip .pnum{ font-size:19px; line-height:24px; }
+  #discardTop .pchip:last-child{ border-color:var(--hundreds); box-shadow:0 0 0 1px var(--hundreds); }
+  .dcArrow{ flex:none; height:14px; line-height:14px; font-size:10px; color:var(--hundreds); }
+  /* without assist: drag to rearrange the hand */
+  .noAssistHand .card{ touch-action:none; }
+  .card.dragging{ opacity:0.3; }
+  .handGhost{ position:fixed; z-index:2000; margin:0; pointer-events:none; transform:translate(-50%,-50%) scale(1.06); opacity:0.92; }
+  /* quiz */
+  #quizModal{ z-index:60; }
+  .crtLogo{ margin:0; padding:4px 8px; border:0; border-radius:8px; background:transparent; color:#ff9d2e; font-family:inherit; font-size:17px; font-weight:900; letter-spacing:0.04em; cursor:pointer; }
+  .crtLogo .u{ color:#ffd9a0; }
+  .quizVerdict.skip{ color:#ffb24a; }
+  .quizVerdict sup{ font-size:0.6em; line-height:0; vertical-align:super; margin-left:1px; }
+  /* ---- v9 ---- */
+  .tableCenter{ padding:8px 10px; gap:8px; }
+  .tableWrap.crowded .tableCenter{ transform:translate(-50%,-50%) scale(0.86); }
+  #game{ position:relative; }
+  .gameX{ position:absolute; top:4px; right:8px; z-index:5; width:34px; height:34px; margin:0; padding:0; border:0; border-radius:8px; background:var(--panel-2); color:var(--ink); font-family:inherit; font-size:22px; font-weight:700; line-height:1; box-shadow:inset 0 1px 0 rgba(255,255,255,0.14), 0 4px 0 rgba(0,0,0,0.6); cursor:pointer; }
+  /* the marks row stays on one line; the sort order sits at the right end in its own colours */
+  #primeBrushRow{ flex-wrap:nowrap; gap:5px; align-items:center; }
+  #primeBrushRow .pfBtn{ flex:none; padding:7px 9px; font-size:12px; white-space:nowrap; }
+  #primeBrushRow .pfLabel{ flex:none; font-size:11.5px; }
+  #primeBrushRow .ordBtn{ margin-left:auto; }
+  #primeBrushRow .ordBtn.asc{ background:var(--reverse); color:#10170f; }
+  #primeBrushRow .ordBtn.desc{ background:var(--draw4); color:#241a06; }
 </style>
 </head>
 <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
@@ -798,8 +867,8 @@
   <div data-modes="rate free online">
     <p class="settingTitle">共通ルール設定</p>
     <div class="settingGroup">
-      <label class="swRow"><span>まとめて出す(重ね出し)機能</span><span class="sw"><input type="checkbox" id="multiDumpToggle" checked><span class="swSlider"></span></span></label>
-      <label class="swRow"><span>桁ロック(短いカードの後は長い特殊カードが出せない)</span><span class="sw"><input type="checkbox" id="lockToggle" checked><span class="swSlider"></span></span></label>
+      <label class="swRow"><span>まとめて出す</span><span class="sw"><input type="checkbox" id="multiDumpToggle" checked><span class="swSlider"></span></span></label>
+      <label class="swRow"><span>桁ロック</span><span class="sw"><input type="checkbox" id="lockToggle" checked><span class="swSlider"></span></span></label>
     </div>
   </div>
   <div data-modes="rate free online">
@@ -827,11 +896,12 @@
   <div data-modes="free">
     <p class="settingTitle">フリーモードの設定</p>
     <div class="settingGroup">
-      <div class="stepRow"><span>人数(自分を含む)</span>
+      <div class="stepRow"><span>人数</span>
         <div class="stepper"><button class="stepBtn" data-key="players" data-d="-1">−</button><span class="stepVal" id="freePlayersVal">3</span><button class="stepBtn" data-key="players" data-d="1">＋</button></div></div>
       <div class="stepRow"><span>初手の枚数</span>
         <div class="stepper"><button class="stepBtn" data-key="handSize" data-d="-1">−</button><span class="stepVal" id="freeHandVal">7</span><button class="stepBtn" data-key="handSize" data-d="1">＋</button></div></div>
-      <label class="swRow"><span>ドローの回数制限をなくす(何枚でも続けて引ける)</span><span class="sw"><input type="checkbox" id="unlimitedDrawToggle"><span class="swSlider"></span></span></label>
+      <label class="swRow"><span>ドローの回数制限をなくす</span><span class="sw"><input type="checkbox" id="unlimitedDrawToggle"><span class="swSlider"></span></span></label>
+      <label class="swRow"><span>アシストあり</span><span class="sw"><input type="checkbox" id="assistToggle"><span class="swSlider"></span></span></label>
     </div>
   </div>
 
@@ -890,25 +960,25 @@
     <div class="vtPanel open" id="primeVt">
       <button class="vtBar" id="vtBar" aria-expanded="true"><span class="vtLamp" id="vtLamp"></span><span class="vtTitle">フィルターパネル</span><span class="vtSum" id="vtSum"></span><span class="vtArrow">▾</span></button>
       <div class="vtWrap"><div class="vtBody"><div class="vtInner">
-        <div class="vtRow"><div class="vtGrp" id="vtEffect" style="flex:5;"></div><div class="vtGrp" id="vtOrder" style="flex:1;"></div></div>
-        <div class="vtRow"><div class="vtGrp" id="vtDigit" style="flex:4;"></div><div class="vtGrp" id="vtMark" style="flex:4;"></div></div>
-        <div class="vtRow vtFoot">
-          <button class="memoLogo" id="quizBtn" aria-label="素数MEMOのクイズ"><span>素数</span><span class="acc">MEMO</span></button>
-          <div class="safety" id="vtSafety"><button class="redBtn" id="vtReset">リセット</button><div class="glass" id="vtCover" role="button" aria-label="ガラスのカバーを開ける"></div></div>
-        </div>
-        <div class="vtRow vtFoot2">
-          <div class="mkMode"><span>マーク条件</span><div class="andor" id="mkAndOr" data-s="or" role="switch" aria-label="マークの条件 AND/OR"><span>AND</span><span>OR</span><div class="andorThumb">OR</div></div></div>
+        <div class="vtRow"><div class="vtGrp" id="vtEffect" style="flex:5;"></div><div class="vtGrp" id="vtZero" style="flex:1;"></div></div>
+        <div class="vtLower">
+          <div class="vtGrp" id="vtDigit"></div>
+          <div class="markBox"><div class="vtGrp" id="vtMark"></div><div class="andor" id="mkAndOr" data-s="or" role="switch" aria-label="マークの条件 AND/OR"><span>AND</span><span>OR</span><div class="andorThumb">OR</div></div></div>
+          <div class="vtFootL">
+            <button class="memoLogo" id="quizBtn" aria-label="素数MEMOのクイズ"><span>素数</span><span class="acc">MEMO</span></button>
+            <div class="safety" id="vtSafety"><button class="redBtn" id="vtReset">リセット</button><div class="glass" id="vtCover" role="button" aria-label="ガラスのカバーを開ける"></div></div>
+          </div>
         </div>
       </div></div></div>
     </div>
     <div class="dialPanel">
-      <div class="dialCap">桁一致ダイヤル <span>(－は指定なし)</span></div>
+      <div class="dialCap">桁一致ダイヤル</div>
       <div class="dialBox">
         <div class="vtGrp dialGrp" id="primeDials"></div>
         <div class="lever" id="dialLever" aria-label="長押しで全部－に戻すレバー"><div class="leverTrack"><div class="leverKnob"></div></div><small>CLEAR</small></div>
       </div>
     </div>
-    <div class="dialCap" style="margin:2px 0 6px 2px;">数値検索 <span>(＋は合うカード、−は除くカード)</span></div>
+    <div class="dialCap" style="margin:2px 0 6px 2px;">数値検索</div>
     <div class="primeSearch">
       <span class="sLabel yes">＋</span>
       <input type="text" inputmode="text" id="primeSearchInput" placeholder="例: 1,2,7,9 / 9xy1 / 148(1,3,7,9)" maxlength="40" autocapitalize="none" autocorrect="off" spellcheck="false" enterkeyhint="search">
@@ -975,16 +1045,19 @@
 
 <div class="layout" id="layout">
   <div id="game">
+    <button class="gameX" id="gameXBtn" aria-label="ゲームをやめる" style="display:none;">×</button>
     <div class="tableWrap" id="tableWrap">
       <div class="circleGuide"></div>
       <div class="tableCenter">
-        <div class="pile draw-pile" id="drawPileWrap">
-          <div class="pile-label">山札（<span id="drawCount">0</span>）</div>
-          <div class="card back" id="drawPile"></div>
-        </div>
-        <div class="pile">
-          <div class="pile-label">場</div>
-          <div id="discardTop"></div>
+        <div class="pilesRow">
+          <div class="pile draw-pile" id="drawPileWrap">
+            <div class="pile-label">山札（<span id="drawCount">0</span>）</div>
+            <div class="card back" id="drawPile"></div>
+          </div>
+          <div class="pile">
+            <div class="pile-label">場</div>
+            <div id="discardTop"></div>
+          </div>
         </div>
       </div>
     </div>
@@ -1039,6 +1112,7 @@
     <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-top:10px;">
       <button class="ghost" id="resultTweetBtn" style="display:none;">Xでシェア</button>
       <button class="ghost" id="viewLogBtn">ログを見る</button>
+      <button class="ghost" id="memoFromResult"><span>素数</span><span style="color:var(--mode-accent);">MEMO</span></button>
     </div>
   </div>
 </div>
@@ -1046,13 +1120,14 @@
 <div class="winbox" id="quizModal">
   <div class="crt">
     <div class="crtScreen">
-      <div class="crtTop"><button class="crtX" id="quizClose" aria-label="閉じる">×</button><span class="crtScore" id="quizScore">0/0</span></div>
+      <div class="crtTop"><button class="crtX" id="quizClose" aria-label="閉じる">×</button><button class="crtLogo" id="quizLogo" aria-label="フリーを始める"><span>素数</span><span class="u">UNO</span></button><span class="crtScore" id="quizScore">0/0</span></div>
       <div class="crtCaption">並べて最大の素数をつくれ</div>
       <div class="quizRow" id="quizSlots"></div>
       <div class="quizRow" id="quizTiles"></div>
+      <div class="quizVerdict" id="quizVerdict"></div>
       <div class="quizMsg" id="quizMsg"></div>
-      <div class="crtBtns"><button class="crtBtn main" id="quizJudge">判定</button><button class="crtBtn" id="quizSkip">スキップ</button></div>
     </div>
+    <div class="hwBtns"><button class="hwBtn main" id="quizJudge">判定</button><button class="hwBtn" id="quizSkip">スキップ</button></div>
     <span class="crtLed"></span>
   </div>
 </div>
@@ -1232,7 +1307,7 @@
       interruptEnabled: document.getElementById('interruptToggle').checked,
       bothCancelDrawEnabled: document.getElementById('bothCancelDrawToggle').checked,
       multiDumpEnabled: document.getElementById('multiDumpToggle').checked,
-      mode, unlimitedDraw: !!opts.unlimitedDraw, digitCeiling: DECK_WIDTH,
+      mode, unlimitedDraw: !!opts.unlimitedDraw, noAssist: !!opts.noAssist, played: [], digitCeiling: DECK_WIDTH,
       multiSelection: [],
       multiMode: false
     };
@@ -1421,6 +1496,7 @@
       logSystem('SHUFFLE');
     }
   }
+  function pushDiscard(c){ state.discardPile.push(c); if(state.played) state.played.push(c); }
   function drawCards(playerIdx, count){
     const drawn = [];
     for(let k=0;k<count;k++){
@@ -1433,10 +1509,20 @@
     return drawn;
   }
 
+  // without assist a wrong play costs as many cards as were tried, and the turn is lost
+  function penalize(playerIdx, n){
+    const p = state.players[playerIdx];
+    state.multiMode = false; state.multiSelection = [];
+    drawCards(playerIdx, n);
+    logAction(p.name, 'PENALTY +' + n, p.hand.length);
+    if(state.pendingDraw>0){ acceptPending(playerIdx); return; }   // takes the stack and passes the turn
+    state.current = nextIndexFrom(playerIdx); state.turnDrawn = false;
+    render(); maybeCpuTurn();
+  }
   function playCard(playerIdx, card){
     const p = state.players[playerIdx];
     p.hand = p.hand.filter(c=>c.id!==card.id);
-    state.discardPile.push(card);
+    pushDiscard(card);
     logPlay(p.name, card, p.hand.length);
     applyLock(card);
 
@@ -1510,7 +1596,7 @@
       if(idx>=0) spent = victim.hand.splice(idx,1)[0];
     }
     if(spent){
-      state.discardPile.push(spent);
+      pushDiscard(spent);
       const bonusDraw = spent.effect==='both' && state.bothCancelDrawEnabled;
       const tag = bonusDraw ? 'CANCEL+2' : 'CANCEL';
       logRow(`${victim.name}（${victim.hand.length}）：`, `<b class="logNum">${pad3(spent.value)}</b> <span class="fx fx-reverse">（${tag}）</span>`);
@@ -1538,7 +1624,7 @@
   function stackCard(playerIdx, card){
     const p = state.players[playerIdx];
     p.hand = p.hand.filter(c=>c.id!==card.id);
-    state.discardPile.push(card);
+    pushDiscard(card);
     logPlay(p.name, card, p.hand.length);
     applyLock(card);
 
@@ -1613,7 +1699,7 @@
     }
     if(!isValidCombo(playerIdx, selected)) return false;
     p.hand = remaining;
-    selected.forEach(c=> state.discardPile.push(c));
+    selected.forEach(c=> pushDiscard(c));
     const lockBefore = ceilingNow();
     selected.forEach(c=>{ if(lockEnabled()) state.digitCeiling = ceilingAfterPlay(c, ceilingNow()); });
     logMultiPlay(p.name, selected, p.hand.length);
@@ -1829,20 +1915,78 @@
   }
   renderRateTable();
 
+  // the last three plays as small prime-table cards, oldest on top, an arrow between each pair
+  function pchipHtml(c){
+    const str = String(c.value), padded = str.padStart(DECK_WIDTH,'0');
+    const colorCls = digitColorClasses(padded.split('').map(Number));
+    const digits = padded.split('').map((d,i)=> `<span class="${colorCls[i]}${i < DECK_WIDTH - str.length ? ' lz' : ''}">${d}</span>`).join('');
+    return `<div class="pchip pc-${c.effect}" data-cv="${c.digits ? c.digits.join('') : str}"><div class="pstrip">${c.effect==='plain' ? '' : (EFFECT_TAG[c.effect] || '')}</div><div class="pnum">${digits}</div></div>`;
+  }
+  function discardColumnHtml(list){ return list.map(pchipHtml).join('<div class="dcArrow">▼</div>'); }
+  // without assist: tap selects, drag rearranges the hand
+  function attachHandDrag(el, card, enabled){
+    el.addEventListener('pointerdown', e=>{
+      if(e.button!==undefined && e.button!==0) return;
+      const sx = e.clientX, sy = e.clientY; let moved = false, ghost = null;
+      const handWrap = document.getElementById('hand');
+      const target = ev=>{
+        const kids = Array.prototype.slice.call(handWrap.children); let best = -1, bd = 1e9;
+        kids.forEach((k,i)=>{ if(k===el) return; const r = k.getBoundingClientRect(), d = Math.hypot(ev.clientX - (r.left + r.width/2), ev.clientY - (r.top + r.height/2)); if(d < bd){ bd = d; best = i; } });
+        return best;
+      };
+      const move = ev=>{
+        if(!moved && Math.hypot(ev.clientX - sx, ev.clientY - sy) > 10){ moved = true; ghost = el.cloneNode(true); ghost.classList.add('handGhost'); document.body.appendChild(ghost); el.classList.add('dragging'); }
+        if(moved){ ghost.style.left = ev.clientX + 'px'; ghost.style.top = ev.clientY + 'px'; }
+      };
+      const up = ev=>{
+        window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up); window.removeEventListener('pointercancel', up);
+        if(ghost) ghost.remove(); el.classList.remove('dragging');
+        if(!state) return;
+        if(!moved){
+          if(!enabled) return;
+          if(!state.multiDumpEnabled) state.multiSelection = state.multiSelection.includes(card) ? [] : [card];
+          else state.multiSelection = state.multiSelection.includes(card) ? state.multiSelection.filter(c=> c!==card) : state.multiSelection.concat([card]);
+        } else {
+          const hand = state.players[mySeat].hand, t = target(ev);
+          if(t >= 0){
+            const kids = Array.prototype.slice.call(handWrap.children), r = kids[t].getBoundingClientRect(), after = ev.clientX > r.left + r.width/2;
+            const targetCard = hand[t]; hand.splice(hand.indexOf(card), 1);
+            hand.splice(hand.indexOf(targetCard) + (after ? 1 : 0), 0, card);
+          }
+        }
+        render();
+      };
+      window.addEventListener('pointermove', move); window.addEventListener('pointerup', up); window.addEventListener('pointercancel', up);
+    });
+  }
+  function playSelection(){
+    if(!state || state.over || state.current!==mySeat) return;
+    const sel = state.multiSelection.slice(), me = state.players[mySeat];
+    if(!sel.length) return;
+    state.multiSelection = [];
+    const top = state.discardPile[state.discardPile.length-1];
+    if(sel.length===1){
+      if(!canPlay(sel[0], me.hand, top)){ penalize(mySeat, 1); return; }
+      if(state.pendingDraw>0) stackCard(mySeat, sel[0]); else playCard(mySeat, sel[0]);
+      return;
+    }
+    if(!(me.hand.length - sel.length >= 1 && isValidCombo(mySeat, sel))){ penalize(mySeat, sel.length); return; }
+    playMultiDump(mySeat, sel);
+  }
   function renderTableCircle(){
     const wrap = document.getElementById('tableWrap');
     wrap.querySelectorAll('.seatChip, .flowArrow').forEach(el=>el.remove());
+    wrap.classList.toggle('crowded', state.players.length >= 5);
     const rect = wrap.getBoundingClientRect();
     const cx = rect.width/2, cy = rect.height/2;
-    const chipR = rect.width*0.42;
-    const arrowR = rect.width*0.29;
+    const chipRx = rect.width*0.47, chipRy = rect.width*0.42;
     const n = state.players.length;
     const angleOf = i => 180 + i*(360/n);
 
     state.players.forEach((p, i)=>{
       const a = angleOf(i) * Math.PI/180;
-      const x = cx + chipR*Math.sin(a);
-      const y = cy - chipR*Math.cos(a);
+      const x = cx + chipRx*Math.sin(a);
+      const y = cy - chipRy*Math.cos(a);
       const chip = document.createElement('div');
       chip.className = 'seatChip' + (state.current===i ? ' active' : '');
       chip.style.left = x+'px'; chip.style.top = y+'px';
@@ -1852,19 +1996,37 @@
       wrap.appendChild(chip);
     });
 
+    // an arrow sits between two seats; it is nudged along the ring until it touches no seat, no centre box and no other arrow
+    const cr = document.querySelector('.tableCenter').getBoundingClientRect();
+    const box = { l:cr.left - rect.left, t:cr.top - rect.top, r:cr.right - rect.left, b:cr.bottom - rect.top };
+    const chipBoxes = Array.prototype.slice.call(wrap.querySelectorAll('.seatChip')).map(c=>{
+      const x = parseFloat(c.style.left), y = parseFloat(c.style.top), w = c.offsetWidth, h = c.offsetHeight;
+      return { l:x-w/2, t:y-h/2, r:x+w/2, b:y+h/2 };
+    });
+    const hit = (a, b, m)=> !(a.r + m <= b.l || b.r + m <= a.l || a.b + m <= b.t || b.b + m <= a.t);
+    const placed = [], arx = rect.width*0.45, ary = rect.width*0.41;
     for(let i=0;i<n;i++){
       const a1 = angleOf(i);
       let a2 = angleOf((i+1)%n);
       if(a2 <= a1) a2 += 360;
       const mid = (a1+a2)/2;
-      const midRad = mid*Math.PI/180;
-      const x = cx + arrowR*Math.sin(midRad);
-      const y = cy - arrowR*Math.cos(midRad);
-      const rotation = mid + (state.direction===1 ? 0 : 180);
+      let best = null, bestCost = 1e9;
+      [0,-5,5,-10,10,-15,15,-20,20,-25,25].forEach(da=>{
+        [0,8,-8,16,-16,24,-24].forEach(dr=>{
+          const ang = (mid+da)*Math.PI/180;
+          const px = cx + (arx+dr)*Math.sin(ang), py = cy - (ary+dr)*Math.cos(ang);
+          const ab = { l:px-10, t:py-10, r:px+10, b:py+10 };
+          if(chipBoxes.some(c=> hit(ab, c, 3)) || hit(ab, box, 6) || placed.some(q=> hit(ab, q, 2))) return;
+          const cost = Math.abs(da)*3 + Math.abs(dr);
+          if(cost < bestCost){ bestCost = cost; best = { px, py, ang:mid+da }; }
+        });
+      });
+      if(!best){ const r = mid*Math.PI/180; best = { px:cx + arx*Math.sin(r), py:cy - ary*Math.cos(r), ang:mid }; }
+      placed.push({ l:best.px-10, t:best.py-10, r:best.px+10, b:best.py+10 });
       const arrow = document.createElement('div');
       arrow.className = 'flowArrow';
-      arrow.style.left = x+'px'; arrow.style.top = y+'px';
-      arrow.style.transform = `translate(-50%,-50%) rotate(${rotation}deg)`;
+      arrow.style.left = best.px+'px'; arrow.style.top = best.py+'px';
+      arrow.style.transform = `translate(-50%,-50%) rotate(${best.ang + (state.direction===1 ? 0 : 180)}deg)`;
       arrow.textContent = '➤';
       wrap.appendChild(arrow);
     }
@@ -1872,6 +2034,7 @@
 
   function render(){
     if(!state) return;
+    document.getElementById('gameXBtn').style.display = (state.mode==='free' && !state.over && !onlineGameActive) ? 'block' : 'none';
 
     if(state.pendingCancelBonus && state.current===state.pendingCancelBonus.targetIdx && state.pendingDraw===0){
       state.pendingDraw += state.pendingCancelBonus.amount;
@@ -1890,11 +2053,7 @@
 
     const top = state.discardPile[state.discardPile.length-1];
     const discardTop = document.getElementById('discardTop');
-    discardTop.innerHTML='';
-    // the last three cards played: the newest on top, the two before it peeking out to either side
-    const recent = state.discardPile.slice(-3).slice(0, -1);
-    recent.forEach((c, i)=>{ const e = cardEl(c); e.classList.add('under'); e.dataset.depth = String(recent.length - i); discardTop.appendChild(e); });
-    discardTop.appendChild(cardEl(top));
+    discardTop.innerHTML = '<div class="dcStack">' + discardColumnHtml(state.discardPile.slice(-3)) + '</div>';
 
     renderTableCircle();
 
@@ -1911,9 +2070,10 @@
     interruptBanner.classList.toggle('show', !!iAmVictim);
 
     const human = state.players[mySeat];
-    sortHand(human.hand);
+    if(!state.noAssist) sortHand(human.hand);   // the automatic order is part of the assist
     const handWrap = document.getElementById('hand');
     handWrap.innerHTML='';
+    handWrap.classList.toggle('noAssistHand', !!state.noAssist);
     const myTurn = state.current===mySeat && !state.over && !state.skipInterrupt;
 
     if(iAmVictim){
@@ -1923,10 +2083,16 @@
         if(isCancelCard) el.addEventListener('click', ()=> requestInterrupt(card));
         handWrap.appendChild(el);
       });
+    } else if(state.noAssist){
+      human.hand.forEach(card=>{
+        const el = cardEl(card, { playable: myTurn, multiSelected: state.multiSelection.includes(card) });
+        attachHandDrag(el, card, myTurn);
+        handWrap.appendChild(el);
+      });
     } else if(state.multiMode){
       human.hand.forEach(card=>{
         const isSelected = state.multiSelection.includes(card);
-        const wouldBeOk = isSelected || (
+        const wouldBeOk = state.noAssist || isSelected || (
           state.multiSelection.length===0
             ? canStartCombo(card, human.hand, top)
             : comboPositionsIfAdded(card, state.multiSelection, top).length>0
@@ -1950,10 +2116,10 @@
       });
     } else {
       human.hand.forEach(card=>{
-        const playable = myTurn && canPlay(card, human.hand, top);
+        const playable = myTurn && (state.noAssist || canPlay(card, human.hand, top));   // without assist every card can be tried
         const el = cardEl(card, {
           playable, disabled: myTurn && !playable,
-          stackable: myTurn && state.pendingDraw>0 && playable
+          stackable: !state.noAssist && myTurn && state.pendingDraw>0 && playable
         });
         if(playable){
           el.addEventListener('click', ()=> requestPlayCard(card));
@@ -1963,9 +2129,16 @@
     }
 
     const multiBtn = document.getElementById('multiDumpBtn');
-    const eligible = multiDumpEligible();
-    multiBtn.disabled = state.multiMode || !eligible;
-    multiBtn.classList.toggle('emphasize', eligible && !state.multiMode);
+    if(state.noAssist){
+      multiBtn.textContent = '出す';
+      multiBtn.disabled = !(myTurn && state.multiSelection.length>0);
+      multiBtn.classList.remove('emphasize');
+    } else {
+      multiBtn.textContent = 'まとめて出す';
+      const eligible = multiDumpEligible();
+      multiBtn.disabled = state.multiMode || !eligible;
+      multiBtn.classList.toggle('emphasize', eligible && !state.multiMode);
+    }
     document.getElementById('multiDumpBar').classList.toggle('show', state.multiMode);
     document.getElementById('multiDumpCount').textContent = state.multiSelection.length;
     document.getElementById('multiDumpConfirmBtn').disabled = state.multiSelection.length===0;
@@ -1989,6 +2162,7 @@
   // ---- action dispatch: local (host/offline) executes directly; guest sends to host ----
   function requestPlayCard(card){
     if(isOnlineGuest()){ sendAction({type:'play', cardId:card.id}); return; }
+    if(state.noAssist && !canPlay(card, state.players[mySeat].hand, state.discardPile[state.discardPile.length-1])){ penalize(mySeat, 1); return; }
     if(state.pendingDraw>0) stackCard(mySeat, card); else playCard(mySeat, card);
   }
   function requestDraw(){
@@ -2014,6 +2188,13 @@
   function requestMultiDump(){
     const ids = state.multiSelection.map(c=>c.id);
     if(isOnlineGuest()){ sendAction({type:'multiDump', cardIds: ids}); return; }
+    if(state.noAssist){
+      const sel = state.multiSelection.slice(), me = state.players[mySeat];
+      if(!(me.hand.length - sel.length >= 1 && isValidCombo(mySeat, sel))){
+        state.multiSelection = []; state.multiMode = false;
+        penalize(mySeat, sel.length); return;
+      }
+    }
     playMultiDump(mySeat, state.multiSelection);
   }
   function isOnlineGuest(){ return onlineGameActive && !isOnlineHost; }
@@ -2128,6 +2309,7 @@
   });
   document.getElementById('multiDumpBtn').addEventListener('click', ()=>{
     if(!state || state.over) return;
+    if(state.noAssist){ playSelection(); return; }
     state.multiMode = true;
     state.multiSelection = [];
     render();
@@ -2213,6 +2395,12 @@
     document.getElementById('log').innerHTML='';
     newGame(lastGameCfg.numCpu, null, lastGameCfg.opts);
   });
+  document.getElementById('gameXBtn').addEventListener('click', ()=>{
+    if(!state || state.over || state.mode!=='free') return;
+    if(!confirm('ゲームをやめてホームに戻ります')) return;
+    state.over = true;   // pending CPU moves see this and stop
+    returnToStartScreen(); refreshStatsDisplay();
+  });
   document.getElementById('homeBtn').addEventListener('click', ()=>{
     if(onlineGameActive){
       // stay connected: go back to a lobby/waiting screen instead of disconnecting
@@ -2239,14 +2427,14 @@
   // ---- modes (rate / free / online): every mode keeps its own settings ----
   const MODE_ORDER = ['free','rate','online','prime'];
   const MODE_NOTE = {
-    rate: '勝敗がレートに反映されます(CPU対戦)',
+    rate: '勝敗がレートに反映されます',
     free: 'レートに影響しません。ルールを自由に設定',
     online: '2人で対戦(CPU追加可)。レートに影響なし',
     prime: '4桁デッキの全カードを一覧で見られます'
   };
   const SETTING_DEFAULTS = {
     rate:   { multiDump:true, interrupt:true, bothCancel:true, cpu:2, digits:3, lock:true },
-    free:   { multiDump:true, interrupt:true, bothCancel:true, players:3, handSize:7, unlimitedDraw:false, digits:3, lock:true },
+    free:   { multiDump:true, interrupt:true, bothCancel:true, players:3, handSize:7, unlimitedDraw:false, noAssist:false, digits:3, lock:true },
     online: { multiDump:true, interrupt:true, bothCancel:true, cpu:0, lock:true },
     prime:  { effects:[], digitsSel:[], order:'asc', query:'', brush:'', marks:{}, markFilter:{} }
   };
@@ -2290,6 +2478,7 @@
     document.getElementById('freePlayersVal').textContent = f.players;
     document.getElementById('freeHandVal').textContent = f.handSize;
     document.getElementById('unlimitedDrawToggle').checked = !!f.unlimitedDraw;
+    document.getElementById('assistToggle').checked = !f.noAssist;
     document.querySelectorAll('.stepBtn').forEach(b=>{
       const v = Number(f[b.dataset.key]), max = b.dataset.key==='players' ? 8 : maxHandFor(f.players);
       b.disabled = Number(b.dataset.d) < 0 ? v <= 2 : v >= max;
@@ -2357,7 +2546,8 @@
     const f = modeSettings.prime;
     document.getElementById('primeBrushRow').innerHTML = '<span class="pfLabel">つける</span>' +
       `<button class="pfBtn ${f.brush?'selected':''}" id="markOpenBtn">マークをつける</button>` +
-      '<button class="pfBtn" data-clear="1">まとめて消去</button>';
+      '<button class="pfBtn" data-clear="1"' + (primeShown.some(c=> (f.marks[c.value]||[]).length) ? '' : ' disabled') + '>まとめて消去</button>' +
+      `<button class="pfBtn ordBtn ${f.order==='desc' ? 'desc' : 'asc'}" id="orderBtn">${f.order==='desc' ? '降順 ▼' : '昇順 ▲'}</button>`;
     document.getElementById('markDrawerBtns').innerHTML = PRIME_MARKS.map(m=>
       `<button class="mdBtn ${f.brush===m.key?'selected':''}" data-b="${m.key}" aria-label="${m.name}">${markIcon(m)}</button>`).join('');
   }
@@ -2462,6 +2652,7 @@
     if(f.effects.length){ f.effectsNot = ALL_EFF.filter(k=> !f.effects.includes(k)); f.effects = []; }
     if(f.digitsSel.length){ f.digitsNot = [1,2,3,4].filter(d=> !f.digitsSel.includes(d)); f.digitsSel = []; }
     f.markCombine = (f.markCombine==='and' || f.markCombine==='all') ? 'and' : 'or';
+    if(f.zero!=='has' && f.zero!=='not') f.zero = '';
     if(typeof f.queryNot!=='string') f.queryNot = '';
     ensureVt();
     if(syncInput){ input.value = f.query || ''; document.getElementById('primeSearchNotInput').value = f.queryNot || ''; }
@@ -2477,10 +2668,11 @@
     // + and - mark filters are combined the same way: AND = every condition holds, OR = any one holds
     const msets = Object.values(f.markFilter).map(x=> new Set(x.ids));
     const byMarks = c=> !msets.length || (f.markCombine==='and' ? msets.every(set=> set.has(c.value)) : msets.some(set=> set.has(c.value)));
-    const rest = (c, skip)=> (skip==='e' || byEffect(c)) && (skip==='d' || byDigits(c)) && byDial(c) && bySearch(c) && byMarks(c);
+    const byZero = c=> !f.zero || (String(c.value).indexOf('0') >= 0) === (f.zero==='has');   // does the card itself contain a 0 (the padding does not count)
+    const rest = (c, skip)=> (skip==='e' || byEffect(c)) && (skip==='d' || byDigits(c)) && (skip==='z' || byZero(c)) && byDial(c) && bySearch(c) && byMarks(c);
     vtUpdate(cards, f, rest);
     const shown = cards.filter(c=> rest(c));
-    primePanelPool = cards.filter(c=> byEffect(c) && byDigits(c) && byMarks(c));   // the panel's own filters only
+    primePanelPool = cards.filter(c=> byEffect(c) && byDigits(c) && byZero(c) && byMarks(c));   // the panel's own filters only
     document.getElementById('vtSum').textContent = primePanelPool.length + '枚';
     if(f.order==='desc') shown.reverse();
     primeShown = shown;
@@ -2499,6 +2691,7 @@
   document.getElementById('primeBrushRow').addEventListener('click', e=>{
     const b = e.target.closest('.pfBtn'); if(!b) return;
     const f = modeSettings.prime;
+    if(b.id==='orderBtn'){ f.order = f.order==='desc' ? 'asc' : 'desc'; saveModeSettings(); renderPrimeTable(); return; }
     if(b.dataset.clear){
       flashPrimeMsg('「まとめて消去」を5秒間押し続けると、いま表示しているカードのマークを消します');
       return;
@@ -2522,24 +2715,75 @@
     chip.querySelector('.pmarks').innerHTML = marksHtml(v);   // only this chip changes; the list is not re-judged
     saveModeSettings();
   });
-  // ---- 素数MEMO quiz: put the digits in order to make the largest prime. Questions come from the panel's range ----
-  const quiz = { pool:[], order:[], i:0, card:null, digits:[], slots:[], locked:false, ok:0, total:0, drag:null };
+  // ---- 素数MEMO quiz: put the digits in order to make the largest prime ----
+  // started from the panel: questions come from the panel's range. Started from a result: the cards played in that game come first, then the panel's range
+  const quiz = { pool:[], queue:[], order:[], i:0, card:null, digits:[], slots:[], locked:false, ok:0, total:0, drag:null };
   const quizShuffle = a=>{ const r = a.slice(); for(let i=r.length-1;i>0;i--){ const j = Math.floor(Math.random()*(i+1)); [r[i], r[j]] = [r[j], r[i]]; } return r; };
-  function smallestFactor(n){ if(n%2===0) return 2; for(let k=3;k*k<=n;k+=2){ if(n%k===0) return k; } return n; }
-  function quizRender(msg, kind){
+  function panelPoolNow(){
+    const f = modeSettings.prime, eN = f.effectsNot || [], dN = f.digitsNot || [];
+    const sets = Object.values(f.markFilter || {}).map(x=> new Set(x.ids)), and = f.markCombine==='and' || f.markCombine==='all';
+    return deck4Cards().filter(c=> !eN.includes(c.effect) && !dN.includes(c.len)
+      && (!f.zero || (String(c.value).indexOf('0') >= 0) === (f.zero==='has'))
+      && (!sets.length || (and ? sets.every(x=> x.has(c.value)) : sets.some(x=> x.has(c.value)))));
+  }
+  function factorHtml(n){
+    const parts = []; let m = n;
+    for(let k=2;k*k<=m;k++){ let e = 0; while(m%k===0){ m /= k; e++; } if(e) parts.push(e>1 ? k + '<sup>' + e + '</sup>' : String(k)); }
+    if(m>1) parts.push(String(m));
+    return parts.join('×');
+  }
+  const quizReduce = ()=> window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function quizRects(){
+    const m = {};
+    document.querySelectorAll('#quizTiles .qTile[data-i], #quizSlots .qSlot[data-t]').forEach(e=>{ m[e.dataset.i !== undefined ? 'i' + e.dataset.i : 'i' + e.dataset.t] = e.getBoundingClientRect(); });
+    return m;
+  }
+  function quizRender(msg, verdictHtml, kind, fresh){
+    const before = fresh ? null : quizRects();
     const d = quiz.digits, placed = new Set(quiz.slots.filter(x=> x!==null));
     document.getElementById('quizTiles').innerHTML = d.map((x,i)=> placed.has(i) ? '<span class="qTile used"></span>' : `<button class="qTile" data-i="${i}">${x}</button>`).join('');
-    document.getElementById('quizSlots').innerHTML = quiz.slots.map((t,s)=> t===null ? `<span class="qSlot" data-s="${s}"></span>` : `<button class="qSlot filled" data-s="${s}">${d[t]}</button>`).join('');
+    document.getElementById('quizSlots').innerHTML = quiz.slots.map((t,s)=> t===null ? `<span class="qSlot" data-s="${s}"></span>` : `<button class="qSlot filled" data-s="${s}" data-t="${t}">${d[t]}</button>`).join('');
     document.getElementById('quizScore').textContent = quiz.ok + '/' + quiz.total;
     document.getElementById('quizJudge').textContent = quiz.locked ? '次へ' : '判定';
-    const m = document.getElementById('quizMsg'); m.textContent = msg ? '> ' + msg : ''; m.className = 'quizMsg' + (kind ? ' ' + kind : '');
+    document.getElementById('quizSkip').disabled = quiz.locked;
+    const v = document.getElementById('quizVerdict'); v.innerHTML = verdictHtml || ''; v.className = 'quizVerdict' + (kind ? ' ' + kind : '');
+    if(verdictHtml){ void v.offsetWidth; v.classList.add('stamp'); }
+    document.getElementById('quizMsg').textContent = msg ? '> ' + msg : '';
+    if(quizReduce()) return;
+    if(fresh){   // a new question: the digits drop in one after another
+      document.querySelectorAll('#quizTiles .qTile[data-i]').forEach((e,i)=> e.animate([{transform:'translateY(-14px) scale(.55)', opacity:0},{transform:'none', opacity:1}], {duration:210, delay:i*55, easing:'cubic-bezier(.2,.8,.3,1.25)', fill:'backwards'}));
+      return;
+    }
+    document.querySelectorAll('#quizTiles .qTile[data-i], #quizSlots .qSlot[data-t]').forEach(e=>{   // a digit slides from where it was to where it is now
+      const r0 = before['i' + (e.dataset.i !== undefined ? e.dataset.i : e.dataset.t)]; if(!r0) return;
+      const r1 = e.getBoundingClientRect(), dx = r0.left - r1.left, dy = r0.top - r1.top; if(!dx && !dy) return;
+      e.animate([{transform:'translate(' + dx + 'px,' + dy + 'px)'},{transform:'none'}], {duration:150, easing:'ease-out'});
+    });
+  }
+  function quizPulse(good){
+    if(quizReduce()) return;
+    document.querySelectorAll('#quizSlots .qSlot.filled').forEach((e,i)=>{
+      e.animate(good ? [{transform:'none'},{transform:'translateY(-9px) scale(1.12)'},{transform:'none'}] : [{transform:'translateX(0)'},{transform:'translateX(-6px)'},{transform:'translateX(6px)'},{transform:'translateX(-4px)'},{transform:'translateX(0)'}],
+        {duration:good ? 280 : 300, delay:good ? i*60 : 0, easing:'ease-out'});
+    });
   }
   function quizNew(){
-    if(quiz.i >= quiz.order.length){ quiz.order = quizShuffle(quiz.pool); quiz.i = 0; }
-    quiz.card = quiz.order[quiz.i++];
+    if(quiz.queue.length) quiz.card = quiz.queue.shift();
+    else { if(quiz.i >= quiz.order.length){ quiz.order = quizShuffle(quiz.pool); quiz.i = 0; } quiz.card = quiz.order[quiz.i++]; }
     const ds = String(quiz.card.value).split('').map(Number);
     let sh = ds; for(let t=0; t<12; t++){ sh = quizShuffle(ds); if(sh.join('') !== ds.join('') || new Set(ds).size < 2) break; }
-    quiz.digits = sh; quiz.slots = sh.map(()=> null); quiz.locked = false; quizRender('');
+    quiz.digits = sh; quiz.slots = sh.map(()=> null); quiz.locked = false; quizRender('', '', '', true);
+  }
+  function openQuiz(first){
+    const all = panelPoolNow();
+    quiz.pool = all.filter(c=> c.len >= 2); if(!quiz.pool.length) quiz.pool = all;
+    const seen = new Set(); quiz.queue = [];
+    const allowed = new Set(all.map(c=> c.value));   // only what the panel's filter lets through
+    quizShuffle(first || []).forEach(c=>{ if(String(c.value).length >= 2 && allowed.has(c.value) && !seen.has(c.value)){ seen.add(c.value); quiz.queue.push(c); } });
+    if(!quiz.queue.length && !quiz.pool.length) return false;
+    quiz.ok = 0; quiz.total = 0; quiz.order = []; quiz.i = 0; quizNew();
+    document.getElementById('quizModal').classList.add('show');
+    return true;
   }
   function quizJudge(){
     if(quiz.locked){ quizNew(); return; }
@@ -2548,19 +2792,28 @@
     if(arr[0]===0 && arr.length>1){ quizRender('先頭に0は置けません'); return; }
     const n = Number(arr.join('')), right = quiz.card.value;
     quiz.total++; quiz.locked = true;
-    if(n === right){ quiz.ok++; quizRender('正解  ' + right + ' が最大の素数', 'good'); }
-    else if(isPrime(n)) quizRender(n + ' は素数。でも最大ではない  最大は ' + right, 'mid');
-    else quizRender(n + ' は素数ではない(' + smallestFactor(n) + ' で割り切れる)  最大は ' + right, 'bad');
+    if(n === right){ quiz.ok++; quizRender('', '◯ 正解！', 'good'); quizPulse(true); }
+    else { quizRender('', '× 不正解' + (isPrime(n) ? '' : '（' + factorHtml(n) + '）') + '：' + right, 'bad'); quizPulse(false); }
   }
-  document.getElementById('quizBtn').addEventListener('click', ()=>{
-    quiz.pool = primePanelPool.filter(c=> c.len >= 2); if(!quiz.pool.length) quiz.pool = primePanelPool.slice();
-    if(!quiz.pool.length){ flashPrimeMsg('パネルの条件に合うカードがありません'); return; }
-    quiz.ok = 0; quiz.total = 0; quiz.order = []; quiz.i = 0; quizNew();
-    document.getElementById('quizModal').classList.add('show');
-  });
+  function quizSkip(){
+    if(quiz.locked) return;
+    const used = new Set(), ans = [];
+    String(quiz.card.value).split('').forEach(ch=>{ const k = quiz.digits.findIndex((x,i)=> x===Number(ch) && !used.has(i)); used.add(k); ans.push(k); });
+    quiz.slots = ans; quiz.locked = true;   // a skip is not counted; the answer is shown and "次へ" moves on
+    quizRender('', 'スキップ：' + quiz.card.value, 'skip');
+  }
+  document.getElementById('quizBtn').addEventListener('click', ()=>{ if(!openQuiz([])) flashPrimeMsg('パネルの条件に合うカードがありません'); });
+  document.getElementById('memoFromResult').addEventListener('click', ()=> openQuiz(state && state.played ? state.played : []));
   document.getElementById('quizJudge').addEventListener('click', quizJudge);
-  document.getElementById('quizSkip').addEventListener('click', ()=> quizNew());
+  document.getElementById('quizSkip').addEventListener('click', quizSkip);
   document.getElementById('quizClose').addEventListener('click', ()=> document.getElementById('quizModal').classList.remove('show'));
+  document.getElementById('quizLogo').addEventListener('click', ()=>{
+    if(typeof onlineGameActive !== 'undefined' && onlineGameActive) return;   // not while an online match is open
+    document.getElementById('quizModal').classList.remove('show');
+    document.getElementById('winBox').classList.remove('show');
+    if(currentMode!=='free') applyMode('free');
+    document.getElementById('startBtn').click();
+  });
   // nothing is judged by itself: tap a digit to put it in the next free slot, drag to place it or swap two slots
   (function(){
     const qm = document.getElementById('quizModal');
@@ -2592,7 +2845,7 @@
         } else {
           const s = slotAt(e.clientX, e.clientY);
           if(s >= 0){
-            if(g.tile) quiz.slots[s] = g.id;                                   // a digit that was there goes back to the pool
+            if(g.tile) quiz.slots[s] = g.id;
             else { const tmp = quiz.slots[s]; quiz.slots[s] = quiz.slots[g.id]; quiz.slots[g.id] = tmp; }
           }
         }
@@ -2604,21 +2857,24 @@
   })();
   // ---- breaker panel: ON/OFF switches (tap anywhere), + / - mark filters, clear shown marks by a 5 s hold ----
   const VT_EFFECT = [['plain','通常','--plain'],['draw2','+2','--draw2'],['draw4','+4','--draw4'],['skip','SKIP','--skip'],['reverse','REV','--reverse']];
-  const DIAL_VALS = ['','0','1','2','3','4','5','6','7','8','9'];
+  const DIAL_ALL = ['','0','1','2','3','4','5','6','7','8','9'];
+  let DIAL_VALS = DIAL_ALL.slice();   // the digits a dial can show (the 0 goes away while the panel says "no 0")
   function vtSw(g, k, head, headStyle, top, bottom, st){
     return `<div class="vt" data-g="${g}" data-k="${k}" data-s="${st}"><div class="vtHead" style="${headStyle}">${head}</div><div class="vtCount"></div><div class="vtTrack"><span class="vtPos">${top}</span><span class="vtPos">${bottom}</span><div class="vtThumb"></div></div></div>`;
   }
-  const DIAL_LABEL = ['－','0','1','2','3','4','5','6','7','8','9'];
   const dialSt = [];
+  const dialListFor = f=> f.zero==='not' ? DIAL_ALL.filter(v=> v!=='0') : DIAL_ALL.slice();
+  const dialIdxOf = v=>{ const i = DIAL_VALS.indexOf(v); return i < 0 ? 0 : i; };
   function ensureVt(){
     const e = document.getElementById('vtEffect'); if(e.children.length) return;
+    DIAL_VALS = dialListFor(modeSettings.prime);
     e.innerHTML = VT_EFFECT.map(([k,l,c])=> vtSw('effect', k, l, `background:var(${c});color:#14110a`, 'ON', 'OFF', 'on')).join('');
     document.getElementById('vtDigit').innerHTML = [1,2,3,4].map(d=> vtSw('digit', d, d+'桁', '', 'ON', 'OFF', 'on')).join('');
     document.getElementById('vtMark').innerHTML = PRIME_MARKS.map(m=>
       `<div class="mkCol" data-k="${m.key}"><div class="vtHead">${markIcon(m)}</div><div class="vtCount"></div><div class="mkTrack"><button class="mkPos" data-v="has" aria-label="${m.name}のあるカードだけ">+</button><button class="mkPos" data-v="not" aria-label="${m.name}のないカードだけ">−</button></div></div>`).join('');
-    document.getElementById('vtOrder').innerHTML = vtSw('order', 'order', '並び', '', '昇順', '降順', 'asc');
+    document.getElementById('vtZero').innerHTML = '<div class="mkCol zeroCol" data-k="zero"><div class="vtHead" style="background:var(--c-purple);color:#14110a">0</div><div class="vtCount"></div><div class="mkTrack"><button class="mkPos" data-v="has" aria-label="0を含むカードだけ">+</button><button class="mkPos" data-v="not" aria-label="0を含まないカードだけ">−</button></div></div>';
     document.getElementById('primeDials').innerHTML = ['千','百','十','一'].map((n,i)=>
-      `<div class="dial" data-i="${i}"><small>${n}</small><button class="dialBtn" data-step="1" aria-label="${n}の位を進める">▲</button><div class="dialWin" data-i="${i}">${DIAL_LABEL.map(t=> `<span class="dv">${t}</span>`).join('')}<div class="dialMark"></div></div><button class="dialBtn" data-step="-1" aria-label="${n}の位を戻す">▼</button></div>`).join('');
+      `<div class="dial" data-i="${i}"><small>${n}</small><button class="dialBtn" data-step="1" aria-label="${n}の位を進める">▲</button><div class="dialWin" data-i="${i}">${DIAL_VALS.map(t=> `<span class="dv">${t==='' ? '－' : t}</span>`).join('')}<div class="dialMark"></div></div><button class="dialBtn" data-step="-1" aria-label="${n}の位を戻す">▼</button></div>`).join('');
     document.getElementById('primeDials').addEventListener('click', ev=>{
       const b = ev.target.closest('.dialBtn'); if(!b) return;
       const d = dialSt[Number(b.closest('.dial').dataset.i)];
@@ -2626,7 +2882,7 @@
     });
     document.querySelectorAll('#primeDials .dialWin').forEach(win=>{
       const i = Number(win.dataset.i);
-      const d = { i, win, spans:Array.from(win.querySelectorAll('.dv')), p:Math.max(0, DIAL_VALS.indexOf(modeSettings.prime.dial[i])), busy:false, down:false, raf:0, tm:0, y0:0, p0:0, moved:false, samples:[] };
+      const d = { i, win, spans:Array.from(win.querySelectorAll('.dv')), p:dialIdxOf(modeSettings.prime.dial[i]), busy:false, down:false, raf:0, tm:0, y0:0, p0:0, moved:false, samples:[], target:0 };
       dialSt.push(d); dialDraw(d); win.classList.toggle('set', dialIdx(d)!==0);
       win.addEventListener('pointerdown', ev=>{ try{ win.setPointerCapture(ev.pointerId); }catch(_){} dialStop(d); d.down = true; d.y0 = ev.clientY; d.p0 = d.p; d.moved = false; d.samples = [{t:performance.now(), p:d.p}]; });
       win.addEventListener('pointermove', ev=>{
@@ -2646,8 +2902,9 @@
   }
   // the dial is a drum: drag to turn it, flick to spin; it slows down and settles on a digit
   function dialDraw(d){
+    const N = DIAL_VALS.length;
     d.spans.forEach((sp,k)=>{
-      let off = (((k - d.p) % 11) + 11) % 11; if(off > 5.5) off -= 11;
+      let off = (((k - d.p) % N) + N) % N; if(off > N/2) off -= N;
       const a = Math.abs(off);
       if(a > 1.75){ sp.style.visibility = 'hidden'; return; }
       sp.style.visibility = 'visible';
@@ -2655,7 +2912,7 @@
       sp.style.opacity = String(Math.max(0.12, 1 - 0.55*a));
     });
   }
-  function dialIdx(d){ return ((Math.round(d.p) % 11) + 11) % 11; }
+  function dialIdx(d){ const N = DIAL_VALS.length; return ((Math.round(d.p) % N) + N) % N; }
   function dialCommit(d){
     const f = modeSettings.prime, idx = dialIdx(d);
     d.win.classList.toggle('set', idx!==0);
@@ -2688,31 +2945,50 @@
     // follows resets and imports; never fights a drag in progress
     if(d.busy || d.down) return;
     if(dialIdx(d) === idx){ d.win.classList.toggle('set', idx!==0); return; }
-    let diff = idx - (((d.p % 11) + 11) % 11); if(diff > 5.5) diff -= 11; if(diff < -5.5) diff += 11;
+    const N = DIAL_VALS.length;
+    let diff = idx - (((d.p % N) + N) % N); if(diff > N/2) diff -= N; if(diff < -N/2) diff += N;
     dialTween(d, d.p + diff, 260, ()=> d.win.classList.toggle('set', idx!==0));
   }
   function vtSummary(f){
     const off = []; VT_EFFECT.forEach(([k,l])=>{ if(f.effectsNot.includes(k)) off.push(l); }); f.digitsNot.forEach(d=> off.push(d+'桁'));
     const mk = []; PRIME_MARKS.forEach(m=>{ const x = f.markFilter[m.key]; if(x) mk.push(m.glyph + (x.mode==='has' ? '＋' : '－')); });
-    const parts = []; if(off.length) parts.push('OFF ' + off.join('・')); if(mk.length) parts.push(mk.join(' '));
+    const parts = []; if(off.length) parts.push('OFF ' + off.join('・')); if(mk.length) parts.push(mk.join(' ')); if(f.zero) parts.push('0' + (f.zero==='has' ? '＋' : '－'));
     return parts;
   }
   function vtUpdate(cards, f, rest){
     const sw = (el, on, count)=>{ el.dataset.s = on ? 'on' : 'off'; el.querySelector('.vtThumb').textContent = on ? 'ON' : 'OFF'; el.querySelector('.vtCount').textContent = count; };
     document.querySelectorAll('#vtEffect .vt').forEach(el=>{ const k = el.dataset.k; sw(el, !f.effectsNot.includes(k), String(cards.filter(c=> c.effect===k && rest(c,'e')).length)); });
     document.querySelectorAll('#vtDigit .vt').forEach(el=>{ const k = Number(el.dataset.k); sw(el, !f.digitsNot.includes(k), String(cards.filter(c=> c.len===k && rest(c,'d')).length)); });
-    const od = document.querySelector('#vtOrder .vt'); od.dataset.s = f.order==='desc' ? 'desc' : 'asc'; od.querySelector('.vtThumb').textContent = f.order==='desc' ? '降順' : '昇順';
+    const pm = (el, st, count)=>{ el.querySelectorAll('.mkPos').forEach(b=> b.classList.toggle('sel', b.dataset.v===st)); el.querySelector('.vtCount').textContent = count; };
     document.querySelectorAll('#vtMark .mkCol').forEach(el=>{
-      const k = el.dataset.k, st = f.markFilter[k] ? f.markFilter[k].mode : '';
-      el.querySelectorAll('.mkPos').forEach(b=> b.classList.toggle('sel', b.dataset.v===st));
-      el.querySelector('.vtCount').textContent = String(Object.keys(f.marks).filter(v=> (f.marks[v]||[]).includes(k)).length);
+      const k = el.dataset.k;
+      pm(el, f.markFilter[k] ? f.markFilter[k].mode : '', String(Object.keys(f.marks).filter(v=> (f.marks[v]||[]).includes(k)).length));
     });
+    pm(document.querySelector('#vtZero .mkCol'), f.zero, String(cards.filter(c=> String(c.value).indexOf('0') >= 0 && rest(c,'z')).length));
     const ao = document.getElementById('mkAndOr'); ao.dataset.s = f.markCombine; ao.querySelector('.andorThumb').textContent = f.markCombine==='and' ? 'AND' : 'OR';
-    dialSt.forEach(d=> dialSync(d, Math.max(0, DIAL_VALS.indexOf(f.dial[d.i]))));
+    // with "no 0" the dials lose their 0 as well
+    const want = dialListFor(f);
+    if(want.length !== DIAL_VALS.length){
+      DIAL_VALS = want;
+      dialSt.forEach(d=>{
+        dialStop(d); d.win.querySelectorAll('.dv').forEach(n=> n.remove());
+        const mark = d.win.querySelector('.dialMark');
+        d.spans = DIAL_VALS.map(v=>{ const sp = document.createElement('span'); sp.className = 'dv'; sp.textContent = v==='' ? '－' : v; d.win.insertBefore(sp, mark); return sp; });
+        d.p = dialIdxOf(f.dial[d.i]); dialDraw(d);
+      });
+    }
+    dialSt.forEach(d=> dialSync(d, dialIdxOf(f.dial[d.i])));
     const open = f.panelOpen!==false;
     document.getElementById('primeVt').classList.toggle('open', open);
     document.getElementById('vtBar').setAttribute('aria-expanded', open ? 'true' : 'false');
     document.getElementById('vtLamp').classList.toggle('warn', vtSummary(f).length>0);
+    // reset / clear only work when there is something to reset
+    const panelDefault = !f.effectsNot.length && !f.digitsNot.length && !Object.keys(f.markFilter).length && f.markCombine==='or' && !f.zero;
+    document.getElementById('vtReset').disabled = panelDefault;
+    document.getElementById('vtSafety').classList.toggle('disabled', panelDefault);
+    document.getElementById('dialLever').classList.toggle('disabled', f.dial.every(d=> d===''));
+    document.getElementById('primeSearchClear').disabled = !(f.query||'').length;
+    document.getElementById('primeSearchNotClear').disabled = !(f.queryNot||'').length;
   }
   function flashPrimeMsg(t){
     document.getElementById('primeSearchResult').textContent = t;
@@ -2725,7 +3001,13 @@
     const mp = e.target.closest('.mkPos');
     if(mp){
       // + / - filter; pressing the selected one clears it. The list is kept as it was when set
-      const key = mp.closest('.mkCol').dataset.k, v = mp.dataset.v, cur = f.markFilter[key] ? f.markFilter[key].mode : '';
+      const key = mp.closest('.mkCol').dataset.k, v = mp.dataset.v;
+      if(key==='zero'){
+        f.zero = f.zero===v ? '' : v;
+        if(f.zero==='not') f.dial = f.dial.map(d=> d==='0' ? '' : d);   // no 0 in the cards, so none on the dials either
+        saveModeSettings(); renderPrimeTable(); return;
+      }
+      const cur = f.markFilter[key] ? f.markFilter[key].mode : '';
       if(cur===v) delete f.markFilter[key];
       else {
         const ids = deck4Cards().filter(c=>{ const has = (f.marks[c.value]||[]).includes(key); return v==='has' ? has : !has; }).map(c=> c.value);
@@ -2735,8 +3017,7 @@
     }
     const vt = e.target.closest('.vt'); if(!vt) return;
     const g = vt.dataset.g, k = vt.dataset.k;
-    if(g==='order') f.order = f.order==='desc' ? 'asc' : 'desc';
-    else if(g==='effect') f.effectsNot = f.effectsNot.includes(k) ? f.effectsNot.filter(x=> x!==k) : f.effectsNot.concat([k]);
+    if(g==='effect') f.effectsNot = f.effectsNot.includes(k) ? f.effectsNot.filter(x=> x!==k) : f.effectsNot.concat([k]);
     else if(g==='digit'){ const d = Number(k); f.digitsNot = f.digitsNot.includes(d) ? f.digitsNot.filter(x=> x!==d) : f.digitsNot.concat([d]); }
     saveModeSettings(); renderPrimeTable();
   });
@@ -2745,7 +3026,7 @@
     const row = document.getElementById('primeBrushRow'); let hold = null;
     const stop = ()=>{ if(!hold) return; cancelAnimationFrame(hold.raf); hold.b.style.setProperty('--p', 0); hold.b.classList.remove('holding'); hold = null; };
     row.addEventListener('pointerdown', e=>{
-      const b = e.target.closest('[data-clear]'); if(!b) return;
+      const b = e.target.closest('[data-clear]'); if(!b || b.disabled) return;
       stop(); hold = { b, t0:performance.now(), raf:0 }; b.classList.add('holding');
       const step = ()=>{
         if(!hold) return;
@@ -2767,11 +3048,11 @@
   (function(){
     const box = document.getElementById('vtSafety'), glass = document.getElementById('vtCover'), btn = document.getElementById('vtReset'); let t = 0;
     const close = ()=>{ box.classList.remove('open'); btn.classList.remove('latched'); clearTimeout(t); };
-    glass.addEventListener('click', ()=>{ box.classList.add('open'); clearTimeout(t); t = setTimeout(close, 1000); });
+    glass.addEventListener('click', ()=>{ if(box.classList.contains('disabled')) return; box.classList.add('open'); clearTimeout(t); t = setTimeout(close, 1000); });
     btn.addEventListener('click', ()=>{
       if(!box.classList.contains('open') || btn.classList.contains('latched')) return;
       const f = modeSettings.prime;
-      f.effectsNot = []; f.digitsNot = []; f.markFilter = {}; f.markCombine = 'or'; f.order = 'asc';   // panel only: dials and search stay
+      f.effectsNot = []; f.digitsNot = []; f.markFilter = {}; f.markCombine = 'or'; f.zero = '';   // panel only: dials, search and the sort order stay
       btn.classList.add('latched'); clearTimeout(t); t = setTimeout(close, 1000);
       saveModeSettings(); renderPrimeTable();
     });
@@ -2781,6 +3062,7 @@
     const lv = document.getElementById('dialLever'); let hold = null, tm = 0;
     const stop = ()=>{ if(!hold || hold.done) return; cancelAnimationFrame(hold.raf); lv.classList.remove('holding'); lv.style.setProperty('--p', 0); hold = null; };
     lv.addEventListener('pointerdown', e=>{
+      if(lv.classList.contains('disabled')) return;
       try{ lv.setPointerCapture(e.pointerId); }catch(_){}
       clearTimeout(tm); if(hold && hold.done){ hold = null; } stop(); hold = { t0:performance.now(), raf:0 }; lv.classList.add('holding');
       const step = ()=>{
@@ -2836,6 +3118,7 @@
     if((f.query||'').trim()) parts.push('検索＋ ' + f.query.trim());
     if((f.queryNot||'').trim()) parts.push('検索− ' + f.queryNot.trim());
     PRIME_MARKS.forEach(m=>{ if(f.markFilter[m.key]) parts.push(m.glyph + (f.markFilter[m.key].mode==='has' ? '＋' : '－')); });
+    if(f.zero) parts.push('0' + (f.zero==='has' ? '＋' : '－'));
     parts.push(f.order==='desc' ? '降順' : '昇順');
     return parts.join(' / ');
   }
@@ -2853,6 +3136,7 @@
     out.dial = Array.isArray(p.dial) && p.dial.length===4 ? p.dial.map(d=> /^[0-9]$/.test(String(d)) ? String(d) : '') : ['','','',''];
     out.queryNot = typeof p.queryNot==='string' ? p.queryNot.slice(0,200) : '';
     out.markCombine = (p.markCombine==='and' || p.markCombine==='all') ? 'and' : 'or';
+    out.zero = (p.zero==='has' || p.zero==='not') ? p.zero : '';
     out.order = p.order==='desc' ? 'desc' : 'asc';
     out.query = typeof p.query==='string' ? p.query.slice(0,200) : '';
     Object.keys(p.marks||{}).forEach(k=>{
@@ -2879,7 +3163,7 @@
     document.getElementById('primeIoClose').addEventListener('click', ()=> modal.classList.remove('show'));
     document.getElementById('primeIoExport').addEventListener('click', ()=>{
       const f = modeSettings.prime;
-      const text = JSON.stringify({ app:'primeUno', v:1, prime:{ effects:f.effects||[], effectsNot:f.effectsNot||[], digitsSel:f.digitsSel||[], digitsNot:f.digitsNot||[], dial:f.dial||['','','',''], order:f.order, query:f.query||'', queryNot:f.queryNot||'', markCombine:f.markCombine||'or', marks:f.marks||{}, markFilter:f.markFilter||{} } });
+      const text = JSON.stringify({ app:'primeUno', v:1, prime:{ effects:f.effects||[], effectsNot:f.effectsNot||[], digitsSel:f.digitsSel||[], digitsNot:f.digitsNot||[], dial:f.dial||['','','',''], order:f.order, query:f.query||'', queryNot:f.queryNot||'', markCombine:f.markCombine||'or', zero:f.zero||'', marks:f.marks||{}, markFilter:f.markFilter||{} } });
       box.value = text; box.focus(); box.select();
       const n = Object.keys(f.marks||{}).filter(k=> (f.marks[k]||[]).length).length;
       const done = ()=> say('書き出しました(マークのあるカード '+n+'枚)。コピーしました。');
@@ -2895,7 +3179,7 @@
     document.getElementById('primeIoReplace').addEventListener('click', ()=>{
       const inc = read(); if(!inc) return;
       const f = modeSettings.prime;
-      f.marks = inc.marks; f.markFilter = inc.markFilter; f.effects = inc.effects; f.effectsNot = inc.effectsNot; f.digitsSel = inc.digitsSel; f.digitsNot = inc.digitsNot; f.dial = inc.dial; f.order = inc.order; f.query = inc.query; f.queryNot = inc.queryNot; f.markCombine = inc.markCombine;
+      f.marks = inc.marks; f.markFilter = inc.markFilter; f.effects = inc.effects; f.effectsNot = inc.effectsNot; f.digitsSel = inc.digitsSel; f.digitsNot = inc.digitsNot; f.dial = inc.dial; f.order = inc.order; f.query = inc.query; f.queryNot = inc.queryNot; f.markCombine = inc.markCombine; f.zero = inc.zero; if(f.zero==='not') f.dial = f.dial.map(d=> d==='0' ? '' : d);
       finish('読み込みました(マークとしぼり込みの設定を置き換えました)。');
     });
   })();
@@ -3003,6 +3287,7 @@
       saveModeSettings();
     });
   });
+  document.getElementById('assistToggle').addEventListener('change', (e)=>{ modeSettings.free.noAssist = !e.target.checked; saveModeSettings(); });
   document.getElementById('unlimitedDrawToggle').addEventListener('change', (e)=>{
     modeSettings.free.unlimitedDraw = e.target.checked; saveModeSettings();
   });
@@ -3040,7 +3325,7 @@
     document.getElementById('startScreen').style.display='none';
     document.getElementById('layout').classList.add('active');
     if(currentMode==='free'){
-      newGame(st.players-1, null, { mode:'free', handSize:st.handSize, unlimitedDraw:st.unlimitedDraw, digits:st.digits, lock: st.lock!==false });
+      newGame(st.players-1, null, { mode:'free', handSize:st.handSize, unlimitedDraw:st.unlimitedDraw, noAssist:!!st.noAssist, digits:st.digits, lock: st.lock!==false });
     } else {
       lastNumCpu = st.cpu;
       newGame(st.cpu, null, { mode:'rate', digits:st.digits, lock: st.lock!==false });
@@ -3903,19 +4188,23 @@
   function watch(){
     var dt = document.getElementById('discardTop'), hand = document.getElementById('hand'), pile = document.getElementById('drawPile'), wrap = document.getElementById('tableWrap');
     if(!dt || !hand || !pile || !window.MutationObserver) return;
-    var lastActive = -1;
+    var prevCount = 0, prevFirst = '';
     new MutationObserver(function(){
-      var chips = wrap ? Array.prototype.slice.call(wrap.querySelectorAll('.seatChip')) : [];
-      var mover = lastActive; lastActive = chips.findIndex(function(e){ return e.classList.contains('active'); });   // who had the turn before this render
-      var c = dt.lastElementChild; if(!c) return;
-      var key = c.dataset.cv; if(prevTop===null){ prevTop = key; return; }
+      var stack = dt.firstElementChild; if(!stack) return;
+      var chips = stack.querySelectorAll('.pchip'); if(!chips.length) return;
+      var key = chips[chips.length-1].dataset.cv, had = prevCount, firstBefore = prevFirst;
+      prevCount = chips.length; prevFirst = chips[0].outerHTML;
+      if(prevTop===null){ prevTop = key; return; }
       if(key===prevTop) return; prevTop = key; if(still) return;
-      var r = c.getBoundingClientRect(), f = centre(r), o = null, s0 = 0.9;
-      if(lastHand && lastHand.key===key && Date.now() - lastHand.t < 1500){ o = centre(lastHand.rect); s0 = lastHand.rect.width / r.width; }
-      else if(mover >= 0 && chips[mover]){ o = centre(chips[mover].getBoundingClientRect()); s0 = 0.5; }
-      lastHand = null;
-      if(!o) o = { x:f.x, y:f.y - 80 };
-      fly(c, slapFrames(o, f, s0), 200);
+      if(had >= 3 && firstBefore){
+        // the card that dropped out of the column rides up and away while the column moves up one step
+        stack.insertAdjacentHTML('afterbegin', firstBefore + '<div class="dcArrow">▼</div>');
+        var step = stack.children[2].offsetTop - stack.children[0].offsetTop, gone = [stack.children[0], stack.children[1]];
+        var cleanup = function(){ gone.forEach(function(n){ if(n.parentNode) n.parentNode.removeChild(n); }); };
+        try{ var an = stack.animate([{transform:'translateY(0)'},{transform:'translateY(-' + step + 'px)'}], {duration:170, easing:'ease-out'}); live.push(an); an.onfinish = cleanup; an.oncancel = cleanup; }catch(_){ cleanup(); }
+      } else {
+        try{ live.push(chips[chips.length-1].animate([{transform:'translateY(16px)', opacity:0},{transform:'none', opacity:1}], {duration:150, easing:'ease-out'})); }catch(_){}
+      }
     }).observe(dt, {childList:true});
     new MutationObserver(function(){
       var cards = Array.prototype.slice.call(hand.children), cur = cards.map(function(e){ return e.dataset.cv; });
