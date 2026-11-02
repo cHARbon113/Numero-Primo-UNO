@@ -18,8 +18,8 @@
     --tens: #ff6f60;
     --ones: #2cf0b2;
     /* card types: plain purple / skip blue / reverse green / draw2 red / draw4 yellow */
-    --c-red: #ff7e50; --c-blue: #34abff; --c-green: #13d79b; --c-yellow: #f6b924; --c-purple: #ee6bff;
-    --plain: #ee6bff;
+    --c-red: #ff8c64; --c-blue: #20b5ff; --c-green: #13d79b; --c-yellow: #f6b924; --c-purple: #ec81ff;
+    --plain: #ec81ff;
     /* glow: playable cards shine, greyed-out cards lose the glow but keep their colours */
     /* digit colours use exactly the same shades as the card-type strips (red=+2, blue=skip, green=reverse, yellow=+4, purple=plain) */
     --c-red-hi: var(--draw2); --c-blue-hi: var(--skip); --c-green-hi: var(--reverse); --c-yellow-hi: var(--draw4); --c-purple-hi: var(--plain);
@@ -30,9 +30,9 @@
     --shine: 0; --shade: 0;
     --ds3: 24px; --ds4: 22px; --tstroke: 0px;
     --plate-bg: transparent; --plate-bw: 0px; --plate-frame: transparent; --plate-pad: 0px;
-    --skip: #34abff;
+    --skip: #20b5ff;
     --reverse: #13d79b;
-    --draw2: #ff7e50;
+    --draw2: #ff8c64;
     --draw4: #f6b924;
     --thousands: #7fb2ff;
     --danger: #ff5d6e;
@@ -111,9 +111,9 @@
 
   #startScreen .rules b{ color:var(--ink); }
   .eff-tag{ display:inline-block; font-family:'B612 Mono','B612 Mono','Space Mono',monospace; font-weight:700; padding:1px 7px; border-radius:5px; font-size:13px;}
-  .tag-skip{ background:rgba(52,171,255,0.24); color:var(--skip); }
+  .tag-skip{ background:rgba(32,181,255,0.24); color:var(--skip); }
   .tag-rev{ background:rgba(19,215,155,0.24); color:var(--reverse); }
-  .tag-d2{ background:rgba(255,126,80,0.24); color:var(--draw2); }
+  .tag-d2{ background:rgba(255,140,100,0.24); color:var(--draw2); }
   .tag-d4{ background:rgba(246,185,36,0.26); color:var(--draw4); }
 
   .cpu-select{ display:flex; gap:10px; justify-content:center; margin:16px 0; }
@@ -337,12 +337,14 @@
   #winBox .wincard{ display:flex; flex-direction:column; padding-top:0; }
   #winText{ position:relative; font-family:'B612 Mono','Space Mono',monospace; font-size:48px; line-height:1; letter-spacing:0.02em; margin:26px 0; font-weight:700; flex:none; min-height:118px; display:flex; align-items:center; justify-content:center; border-radius:12px; background:#0b100e; color:var(--mode-accent); border:2px solid color-mix(in srgb, var(--mode-accent) 60%, #000); box-shadow:inset 0 4px 0 rgba(0,0,0,0.6), 0 5px 0 rgba(0,0,0,0.45); overflow:hidden; }
   #winText::after{ content:''; position:absolute; inset:0; pointer-events:none; background:repeating-linear-gradient(0deg, rgba(255,255,255,0.05) 0, rgba(255,255,255,0.05) 1px, transparent 1px, transparent 3px); }
-  #winText.lose{ color:#9fb0b8; border-color:#44545c; }
+  #winText.lose{ color:#e1eaee; border-color:#44545c; }
   .dg{ display:inline-block; }
   @keyframes scrOn{ from{ transform:scaleY(0.06); opacity:0.2; } to{ transform:none; opacity:1; } }
-  @keyframes dgOn{ 0%{ opacity:0; } 18%{ opacity:1; } 32%{ opacity:0.12; } 48%{ opacity:1; } 62%{ opacity:0.35; } 100%{ opacity:1; } }
-  #winBox.show #winText{ animation:scrOn .2s cubic-bezier(.2,.8,.25,1) .16s both; }
-  #winBox.show #winText .dg{ animation:dgOn .42s steps(1,end) calc(.34s + var(--i) * .08s) both; }
+  @keyframes dgOn{ 0%{ opacity:0; } 25%{ opacity:1; } 45%{ opacity:0.15; } 65%{ opacity:1; } 100%{ opacity:1; } }
+  #winBox.show #winText{ animation:scrOn .2s cubic-bezier(.2,.8,.25,1) .08s both; }
+  @keyframes allOn{ 0%{ filter:brightness(1); } 35%{ filter:brightness(1.9); } 100%{ filter:brightness(1); } }
+  #winBox.show #winText .dg{ opacity:1; animation:dgOn .24s steps(1,end) both, allOn .3s ease-out both; }   /* delays are set per character in script */
+  #winText.lit .dg{ animation:none !important; opacity:1; filter:none; }   /* whatever the animation did, the end state is every character lit */
   #winBox.show .wincard{ animation:winSlide .3s cubic-bezier(.2,.8,.25,1) both; }   /* same moment as before, now it slides up into place */
   .wincard{
     background:var(--panel); padding:40px 34px; border-radius:18px; text-align:center; box-shadow:var(--shadow);
@@ -892,8 +894,12 @@
   .mkPos{ position:relative; }
   .mkPos::before{ content:''; position:absolute; inset:-4px -6px; }   /* the gap between keys is shared half and half */
   .sw input:checked + .swSlider{ background:var(--sw-track, var(--mode-accent)); }
-  body[data-mode="free"]{ --plate:#0a99ff; --plate-on:#0071c2; }
+  body[data-mode="free"]{ --plate:#00aaff; --plate-on:#0081c2; }
   body[data-mode="online"]{ --sw-track:#da7e62; --plate:#bf5e40; --plate-on:#8e452f; }
+  /* ---- v29: monospace digits everywhere they stand alone ---- */
+  /* card strips and the panel's item names share one face: monospace, bold, with a hairline stroke so it reads clearly without filling the letters in */
+  .strip, .pstrip, .vtHead:not(.hd){ font-family:'B612 Mono','Zen Kaku Gothic New',sans-serif; font-weight:700; -webkit-text-stroke:0.2px currentColor; letter-spacing:0.04em; }
+  .cpuX{ font-family:'B612 Mono','Space Mono',monospace; }
 </style>
 </head>
 <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
@@ -910,7 +916,7 @@
     <div class="modeThumb"></div>
     <button class="modeBtn" data-mode="free"><span class="mTitle">フリー</span><span class="mSub">自由に設定</span></button>
     <button class="modeBtn" data-mode="rate"><span class="mTitle">レート</span><span class="mSub">戦績を記録</span></button>
-    <button class="modeBtn" data-mode="online"><span class="mTitle">オンライン</span><span class="mSub">2人・P2P</span></button>
+    <button class="modeBtn" data-mode="online"><span class="mTitle">オンライン</span><span class="mSub"><span class="mono">2</span>人・P2P</span></button>
     <button class="modeBtn" data-mode="prime"><span class="mTitle">プライム</span><span class="mSub">全カード表</span></button>
   </div>
   <p class="modeNote" id="modeNote"></p>
@@ -997,16 +1003,16 @@
   <div data-modes="rate free">
     <p class="settingTitle">カードの桁数</p>
     <div class="cpu-select" id="digitSelect" style="margin-bottom:14px;">
-      <div class="cpu-btn selected" data-d="3">3桁<span class="cpuSub">107枚</span></div>
-      <div class="cpu-btn" data-d="4">4桁<span class="cpuSub">443枚</span></div>
+      <div class="cpu-btn selected" data-d="3"><span class="mono">3</span>桁<span class="cpuSub"><span class="mono">107</span>枚</span></div>
+      <div class="cpu-btn" data-d="4"><span class="mono">4</span>桁<span class="cpuSub"><span class="mono">443</span>枚</span></div>
     </div>
   </div>
   <div data-modes="rate">
     <p class="settingTitle">対戦相手の人数</p>
     <div class="cpu-select" id="cpuSelect">
-      <div class="cpu-btn" data-n="1">CPU<span class="cpuX">×</span>1<span class="cpuSub">2人対戦</span></div>
-      <div class="cpu-btn selected" data-n="2">CPU<span class="cpuX">×</span>2<span class="cpuSub">3人対戦</span></div>
-      <div class="cpu-btn" data-n="3">CPU<span class="cpuX">×</span>3<span class="cpuSub">4人対戦</span></div>
+      <div class="cpu-btn" data-n="1">CPU<span class="cpuX">×1</span><span class="cpuSub"><span class="mono">2</span>人対戦</span></div>
+      <div class="cpu-btn selected" data-n="2">CPU<span class="cpuX">×2</span><span class="cpuSub"><span class="mono">3</span>人対戦</span></div>
+      <div class="cpu-btn" data-n="3">CPU<span class="cpuX">×3</span><span class="cpuSub"><span class="mono">4</span>人対戦</span></div>
     </div>
   </div>
   <div data-modes="free">
@@ -1133,9 +1139,9 @@
     <div id="onlineLobbyBox" style="display:none; margin-top:14px; padding-top:14px; border-top:1px solid rgba(255,255,255,0.08);">
       <p style="font-size:12.5px;color:var(--ink-dim);margin-bottom:8px;">対戦の準備(ホストのみ設定できます)</p>
       <div class="cpu-select" id="onlineCpuSelect" style="max-width:280px; margin:0 auto 10px;">
-        <div class="cpu-btn selected" data-n="0">CPUなし<span class="cpuSub">2人対戦</span></div>
-        <div class="cpu-btn" data-n="1">CPU+1<span class="cpuSub">3人対戦</span></div>
-        <div class="cpu-btn" data-n="2">CPU+2<span class="cpuSub">4人対戦</span></div>
+        <div class="cpu-btn selected" data-n="0">CPUなし<span class="cpuSub"><span class="mono">2</span>人対戦</span></div>
+        <div class="cpu-btn" data-n="1">CPU<span class="cpuX">+1</span><span class="cpuSub"><span class="mono">3</span>人対戦</span></div>
+        <div class="cpu-btn" data-n="2">CPU<span class="cpuX">+2</span><span class="cpuSub"><span class="mono">4</span>人対戦</span></div>
       </div>
       <button class="primary" id="onlineStartMatchBtn" style="font-size:14px; padding:10px 24px;">対戦を開始する</button>
     </div>
@@ -1167,7 +1173,7 @@
       <div class="tableCenter">
         <div class="pilesRow">
           <div class="pile draw-pile" id="drawPileWrap">
-            <div class="pile-label">山札（<span id="drawCount">0</span>）</div>
+            <div class="pile-label">山札（<span id="drawCount" class="mono">0</span>）</div>
             <div class="card back" id="drawPile"></div>
           </div>
           <div class="pile">
@@ -1198,7 +1204,7 @@
     </div>
 
     <div class="pendingBanner" id="multiDumpBar" style="border-color:var(--reverse);">
-      <div class="msg"><span id="multiDumpCount">0</span>枚選択中(同じ種類で、位が揃ったカード)</div>
+      <div class="msg"><span id="multiDumpCount" class="mono">0</span>枚選択中(同じ種類で、位が揃ったカード)</div>
       <div style="display:flex; gap:8px;">
         <button class="accept" id="multiDumpConfirmBtn" style="background:var(--reverse); color:#04281d;">出す</button>
         <button class="ghost" id="multiDumpCancelBtn">キャンセル</button>
@@ -1548,6 +1554,10 @@
     el.insertBefore(line, el.firstChild);
     el.scrollTop = 0;
   }
+  // digits are set in the monospace face everywhere they stand alone (names, counts, log lines)
+  const escHtml = t=> String(t).replace(/[&<>"']/g, ch=> ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+  const numHtml = t=> escHtml(t).replace(/[0-9]+/g, m=> '<span class="mono">' + m + '</span>');
+  const monoDigits = html=> String(html).replace(/(<[^>]*>|&#?\w+;)|([0-9]+)/g, (m, tag, num)=> tag ? tag : '<span class="mono">' + num + '</span>');
   let unoToastTimer = null;
   function announceUno(name){
     logRow(`${name}：`, `<span class="log-uno">UNO</span>`);
@@ -1561,7 +1571,7 @@
   }
   // ---- compact log formats: 名前（枚数）：数字（効果） ----
   function logRow(prefix, body){
-    log(`<span class="logPrefix">${prefix}</span><span class="logBody">${body}</span>`);
+    log(`<span class="logPrefix">${monoDigits(prefix)}</span><span class="logBody">${monoDigits(body)}</span>`);
   }
   function logPlay(name, card, remaining){
     const isWin = remaining===0;
@@ -1622,6 +1632,21 @@
       logSystem('SHUFFLE');
     }
   }
+  // A click is only accepted when the press started on the same control. iOS moves a tap that lands just
+  // outside a button onto the nearest one; that gave a state change without the press animation, so it is dropped.
+  (function(){
+    const IA = 'button, .vtTrack, label';
+    let down = null;
+    document.addEventListener('pointerdown', e=>{ down = { el: e.target.closest ? e.target.closest(IA) : null }; }, true);
+    document.addEventListener('click', e=>{
+      if(!e.isTrusted || e.detail===0 || !down) return;   // keyboard / script / no pointer press seen
+      const hit = e.target.closest ? e.target.closest(IA) : null;
+      const d = down; down = null;
+      if(!hit) return;
+      if(d.el===hit || (d.el && (hit.contains(d.el) || d.el.contains(hit)))) return;
+      e.stopPropagation(); e.preventDefault();
+    }, true);
+  })();
   // belt and braces for iOS Safari: no selection, no pinch, no double-click word select
   (function(){
     const editable = t=> t && t.closest && t.closest('input,textarea,.selectable,#logViewBody');
@@ -1676,6 +1701,7 @@
       state.current = nextIndexFrom(playerIdx);
     } else if(card.effect==='skip'){
       const skipped = nextIndexFrom(playerIdx);
+      logSystem('SKIP', state.players[skipped].name);
       state.current = nextIndexFrom(skipped);
     } else if(card.effect==='reverse'){
       if(isDuel){
@@ -1943,6 +1969,51 @@
     return best;
   }
 
+  // ---- CPU play choice ----
+  // A hand can only be finished with a plain card, so the CPU never wants to end up holding a lone
+  // special card; it keeps a plain card for last, spends specials while the hand is small, hits a
+  // player who is at UNO, and keeps the leftover cards close (shared digits) to the card it plays.
+  const sharedCount = (a, b)=> a.digits.reduce((t, d, i)=> t + (d===b.digits[i] ? 1 : 0), 0);
+  // how likely a card is to match some later top card: 1 - product over positions of (1 - how common its digit is there)
+  function cpuMatchability(card){
+    if(!state.cpuFreq){
+      const cards = state.drawPile.concat(state.discardPile, state.players.flatMap(p=> p.hand));
+      const W = cards[0].digits.length, f = Array.from({length:W}, ()=> new Array(10).fill(0));
+      cards.forEach(c=> c.digits.forEach((d, i)=> { f[i][d] += 1; }));
+      state.cpuFreq = f.map(row=> row.map(v=> v / cards.length));
+    }
+    return 1 - card.digits.reduce((t, d, i)=> t * (1 - state.cpuFreq[i][d]), 1);
+  }
+  function cpuPick(idx, hand, options){
+    const nextHasUno = state.players[nextIndexFrom(idx)].hand.length===1;
+    let best = null, bestScore = -Infinity;
+    options.forEach(c=>{
+      const rest = hand.filter(h=> h!==c);
+      const special = c.effect!=='plain';
+      let sc = Math.random() * 2;
+      if(rest.length===0){
+        sc += 1000;   // the last card, and it is plain: that is the win
+      } else if(rest.length===1){
+        sc += rest[0].effect==='plain' ? 100 + 15 * sharedCount(rest[0], c) + 150 * cpuMatchability(rest[0]) : -100;
+      } else {
+        const restPlain = rest.filter(h=> h.effect==='plain').length;
+        if(special){
+          sc += hand.length<=4 ? 20 : -5;
+          if(restPlain===0) sc -= 60;
+        } else sc += 5;
+        sc += 3 * rest.reduce((t, h)=> t + sharedCount(h, c), 0) / rest.length;
+        sc += 80 * rest.reduce((t, h)=> t + cpuMatchability(h), 0) / rest.length;   // keep the flexible cards, dump the awkward ones
+      }
+      if(nextHasUno && special) sc += 40;   // hit the player who is about to win
+      if(sc > bestScore){ bestScore = sc; best = c; }
+    });
+    return best;
+  }
+  // do not dump into a lone special card
+  function cpuDumpOk(hand, group){
+    const rest = hand.filter(h=> !group.includes(h));
+    return !(rest.length===1 && rest[0].effect!=='plain');
+  }
   function maybeCpuTurn(){
     if(state.over) return;
     const p = state.players[state.current];
@@ -1954,7 +2025,7 @@
       if(state.pendingDraw>0){
         if(state.multiDumpEnabled){
           const g = findMultiDumpGroup(pl.hand, null);
-          if(g && g.length>=2){ playMultiDump(idx, g); return; }
+          if(g && g.length>=2 && cpuDumpOk(pl.hand, g)){ playMultiDump(idx, g); return; }
         }
         const stackOpt = pl.hand.filter(c=> canPlay(c, pl.hand, null));
         if(stackOpt.length>0){
@@ -1971,7 +2042,7 @@
 
       if(state.multiDumpEnabled){
         const group = findMultiDumpGroup(pl.hand, top);
-        if(group && group.length>=2){
+        if(group && group.length>=2 && cpuDumpOk(pl.hand, group)){
           playMultiDump(idx, group);
           return;
         }
@@ -1979,10 +2050,7 @@
 
       const options = pl.hand.filter(c=> canPlay(c, pl.hand, top));
       if(options.length>0){
-        // hold onto special-effect cards as tools when a plain card will do
-        const plainOptions = options.filter(c=>c.effect==='plain');
-        const pool = plainOptions.length>0 ? plainOptions : options;
-        playCard(idx, pool[Math.floor(Math.random()*pool.length)]);
+        playCard(idx, cpuPick(idx, pl.hand, options));
       } else {
         const drawn = drawCards(idx, 1);
         if(drawn.length) logAction(pl.name, '+1', pl.hand.length);
@@ -2184,9 +2252,9 @@
       const chip = document.createElement('div');
       chip.className = 'seatChip' + (state.current===i ? ' active' : ''); chip.dataset.seat = i;
       chip.style.left = x+'px'; chip.style.top = y+'px';
-      chip.innerHTML = `<div>${p.name}</div>` +
+      chip.innerHTML = `<div>${numHtml(p.name)}</div>` +
         `<div class="seatCount">${p.hand.length}</div>` +
-        (p.hand.length===1 ? '<div class="seatReach">残1</div>' : '');
+        (p.hand.length===1 ? '<div class="seatReach">残<span class="mono">1</span></div>' : '');
       wrap.appendChild(chip);
     });
 
@@ -2535,7 +2603,11 @@
     const name = state.players[winnerIdx].name;
     const won = winnerIdx===mySeat;
     const wt = document.getElementById('winText'); wt.className = won ? 'win' : 'lose';
-    wt.innerHTML = [...(won ? 'WIN！' : 'LOSE…')].map((c, i)=> `<span class="dg" style="--i:${i}">${c}</span>`).join('');
+    const chars = [...(won ? 'WIN！' : 'LOSE…')];
+    const T0 = 0.3, STEP = 0.05, ON = 0.24;   // the slide takes 0.3s; the letters start right when it ends
+    wt.classList.remove('lit');
+    wt.innerHTML = chars.map((c, i)=> `<span class="dg" style="animation-delay:${(T0 + i*STEP).toFixed(2)}s, ${(T0 + chars.length*STEP + ON).toFixed(2)}s">${c}</span>`).join('');
+    clearTimeout(wt._lit); wt._lit = setTimeout(()=> wt.classList.add('lit'), (T0 + chars.length*STEP + ON + 0.34) * 1000);
     document.getElementById('rematchBtn').style.display = onlineGameActive ? 'none' : 'inline-block';
     const ratingText = document.getElementById('ratingText');
     const resultTweetBtn = document.getElementById('resultTweetBtn');
@@ -2884,7 +2956,7 @@
     if(f.order==='desc') shown.reverse();
     primeShown = shown;
     document.getElementById('primeSearchResult').textContent = (parsed.error || parsedNot.error) ? '( ) の対応を確認してください' : [match ? '＋: ' + primeQueryText(parsed.terms) : '', matchNot ? '−: ' + primeQueryText(parsedNot.terms) : ''].filter(Boolean).join(' ／ ');
-    document.getElementById('primeCount').textContent = `${shown.length}枚を表示(全${cards.length}枚)`;
+    document.getElementById('primeCount').innerHTML = `<span class="mono">${shown.length}</span>枚を表示(全<span class="mono">${cards.length}</span>枚)`;
     document.getElementById('primeGrid').innerHTML = !shown.length ? '<div class="primeEmpty">条件に合うカードはありません</div>' : shown.map(c=>{
       const padded = String(c.value).padStart(4,'0');
       const colorCls = digitColorClasses(padded.split('').map(Number));
