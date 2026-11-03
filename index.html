@@ -213,6 +213,10 @@
   /* 4-digit cards: as big as the card width allows */
   body.deck4 .card .digits{ font-size:var(--ds4); }
   body.deck4 .card .digits span{ padding:0; }
+  /* 5-digit cards (free mode only) */
+  body.deck5 .card .digits{ font-size:17px; }
+  body.deck5 .tableCenter .digits{ font-size:17.5px; }
+  body.deck5 #discardTop .pchip .pnum{ font-size:18px; }
 
   .card .strip{
     position:absolute; top:0; left:0; right:0; height:19px;
@@ -319,6 +323,19 @@
   }
   .unoToast.show{ opacity:1; transform:translateX(-50%) scale(1); }
 
+  /* effect cues: a hard-shadowed pill under the UNO pill; a new play cuts the old ones short */
+  .fxStack{ position:fixed; top:66px; left:50%; transform:translateX(-50%); z-index:59; display:flex; flex-direction:column; align-items:center; gap:7px; pointer-events:none; width:max-content; max-width:94vw; }
+  .fxToast{ --fc:var(--mode-accent); display:flex; align-items:baseline; gap:10px; padding:7px 20px; border-radius:999px; background:var(--fc); color:#14110a; font-family:'B612 Mono','Space Mono',monospace; font-weight:700; font-size:18px; letter-spacing:.04em; white-space:nowrap; box-shadow:0 4px 0 rgba(0,0,0,0.55); transform-origin:50% 0; animation:fxIn .2s cubic-bezier(.2,1.5,.4,1) both; }
+  .fxToast .fxSub{ font-size:12px; opacity:.78; }
+  .fxToast.fxk-skip{ --fc:var(--skip); } .fxToast.fxk-reverse{ --fc:var(--reverse); } .fxToast.fxk-draw2{ --fc:var(--draw2); } .fxToast.fxk-draw4{ --fc:var(--draw4); }
+  .fxToast.fxk-lock{ --fc:var(--plain); } .fxToast.fxk-combo{ --fc:var(--ink); }
+  .fxToast.lv2{ font-size:22px; padding:8px 24px; }
+  .fxToast.lv3{ font-size:27px; padding:9px 28px; animation:fxIn .2s cubic-bezier(.2,1.5,.4,1) both, fxHit .36s .06s ease-out; }
+  .fxToast.out{ animation:fxOut .26s ease-in both; }
+  .fxToast.out.fast{ animation-duration:.14s; }
+  @keyframes fxIn{ from{ opacity:0; transform:translateY(-16px) scale(.65); } 65%{ opacity:1; transform:translateY(2px) scale(1.09); } to{ opacity:1; transform:none; } }
+  @keyframes fxOut{ to{ opacity:0; transform:translateY(-10px) scale(.9); } }
+  @keyframes fxHit{ 0%,100%{ translate:0 0; } 20%{ translate:-5px 0; } 45%{ translate:5px 0; } 70%{ translate:-3px 0; } }
   .controls{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; justify-content:center; }
   button.ghost{
     background:transparent; border:1.5px solid rgba(255,255,255,0.25); color:var(--ink);
@@ -444,6 +461,10 @@
     border-radius:7px; padding:15px 1px 12px; text-align:center;
   }
   .primeGrid.brushing .pchip{ cursor:pointer; }
+  .primeGrid.w5 .pchip .pnum{ font-size:18px; }
+  @media (min-width:600px){ .primeGrid.w5{ grid-template-columns:repeat(auto-fill, minmax(88px, 1fr)); } }
+  #primeDials.w5{ gap:6px; }
+  #primeDials.w5 .dial{ width:40px; }
   .pchip .pstrip{
     position:absolute; top:0; left:0; right:0; height:14px; line-height:14px;
     font-size:9px; font-weight:900; letter-spacing:0.04em; color:#14110a; background:var(--pc); --sc:var(--pc);
@@ -551,6 +572,7 @@
     .tableCenter .card.back{ width:52px; height:74px; }
     .tableCenter .digits{ font-size:24px; margin-top:7px; }
     body.deck4 .tableCenter .digits{ font-size:20.5px; }
+    body.deck5 .tableCenter .digits{ font-size:16.5px; }
     .seatChip{ font-size:10.5px; padding:4px 9px; }
     .flowArrow{ font-size:15px; }
   }
@@ -604,7 +626,8 @@
     background:var(--hundreds); border-radius:8px; box-shadow:0 3px 0 rgba(0,0,0,0.4);
     translate:0 0; transition:transform .26s var(--spring), translate .08s var(--ease); z-index:0;
   }
-  .cpu-select:has(> .cpu-btn:nth-child(3))::before{ width:calc((100% - 8px) / 3); }
+  .cpu-select:has(> .cpu-btn:nth-child(3):not([hidden]))::before{ width:calc((100% - 8px) / 3); }
+  .cpu-select .cpu-btn[hidden]{ display:none; }
   .cpu-select:has(> .cpu-btn:nth-child(2).selected)::before{ transform:translateX(100%); }
   .cpu-select:has(> .cpu-btn:nth-child(3).selected)::before{ transform:translateX(200%); }
   .cpu-select:has(> .cpu-btn:active)::before{ translate:0 2px; }
@@ -696,6 +719,7 @@
   .memoLogo{ margin:0; padding:6px 12px; border:0; border-radius:8px; background:#0b100e; color:var(--ink); font-family:inherit; font-size:17px; font-weight:900; letter-spacing:0.06em; box-shadow:inset 0 1px 0 rgba(255,255,255,0.1), 0 4px 0 rgba(0,0,0,0.6); cursor:pointer; }
   .memoLogo .acc{ color:var(--mode-accent); }
   .lever, .dialWin, .pfBtn[data-clear], .glass, #vtReset{ -webkit-touch-callout:none; -webkit-user-select:none; user-select:none; }
+  .pfBtn[data-clear], #resetHoldBtn{ touch-action:none; }
   #discardTop{ position:relative; }
   #discardTop > .card:not(.under){ position:relative; z-index:2; }
   /* quiz: an orange monitor */
@@ -905,6 +929,7 @@
 <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 <body>
 <div class="unoToast" id="unoToast"></div>
+<div class="fxStack" id="fxStack"></div>
 
 <header>
   <h1>素数<span class="accent">UNO</span></h1>
@@ -927,16 +952,17 @@
     <details class="rl" open><summary>基本</summary><ul>
       <li>カードは素数で、数字の組み合わせごとに<b>並べ替えてできる最大の素数1枚だけ</b>です(例: 113・131・311 は 311 だけ)。足りない桁は頭に0を足して表示し(例: 2→002)、その0も位の一致に数えます。</li>
       <li>場のカードと<b>どれか1つの位に同じ数字</b>があれば出せます。</li>
+      <li>フリーでは<b>「0を含むカード」</b>をオフにすると、実際の桁に0を含むカード(101・307など)がデッキから除かれます。頭に足した0は関係ありません。</li>
       <li>出せても山札から引けます。引いたあとは出さずにパスできます(1ターンに最低1回は引くか出す)。</li>
       <li><b>最後の1枚は通常カード</b>でしか上がれません。</li>
       <li><b>色</b>: 種類は 通常=紫 / スキップ=青 / リバース=緑 / ドロー2=赤 / ドロー4=黄。数字は 0=紫、2・4・5・6・8=赤、1・3・7・9=青で、同じ数字が被ると赤→黄、青→緑(0は紫のまま)。</li>
-      <li><b>モード</b>: レート(CPU戦・レートに反映) / フリー(人数・初手枚数・ドロー制限・桁数を設定) / オンライン(2人・P2P) / プライム(4桁デッキの全カード表)。設定はモードごとに保存されます。</li>
+      <li><b>モード</b>: レート(CPU戦・レートに反映) / フリー(人数・初手枚数・ドロー制限・桁数(3〜5桁)を設定) / オンライン(2人・P2P) / プライム(4桁・5桁デッキの全カード表)。設定はモードごとに保存されます。</li>
     </ul></details>
     <details class="rl"><summary>カードの種類と積み</summary><ul>
       <li>種類は<b>実際の桁だけ</b>で決まります(頭の0・ゼロ埋めは数えません)。1・3・7・9を「奇数系」と呼び、上から順に判定します。</li>
       <li><span class="eff-tag tag-d4">ドロー4</span> 1桁のカード(2・3・5・7)</li>
       <li><span class="eff-tag tag-d2">ドロー2</span> 2桁で奇数系が1個以下(23・29・41など)</li>
-      <li>3桁以上で、奇数系が1個以下かつ同じ数字が被るカード: 2つ被りは<span class="eff-tag tag-d2">ドロー2</span>(8863)、3つ被りは<span class="eff-tag tag-d4">ドロー4</span>(2221)</li>
+      <li>3桁以上で、奇数系が1個以下かつ同じ数字が被るカード: 2つ被りは<span class="eff-tag tag-d2">ドロー2</span>(8863)、3つ以上の被りは<span class="eff-tag tag-d4">ドロー4</span>(2221)</li>
       <li><span class="eff-tag tag-skip">スキップ</span> 2桁以上で両端の数字が同じ(131・7127など)</li>
       <li><span class="eff-tag tag-rev">リバース</span> 全部奇数系で、同じ数字が被る(311・3331など。スキップが優先)</li>
       <li>それ以外は<b>通常</b>です。</li>
@@ -953,7 +979,7 @@
       <li><b>3人以上</b>: リバースは向きを変えます。</li>
     </ul></details>
     <details class="rl"><summary>桁ロック</summary><ul>
-      <li><b>桁ロック</b>(全モード。設定でオン/オフできます): デッキの桁数(3桁デッキは3、4桁デッキは4)より短いカードが出ると(特殊カードも)その桁数が上限になり、上限より桁数が多い特殊カードは出せません(通常カードは出せる。積みでは上限を無視)。最大桁数の通常カードで解除されます。重ね出しは順番も効き、特殊カードは桁の多い順、通常カードは最大桁数を最後にすると解除できます。</li>
+      <li><b>桁ロック</b>(全モード。設定でオン/オフできます): デッキの桁数(3桁デッキは3、4桁デッキは4、5桁デッキは5)より短いカードが出ると(特殊カードも)その桁数が上限になり、上限より桁数が多い特殊カードは出せません(通常カードは出せる。積みでは上限を無視)。最大桁数の通常カードで解除されます。重ね出しは順番も効き、特殊カードは桁の多い順、通常カードは最大桁数を最後にすると解除できます。</li>
     </ul></details>
     <details class="rl" data-modes="rate"><summary>レートの変動幅</summary>
       <div id="rateDeltaBox"></div>
@@ -966,8 +992,8 @@
   <h2 class="rulesHead">使い方 <button class="ghost" id="usageToggleBtn" style="padding:4px 12px; font-size:12px; margin-left:6px;">表示</button></h2>
   <div class="rules" id="usageBody" style="display:none;">
     <details class="rl" open><summary>見る・並べる</summary><ul>
-      <li>4桁デッキ全443枚の一覧です。<b>効果</b>と<b>桁数</b>のボタンで絞り込み(「すべて」以外は<b>複数選べます</b>)、<b>昇順/降順</b>で並べ替えます。ボタンの数字は、他の条件と合わせたときの枚数です。</li>
-      <li>1〜3桁のカードは頭に0を足して4桁で表示し、薄い0は桁数に数えません。</li>
+      <li>4桁デッキ(全443枚)と5桁デッキ(全1552枚)の一覧です。一番上の切り替えで選びます(5桁デッキは4桁デッキのカードを全部含み、マークは両方で共通です)。<b>効果</b>と<b>桁数</b>のボタンで絞り込み(「すべて」以外は<b>複数選べます</b>)、<b>昇順/降順</b>で並べ替えます。ボタンの数字は、他の条件と合わせたときの枚数です。</li>
+      <li>桁数の少ないカードは頭に0を足してデッキの桁数で表示し、薄い0は桁数に数えません。桁一致ダイヤルは5桁デッキでは5つになります。</li>
     </ul></details>
     <details class="rl" open><summary>検索の書き方</summary><ul>
       <li><b>1,2,7,9</b> のようにカンマで区切ると、順番は問わず全部含むカード(9721など)。続けて書いた数字は並びのまま探します(<b>97</b> は 9 の次が 7)。</li>
@@ -1005,6 +1031,7 @@
     <div class="cpu-select" id="digitSelect" style="margin-bottom:14px;">
       <div class="cpu-btn selected" data-d="3"><span class="mono">3</span>桁<span class="cpuSub"><span class="mono">107</span>枚</span></div>
       <div class="cpu-btn" data-d="4"><span class="mono">4</span>桁<span class="cpuSub"><span class="mono">443</span>枚</span></div>
+      <div class="cpu-btn" data-d="5" id="digit5Btn" hidden><span class="mono">5</span>桁<span class="cpuSub"><span class="mono">1552</span>枚</span></div>
     </div>
   </div>
   <div data-modes="rate">
@@ -1024,6 +1051,7 @@
         <div class="stepper"><button class="stepBtn" data-key="handSize" data-d="-1">−</button><span class="stepVal" id="freeHandVal">7</span><button class="stepBtn" data-key="handSize" data-d="1">＋</button></div></div>
       <label class="swRow"><span>ドロー制限</span><span class="sw"><input type="checkbox" id="unlimitedDrawToggle"><span class="swSlider"></span></span></label>
       <label class="swRow"><span>アシスト</span><span class="sw"><input type="checkbox" id="assistToggle"><span class="swSlider"></span></span></label>
+      <label class="swRow"><span>0を含むカード</span><span class="sw"><input type="checkbox" id="zeroToggle" checked><span class="swSlider"></span></span></label>
     </div>
   </div>
 
@@ -1079,6 +1107,10 @@
   
 
   <div class="primeBox" data-modes="prime">
+    <div class="cpu-select" id="primeDeckSelect" style="margin:0 0 10px;">
+      <div class="cpu-btn selected" data-w="4"><span class="mono">4</span>桁デッキ<span class="cpuSub"><span class="mono">443</span>枚</span></div>
+      <div class="cpu-btn" data-w="5"><span class="mono">5</span>桁デッキ<span class="cpuSub"><span class="mono">1552</span>枚</span></div>
+    </div>
     <div class="vtPanel open" id="primeVt">
       <button class="vtBar" id="vtBar" aria-expanded="true"><span class="vtLamp" id="vtLamp"></span><span class="vtTitle">フィルターパネル</span><span class="vtSum" id="vtSum"></span><span class="vtArrow">▾</span></button>
       <div class="vtWrap"><div class="vtBody"><div class="vtInner">
@@ -1312,9 +1344,12 @@
   // the digit lock exists in free mode only
   let LOCK_ON = false;
   function setLock(v){ LOCK_ON = !!v; }
+  // free mode can drop every card that has a 0 among its real digits (zero padding is not part of this)
+  let ZERO_ON = true;
   function setDeckWidth(w){
     DECK_WIDTH = w;
-    document.body.classList.toggle('deck4', w===4);
+    document.body.classList.toggle('deck4', w>=4);
+    document.body.classList.toggle('deck5', w===5);
   }
   function pad3(n){ return String(n).padStart(DECK_WIDTH,'0'); }
   function digitsOf(n){ return pad3(n).split('').map(Number); }
@@ -1364,6 +1399,7 @@
     deckCache[W] = Object.values(best).sort((a,b)=>a-b);
     return deckCache[W];
   }
+  function deckValuesFor(W, withZero){ const all = deckValues(W); return withZero ? all : all.filter(n=> !String(n).includes('0')); }
   function deck4Values(){ return deckValues(4); }   // the prime-mode table
 
   const EFFECT_LABEL = { skip:'スキップ', reverse:'リバース', draw2:'ドロー2', draw4:'ドロー4', both:'リバース+ドロー2' };
@@ -1394,7 +1430,7 @@
   }
 
   function buildDeck(){
-    const values = deckValues(DECK_WIDTH);
+    const values = deckValuesFor(DECK_WIDTH, ZERO_ON);
     const deck = values.map(n=>({
       id: Math.random().toString(36).slice(2), value:n, digits:digitsOf(n),
       effect: classifyCard(n)
@@ -1418,10 +1454,12 @@
     const mode = opts.mode || (onlineGuestName ? 'online' : 'rate');
     const seats = 1 + (onlineGuestName ? 1 : 0) + numCpu;
     // keep the starting hands within what the 168-card deck can supply
-    const deckSize = deckValues(opts.digits===4 ? 4 : 3).length;
+    const gameWidth = (opts.digits===5 && mode==='free') ? 5 : (opts.digits===4 || opts.digits===5) ? 4 : 3;   // 5 digits: free mode only for now
+    ZERO_ON = mode==='free' ? opts.zero!==false : true;
+    const deckSize = deckValuesFor(gameWidth, ZERO_ON).length;
     const handSize = Math.max(1, Math.min(opts.handSize || 7, Math.floor((deckSize - 6)/seats)));
     document.body.dataset.mode = mode;
-    setDeckWidth(opts.digits===4 ? 4 : 3);
+    setDeckWidth(gameWidth);
     setLock(opts.lock!==false);
     const deck = buildDeck();
     const players = [{name: myDisplayName(), human:true, hand:[]}];
@@ -1475,8 +1513,9 @@
     if(!lockEnabled()) return;
     const before = ceilingNow();
     state.digitCeiling = ceilingAfterPlay(card, before);
-    if(state.digitCeiling!==before) logSystem('LOCK', String(state.digitCeiling));
+    if(state.digitCeiling!==before){ logSystem('LOCK', String(state.digitCeiling)); fxLockCue(); }
   }
+  function fxLockCue(){ fxCue('lock', state.digitCeiling>=DECK_WIDTH ? 'UNLOCK' : 'LOCK ' + state.digitCeiling); }
 
   // last card in hand must be a 'plain' card to be playable (can't finish on a special card)
   function canPlay(card, hand, top){
@@ -1558,6 +1597,27 @@
   const escHtml = t=> String(t).replace(/[&<>"']/g, ch=> ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
   const numHtml = t=> escHtml(t).replace(/[0-9]+/g, m=> '<span class="mono">' + m + '</span>');
   const monoDigits = html=> String(html).replace(/(<[^>]*>|&#?\w+;)|([0-9]+)/g, (m, tag, num)=> tag ? tag : '<span class="mono">' + num + '</span>');
+  // ---- effect cues (skip / reverse / draw stacks / combo / digit lock); online guests get them through the state view ----
+  let fxSeq = 0, fxSeen = 0;
+  function fxShow(ev){
+    const box = document.getElementById('fxStack'); if(!box) return;
+    const el = document.createElement('div');
+    const lv = Math.max(1, ev.level||1);
+    el.className = 'fxToast fxk-' + ev.kind + (lv>=5 ? ' lv3' : lv>=3 ? ' lv2' : '');
+    el.innerHTML = `<span class="fxMain">${monoDigits(escHtml(ev.main))}</span>` + (ev.sub ? `<span class="fxSub">${monoDigits(escHtml(ev.sub))}</span>` : '');
+    box.appendChild(el);
+    while(box.children.length > 4) box.removeChild(box.firstChild);
+    setTimeout(()=>{ el.classList.add('out'); setTimeout(()=> el.remove(), 280); }, 1500 + Math.min(lv, 6)*100);
+  }
+  function fxCue(kind, main, sub, level){
+    const ev = { id:++fxSeq, kind, main, sub:sub||'', level:level||1 };
+    if(state){ state.fxEvents = state.fxEvents || []; state.fxEvents.push(ev); if(state.fxEvents.length>8) state.fxEvents.shift(); }
+    fxShow(ev);
+  }
+  // the next move cuts the cues of the last one short (the cut-off itself is quick)
+  function fxFlush(){
+    document.querySelectorAll('#fxStack .fxToast:not(.out)').forEach(el=>{ el.classList.add('out','fast'); setTimeout(()=> el.remove(), 160); });
+  }
   let unoToastTimer = null;
   function announceUno(name){
     logRow(`${name}：`, `<span class="log-uno">UNO</span>`);
@@ -1655,7 +1715,7 @@
     document.addEventListener('contextmenu', e=>{ if(!editable(e.target)) e.preventDefault(); });
     ['gesturestart','gesturechange','gestureend'].forEach(n=> document.addEventListener(n, e=> e.preventDefault()));
   })();
-  function markPlayFrom(i){ window.__playFrom = { seat:i, mine:i===mySeat, t:Date.now() }; }   // read by the table animation
+  function markPlayFrom(i){ fxFlush(); window.__playFrom = { seat:i, mine:i===mySeat, t:Date.now() }; }   // read by the table animation
   function pushDiscard(c){ state.discardPile.push(c); if(state.played) state.played.push(c); }
   function drawCards(playerIdx, count){
     const drawn = [];
@@ -1698,10 +1758,13 @@
       if(applyReverse) state.direction *= -1;
       state.pendingDraw += DRAW_AMOUNT[card.effect];
       state.pendingLevel = stackLevel(card.effect);
+      state.stackN = 1;
+      fxCue(card.effect==='draw4' ? 'draw4' : 'draw2', '+' + state.pendingDraw, applyReverse ? 'REVERSE' : '', 1);
       state.current = nextIndexFrom(playerIdx);
     } else if(card.effect==='skip'){
       const skipped = nextIndexFrom(playerIdx);
       logSystem('SKIP', state.players[skipped].name);
+      fxCue('skip', 'SKIP', state.players[skipped].name, 1);
       state.current = nextIndexFrom(skipped);
     } else if(card.effect==='reverse'){
       if(isDuel){
@@ -1712,10 +1775,13 @@
           offerSkipInterrupt(skipped, playerIdx);
           return;
         } else {
+          logSystem('SKIP', victim.name);
+          fxCue('skip', 'SKIP', victim.name, 1);
           state.current = nextIndexFrom(skipped);
         }
       } else {
         state.direction *= -1;
+        fxCue('reverse', 'REVERSE', '', 1);
         state.current = nextIndexFrom(playerIdx);
       }
     } else {
@@ -1762,6 +1828,7 @@
       const bonusDraw = spent.effect==='both' && state.bothCancelDrawEnabled;
       const tag = bonusDraw ? 'CANCEL+2' : 'CANCEL';
       logRow(`${victim.name}（${victim.hand.length}）：`, `<b class="logNum">${pad3(spent.value)}</b> <span class="fx fx-reverse">（${tag}）</span>`);
+      fxCue('reverse', tag, victim.name, 1);
       if(bonusDraw && originIdx!=null){
         // don't touch pendingDraw yet -- victim is about to keep their own turn,
         // and pendingDraw is always resolved against whoever state.current is.
@@ -1776,6 +1843,8 @@
     maybeCpuTurn();
   }
   function acceptSkip(victimIdx){
+    logSystem('SKIP', state.players[victimIdx].name);
+    fxCue('skip', 'SKIP', state.players[victimIdx].name, 1);
     state.skipInterrupt = null;
     state.current = nextIndexFrom(victimIdx);
     state.turnDrawn = false;
@@ -1798,6 +1867,8 @@
     if(applyReverse) state.direction *= -1;
     state.pendingDraw += DRAW_AMOUNT[card.effect];
     state.pendingLevel = stackLevel(card.effect);
+    state.stackN = (state.stackN||1) + 1;
+    fxCue(card.effect==='draw4' ? 'draw4' : 'draw2', '+' + state.pendingDraw, 'STACK ×' + state.stackN, state.stackN);
     state.current = nextIndexFrom(playerIdx);
     state.turnDrawn = false;
     render();
@@ -1805,6 +1876,7 @@
   }
 
   function acceptPending(playerIdx){
+    fxFlush(); state.stackN = 0;
     const p = state.players[playerIdx];
     const n = state.pendingDraw;
     drawCards(playerIdx, n);
@@ -1818,6 +1890,7 @@
   }
 
   function passTurn(playerIdx){
+    fxFlush();
     const p = state.players[playerIdx];
     logAction(p.name, 'PASS', p.hand.length);
     state.current = nextIndexFrom(playerIdx);
@@ -1867,7 +1940,8 @@
     const lockBefore = ceilingNow();
     selected.forEach(c=>{ if(lockEnabled()) state.digitCeiling = ceilingAfterPlay(c, ceilingNow()); });
     logMultiPlay(p.name, selected, p.hand.length);
-    if(lockEnabled() && state.digitCeiling!==lockBefore) logSystem('LOCK', String(state.digitCeiling));
+    if(selected.length>=2) fxCue('combo', 'COMBO ×' + selected.length, p.name, selected.length);
+    if(lockEnabled() && state.digitCeiling!==lockBefore){ logSystem('LOCK', String(state.digitCeiling)); fxLockCue(); }
     if(playerIdx===mySeat){ state.multiMode = false; state.multiSelection = []; }
 
     if(p.hand.length===0){
@@ -1898,7 +1972,11 @@
     if(type==='skip'){
       const skips = isDuel ? 1 : count;
       let from = playerIdx;
-      for(let i=0;i<skips;i++) from = nextIndexFrom(from);
+      let at = playerIdx;
+      const hit = [];
+      for(let i=0;i<skips;i++){ at = nextIndexFrom(at); logSystem('SKIP', state.players[at].name); hit.push(state.players[at].name); }
+      fxCue('skip', skips>1 ? 'SKIP ×' + skips : 'SKIP', hit.join(' '), skips);
+      from = at;
       state.current = nextIndexFrom(from);
       return false;
     }
@@ -1908,10 +1986,13 @@
         const victim = state.players[from];
         const hasCancelCard = state.interruptEnabled && victim.hand.some(c=>c.effect==='reverse'||c.effect==='both');
         if(hasCancelCard){ offerSkipInterrupt(from, playerIdx); return true; }
+        logSystem('SKIP', victim.name);
+        fxCue('skip', 'SKIP', victim.name, 1);
         state.current = nextIndexFrom(from);
         return false;
       }
       for(let i=0;i<count;i++) state.direction *= -1;
+      fxCue('reverse', count>1 ? 'REVERSE ×' + count : 'REVERSE', '', count);
       state.current = nextIndexFrom(playerIdx);
       return false;
     }
@@ -1922,6 +2003,8 @@
     if(!isDuel) for(let i=0;i<reverseCount;i++) state.direction *= -1;
     state.pendingDraw += totalDraw;
     state.pendingLevel = Math.max(...selected.map(c=> stackLevel(c.effect)));
+    state.stackN = (state.stackN||0) + count;
+    fxCue(selected.some(c=> c.effect==='draw4') ? 'draw4' : 'draw2', '+' + state.pendingDraw, state.stackN>count ? 'STACK ×' + state.stackN : '', state.stackN);
     state.current = nextIndexFrom(playerIdx);
     return false;
   }
@@ -2298,9 +2381,10 @@
     if(!state) return;
     document.getElementById('gameXBtn').style.display = (state.mode==='free' && !state.over && !onlineGameActive) ? 'block' : 'none';
 
-    if(state.pendingCancelBonus && state.current===state.pendingCancelBonus.targetIdx && state.pendingDraw===0){
+    if(state.pendingCancelBonus && state.current===state.pendingCancelBonus.targetIdx && !state.skipInterrupt){
+      // added on top of any draw already pending (the bonus used to wait for pendingDraw===0 and then fire at a random later turn)
       state.pendingDraw += state.pendingCancelBonus.amount;
-      state.pendingLevel = stackLevel('draw2');
+      state.pendingLevel = Math.max(state.pendingLevel, stackLevel('draw2'));
       state.pendingCancelBonus = null;
     }
 
@@ -2424,6 +2508,7 @@
   // ---- action dispatch: local (host/offline) executes directly; guest sends to host ----
   function requestPlayCard(card){
     if(isOnlineGuest()){ sendAction({type:'play', cardId:card.id}); return; }
+    if(!state || state.over || state.skipInterrupt || state.current!==mySeat || !state.players[mySeat].hand.includes(card)) return;   // stale tap on a card that is already gone
     if(state.noAssist && !canPlay(card, state.players[mySeat].hand, state.discardPile[state.discardPile.length-1])){ penalize(mySeat, 1); return; }
     if(state.pendingDraw>0) stackCard(mySeat, card); else playCard(mySeat, card);
   }
@@ -2479,7 +2564,8 @@
       skipInterrupt: state.skipInterrupt,
       interruptEnabled: state.interruptEnabled, bothCancelDrawEnabled: state.bothCancelDrawEnabled,
       multiDumpEnabled: state.multiDumpEnabled,
-      lockOn: LOCK_ON, digitCeiling: state.digitCeiling, deckWidth: DECK_WIDTH
+      lockOn: LOCK_ON, digitCeiling: state.digitCeiling, deckWidth: DECK_WIDTH,
+      fx: (state.fxEvents||[]).slice(-6)
     };
   }
   function broadcastState(){
@@ -2513,28 +2599,42 @@
     };
     setLock(!!view.lockOn);
     setDeckWidth(view.deckWidth || 3);
+    (view.fx||[]).filter(e=> e.id>fxSeen).forEach(e=>{ fxShow(e); });
+    (view.fx||[]).forEach(e=>{ if(e.id>fxSeen) fxSeen = e.id; });
     render();
     if(state.over) showWin(state.players.findIndex(p=>p.hand.length===0));
   }
   function handleRemoteAction(action){
     const guestIdx = 1;
     const pl = state.players[guestIdx];
-    if(!pl || !action) return;
+    if(!pl || !action || state.over) return;
+    // a double tap or a late message must never act on a turn that is not the guest's (it used to pass or skip a turn twice)
+    const interrupting = !!state.skipInterrupt;
+    const myTurn = state.current===guestIdx && !interrupting;
     if(action.type==='play'){
+      if(!myTurn) return;
       const card = pl.hand.find(c=>c.id===action.cardId);
-      if(card){ if(state.pendingDraw>0) stackCard(guestIdx, card); else playCard(guestIdx, card); }
+      if(!card) return;
+      if(!canPlay(card, pl.hand, state.discardPile[state.discardPile.length-1])){ if(state.noAssist) penalize(guestIdx, 1); return; }
+      if(state.pendingDraw>0) stackCard(guestIdx, card); else playCard(guestIdx, card);
     } else if(action.type==='draw'){
+      if(!myTurn || state.pendingDraw>0 || (state.turnDrawn && !state.unlimitedDraw)) return;
       voluntaryDraw(guestIdx);
     } else if(action.type==='pass'){
+      if(!myTurn || state.pendingDraw>0 || !state.turnDrawn) return;
       passTurn(guestIdx);
     } else if(action.type==='accept'){
+      if(!myTurn || state.pendingDraw<=0) return;
       acceptPending(guestIdx);
     } else if(action.type==='interrupt'){
+      if(!interrupting || state.skipInterrupt.victim!==guestIdx) return;
       const card = pl.hand.find(c=>c.id===action.cardId);
       interruptSkip(guestIdx, card);
     } else if(action.type==='acceptSkip'){
+      if(!interrupting || state.skipInterrupt.victim!==guestIdx) return;
       acceptSkip(guestIdx);
     } else if(action.type==='multiDump'){
+      if(!myTurn) return;
       const cards = (action.cardIds||[]).map(id=> pl.hand.find(c=>c.id===id)).filter(Boolean);
       playMultiDump(guestIdx, cards);
     }
@@ -2708,13 +2808,13 @@
     rate: '勝敗がレートに反映されます',
     free: 'レートに影響しません。ルールを自由に設定',
     online: '2人で対戦(CPU追加可)。レートに影響なし',
-    prime: '4桁デッキの全カードを一覧で見られます'
+    prime: '4桁・5桁デッキの全カードを一覧で見られます'
   };
   const SETTING_DEFAULTS = {
     rate:   { multiDump:true, interrupt:true, bothCancel:true, cpu:2, digits:3, lock:true },
-    free:   { multiDump:true, interrupt:true, bothCancel:true, players:3, handSize:7, unlimitedDraw:false, noAssist:false, digits:3, lock:true },
+    free:   { multiDump:true, interrupt:true, bothCancel:true, players:3, handSize:7, unlimitedDraw:false, noAssist:false, digits:3, lock:true, zero:true },
     online: { multiDump:true, interrupt:true, bothCancel:true, cpu:0, lock:true },
-    prime:  { effects:[], digitsSel:[], order:'asc', query:'', brush:'', marks:{}, markFilter:{} }
+    prime:  { deck:4, effects:[], digitsSel:[], order:'asc', query:'', brush:'', marks:{}, markFilter:{} }
   };
   function loadModeSettings(){
     let saved = null;
@@ -2746,7 +2846,7 @@
     try{ localStorage.setItem('primeUnoModeSettings', JSON.stringify(modeSettings)); }catch(e){}
   }
   function maxHandFor(players){
-    const total = (modeSettings.free.digits===4 ? deckValues(4).length : deckValues(3).length) - 6;
+    const total = deckValuesFor([3,4,5].includes(modeSettings.free.digits) ? modeSettings.free.digits : 3, modeSettings.free.zero!==false).length - 6;
     return Math.max(2, Math.min(20, Math.floor(total/players)));
   }
   function refreshFreeUi(){
@@ -2757,6 +2857,7 @@
     document.getElementById('freeHandVal').textContent = f.handSize;
     document.getElementById('unlimitedDrawToggle').checked = !f.unlimitedDraw;
     document.getElementById('assistToggle').checked = !f.noAssist;
+    document.getElementById('zeroToggle').checked = f.zero!==false;
     document.querySelectorAll('.stepBtn').forEach(b=>{
       const v = Number(f[b.dataset.key]), max = b.dataset.key==='players' ? 8 : maxHandFor(f.players);
       b.disabled = Number(b.dataset.d) < 0 ? v <= 2 : v >= max;
@@ -2765,7 +2866,13 @@
   // the card-digit choice (3 / 4) exists in rate and free mode
   function syncDigitSelect(){
     const st = modeSettings[currentMode];
-    st.digits = st.digits===4 ? 4 : 3;
+    const can5 = currentMode==='free';
+    st.digits = (st.digits===5 && can5) ? 5 : st.digits===4 ? 4 : 3;
+    document.getElementById('digit5Btn').hidden = !can5;
+    document.querySelectorAll('#digitSelect .cpu-btn').forEach(b=>{
+      const n = deckValuesFor(Number(b.dataset.d), currentMode==='free' ? st.zero!==false : true).length;
+      const m = b.querySelector('.cpuSub .mono'); if(m) m.textContent = n;
+    });
     document.querySelectorAll('#digitSelect .cpu-btn').forEach(b=> b.classList.toggle('selected', Number(b.dataset.d)===st.digits));
   }
   function syncBothCancelRow(){
@@ -2841,8 +2948,37 @@
     document.body.classList.remove('markOpen');
     if(document.body.dataset.mode==='prime') renderPrimeTable();
   }
-  function deck4Cards(){
-    return deck4Values().map(n=>({ value:n, effect:classifyCard(n), len:String(n).length }));
+  // the prime table shows the 4-digit or the 5-digit deck (the 5-digit deck contains every 4-digit card)
+  const primeW = ()=> modeSettings.prime.deck===5 ? 5 : 4;
+  const primeCardsCache = {};
+  function primeCards(w){
+    if(primeCardsCache[w]) return primeCardsCache[w];
+    return primeCardsCache[w] = deckValues(w).map(n=>{
+      const len = String(n).length, effect = classifyCard(n), padded = String(n).padStart(w,'0');
+      const cls = digitColorClasses(padded.split('').map(Number));
+      const digits = padded.split('').map((d,i)=> `<span class="${cls[i]}${i < w-len ? ' lz' : ''}">${d}</span>`).join('');
+      const head = `<div class="pchip pc-${effect}" data-v="${n}"><div class="pstrip">${effect==='plain' ? '' : EFFECT_TAG[effect]}</div><div class="pnum">${digits}</div><div class="pmarks">`;
+      return { value:n, effect, len, padded, head };
+    });
+  }
+  function primeDeckCards(){ return primeCards(primeW()); }
+  // the grid is painted in pieces so a big list never freezes the page; a newer redraw cancels the older one
+  let primePaintToken = 0;
+  function paintPrimeGrid(shown){
+    const grid = document.getElementById('primeGrid'), token = ++primePaintToken;
+    grid.classList.toggle('w5', primeW()===5);
+    if(!shown.length){ grid.innerHTML = '<div class="primeEmpty">条件に合うカードはありません</div>'; return; }
+    const chip = c=> c.head + marksHtml(c.value) + '</div></div>';
+    const FIRST = 200, CHUNK = 300;
+    grid.innerHTML = shown.slice(0, FIRST).map(chip).join('');
+    let i = FIRST;
+    const later = fn=> window.requestIdleCallback ? requestIdleCallback(fn, { timeout:150 }) : setTimeout(fn, 16);
+    const next = ()=>{
+      if(token!==primePaintToken || i>=shown.length) return;
+      grid.insertAdjacentHTML('beforeend', shown.slice(i, i+CHUNK).map(chip).join(''));
+      i += CHUNK; if(i<shown.length) later(next);
+    };
+    if(i<shown.length) later(next);
   }
   // ---- search language ----
   //  1,2,7,9      each comma-separated term can sit anywhere, in any order (9721 ...)
@@ -2916,15 +3052,17 @@
     return runTerm(0);
   }
   function renderPrimeTable(syncInput){
-    const cards = deck4Cards();
     const f = modeSettings.prime;
+    if(f.deck!==5) f.deck = 4;
+    const W = primeW();
+    const cards = primeDeckCards();
     f.marks = f.marks || {}; f.markFilter = f.markFilter || {};
     // settings saved before multi-select had a single effect / digit value
     if(!Array.isArray(f.effects)) f.effects = (f.effect && f.effect!=='all') ? [f.effect] : [];
     if(!Array.isArray(f.digitsSel)) f.digitsSel = f.digits ? [Number(f.digits)] : [];
     const input = document.getElementById('primeSearchInput');
     if(!Array.isArray(f.effectsNot)) f.effectsNot = []; if(!Array.isArray(f.digitsNot)) f.digitsNot = [];
-    if(!Array.isArray(f.dial) || f.dial.length!==4) f.dial = ['','','',''];
+    if(!Array.isArray(f.dial) || f.dial.length!==W) f.dial = new Array(W).fill('');
     // older saves picked what to show; the panel now switches categories OFF instead
     const ALL_EFF = ['plain','draw2','draw4','skip','reverse'];
     if(f.effects.length){ f.effectsNot = ALL_EFF.filter(k=> !f.effects.includes(k)); f.effects = []; }
@@ -2940,30 +3078,38 @@
     const matchNot = (parsedNot.terms && parsedNot.terms.length) ? (str=> primeMatchQuery(str, parsedNot.terms)) : null;
     const byEffect = c=> !f.effectsNot.includes(c.effect);
     const byDigits = c=> !f.digitsNot.includes(c.len);
-    const byDial = c=>{ const p = String(c.value).padStart(4,'0'); return f.dial.every((d,i)=> d==='' || p[i]===d); };
-    const bySearch = c=>{ const p = String(c.value).padStart(4,'0'); return (!match || match(p)) && (!matchNot || !matchNot(p)); };
+    const byDial = c=> f.dial.every((d,i)=> d==='' || c.padded[i]===d);
+    const bySearch = c=> (!match || match(c.padded)) && (!matchNot || !matchNot(c.padded));
     // mark filters work on a snapshot taken when the toggle was set (see the click handler)
     // + and - mark filters are combined the same way: AND = every condition holds, OR = any one holds
     const msets = Object.values(f.markFilter).map(x=> new Set(x.ids));
     const byMarks = c=> !msets.length || (f.markCombine==='and' ? msets.every(set=> set.has(c.value)) : msets.some(set=> set.has(c.value)));
     const byZero = c=> !f.zero || (String(c.value).indexOf('0') >= 0) === (f.zero==='has');   // does the card itself contain a 0 (the padding does not count)
-    const rest = (c, skip)=> (skip==='e' || byEffect(c)) && (skip==='d' || byDigits(c)) && (skip==='z' || byZero(c)) && byDial(c) && bySearch(c) && byMarks(c);
-    const restPanel = (c, skip)=> (skip==='e' || byEffect(c)) && (skip==='d' || byDigits(c)) && (skip==='z' || byZero(c)) && bySearch(c) && byMarks(c);   // the panel's counts do not follow the dial
-    vtUpdate(cards, f, restPanel);
-    const shown = cards.filter(c=> rest(c));
-    primePanelPool = cards.filter(c=> byEffect(c) && byDigits(c) && byZero(c) && byMarks(c));   // the panel's own filters only
+    // one pass over the deck: the list, the panel's pool and every switch's count (the old code walked the deck about 15 times)
+    const cntE = {}, cntD = {}; let cntZ = 0;
+    const shown = [], pool = [];
+    for(let n=0; n<cards.length; n++){
+      const c = cards[n];
+      const eOk = byEffect(c), dOk = byDigits(c), zOk = byZero(c), mOk = byMarks(c);
+      const sOk = mOk && bySearch(c);   // the panel's counts follow search and marks but not the dial
+      const hasZero = String(c.value).indexOf('0') >= 0;
+      if(sOk){
+        if(dOk && zOk) cntE[c.effect] = (cntE[c.effect]||0) + 1;
+        if(eOk && zOk) cntD[c.len] = (cntD[c.len]||0) + 1;
+        if(eOk && dOk && hasZero) cntZ++;
+        if(eOk && dOk && zOk && byDial(c)) shown.push(c);
+      }
+      if(eOk && dOk && zOk && mOk) pool.push(c);
+    }
+    vtUpdate(cards, f, { e:cntE, d:cntD, z:cntZ });
+    primePanelPool = pool;   // the panel's own filters only
     document.getElementById('vtSum').textContent = primePanelPool.length + '枚';
     if(f.order==='desc') shown.reverse();
     primeShown = shown;
     document.getElementById('primeSearchResult').textContent = (parsed.error || parsedNot.error) ? '( ) の対応を確認してください' : [match ? '＋: ' + primeQueryText(parsed.terms) : '', matchNot ? '−: ' + primeQueryText(parsedNot.terms) : ''].filter(Boolean).join(' ／ ');
+    document.querySelectorAll('#primeDeckSelect .cpu-btn').forEach(b=> b.classList.toggle('selected', Number(b.dataset.w)===W));
     document.getElementById('primeCount').innerHTML = `<span class="mono">${shown.length}</span>枚を表示(全<span class="mono">${cards.length}</span>枚)`;
-    document.getElementById('primeGrid').innerHTML = !shown.length ? '<div class="primeEmpty">条件に合うカードはありません</div>' : shown.map(c=>{
-      const padded = String(c.value).padStart(4,'0');
-      const colorCls = digitColorClasses(padded.split('').map(Number));
-      const digits = padded.split('').map((d,i)=>
-        `<span class="${colorCls[i]}${i < 4-c.len ? ' lz' : ''}">${d}</span>`).join('');
-      return `<div class="pchip pc-${c.effect}" data-v="${c.value}"><div class="pstrip">${c.effect==='plain' ? '' : EFFECT_TAG[c.effect]}</div><div class="pnum">${digits}</div><div class="pmarks">${marksHtml(c.value)}</div></div>`;
-    }).join('');
+    paintPrimeGrid(shown);
     document.getElementById('primeGrid').classList.toggle('brushing', !!f.brush);
     renderMarkControls();
   }
@@ -2984,6 +3130,19 @@
     document.getElementById('primeGrid').classList.add('brushing');
   });
   document.getElementById('markDrawerClose').addEventListener('click', closeMarkDrawer);
+  document.getElementById('primeDeckSelect').addEventListener('click', e=>{
+    const b = e.target.closest('.cpu-btn'); if(!b) return;
+    const w = Number(b.dataset.w), f = modeSettings.prime, was = primeW();
+    if(w===was) return;
+    f.deck = w;
+    f.dial = w>was ? [''].concat(f.dial) : f.dial.slice(1);   // the places keep their meaning: the right end is always the ones
+    const cards = primeDeckCards();   // + / - mark filters are lists taken when they were set: take them again for this deck
+    Object.keys(f.markFilter).forEach(key=>{
+      const x = f.markFilter[key];
+      x.ids = cards.filter(c=>{ const has = (f.marks[c.value]||[]).includes(key); return x.mode==='has' ? has : !has; }).map(c=> c.value);
+    });
+    saveModeSettings(); renderPrimeTable();
+  });
   document.getElementById('primeGrid').addEventListener('click', e=>{
     const f = modeSettings.prime;
     const chip = e.target.closest('.pchip'); if(!chip || !f.brush) return;
@@ -3001,7 +3160,7 @@
   function panelPoolNow(){
     const f = modeSettings.prime, eN = f.effectsNot || [], dN = f.digitsNot || [];
     const sets = Object.values(f.markFilter || {}).map(x=> new Set(x.ids)), and = f.markCombine==='and' || f.markCombine==='all';
-    return deck4Cards().filter(c=> !eN.includes(c.effect) && !dN.includes(c.len)
+    return primeDeckCards().filter(c=> !eN.includes(c.effect) && !dN.includes(c.len)
       && (!f.zero || (String(c.value).indexOf('0') >= 0) === (f.zero==='has'))
       && (!sets.length || (and ? sets.every(x=> x.has(c.value)) : sets.some(x=> x.has(c.value)))));
   }
@@ -3144,21 +3303,30 @@
   const dialSt = [];
   const dialListFor = f=> f.zero==='not' ? DIAL_ALL.filter(v=> v!=='0') : DIAL_ALL.slice();
   const dialIdxOf = v=>{ const i = DIAL_VALS.indexOf(v); return i < 0 ? 0 : i; };
+  let vtBuiltW = 0;
   function ensureVt(){
-    const e = document.getElementById('vtEffect'); if(e.children.length) return;
+    const e = document.getElementById('vtEffect');
+    if(e.children.length){ if(vtBuiltW!==primeW()) buildVtWidth(); return; }
     DIAL_VALS = dialListFor(modeSettings.prime);
     e.innerHTML = VT_EFFECT.map(([k,l,c])=> vtSw('effect', k, l, `background:var(${c});color:#14110a`, 'ON', 'OFF', 'on')).join('');
-    document.getElementById('vtDigit').innerHTML = [1,2,3,4].map(d=> vtSw('digit', d, '<span class="hd">'+d+'</span>桁', '', 'ON', 'OFF', 'on')).join('');
     document.getElementById('vtMark').innerHTML = PRIME_MARKS.map(m=>
       `<div class="mkCol" data-k="${m.key}"><div class="vtHead">${markIcon(m)}</div><div class="vtCount"></div><div class="mkTrack"><button class="mkPos" data-v="has" aria-label="${m.name}のあるカードだけ">+</button><button class="mkPos" data-v="not" aria-label="${m.name}のないカードだけ">−</button></div></div>`).join('');
     document.getElementById('vtZero').innerHTML = '<div class="mkCol zeroCol" data-k="zero"><div class="vtHead">0</div><div class="vtCount"></div><div class="mkTrack"><button class="mkPos" data-v="has" aria-label="0を含むカードだけ">+</button><button class="mkPos" data-v="not" aria-label="0を含まないカードだけ">−</button></div></div>';
-    document.getElementById('primeDials').innerHTML = ['千','百','十','一'].map((n,i)=>
-      `<div class="dial" data-i="${i}"><small>${n}</small><button class="dialBtn" data-step="1" aria-label="${n}の位を進める">▲</button><div class="dialWin" data-i="${i}">${DIAL_VALS.map(t=> `<span class="dv">${t==='' ? '－' : t}</span>`).join('')}<div class="dialMark"></div></div><button class="dialBtn" data-step="-1" aria-label="${n}の位を戻す">▼</button></div>`).join('');
     document.getElementById('primeDials').addEventListener('click', ev=>{
       const b = ev.target.closest('.dialBtn'); if(!b) return;
       const d = dialSt[Number(b.closest('.dial').dataset.i)];
       dialTween(d, (d.busy ? d.target : Math.round(d.p)) + Number(b.dataset.step), 170, ()=> dialCommit(d));
     });
+    buildVtWidth();
+  }
+  // the digit switches and the dials depend on the deck width (4 or 5 digits)
+  function buildVtWidth(){
+    const W = primeW(); vtBuiltW = W;
+    document.getElementById('primeDials').classList.toggle('w5', W===5);
+    document.getElementById('vtDigit').innerHTML = [1,2,3,4].map(d=> vtSw('digit', d, '<span class="hd">'+d+'</span>桁', '', 'ON', 'OFF', 'on')).join('');
+    document.getElementById('primeDials').innerHTML = ['万','千','百','十','一'].slice(5-W).map((n,i)=>
+      `<div class="dial" data-i="${i}"><small>${n}</small><button class="dialBtn" data-step="1" aria-label="${n}の位を進める">▲</button><div class="dialWin" data-i="${i}">${DIAL_VALS.map(t=> `<span class="dv">${t==='' ? '－' : t}</span>`).join('')}<div class="dialMark"></div></div><button class="dialBtn" data-step="-1" aria-label="${n}の位を戻す">▼</button></div>`).join('');
+    dialSt.length = 0;
     document.querySelectorAll('#primeDials .dialWin').forEach(win=>{
       const i = Number(win.dataset.i);
       const d = { i, win, spans:Array.from(win.querySelectorAll('.dv')), p:dialIdxOf(modeSettings.prime.dial[i]), busy:false, down:false, raf:0, tm:0, y0:0, p0:0, moved:false, samples:[], target:0 };
@@ -3178,7 +3346,8 @@
       });
       win.addEventListener('pointercancel', ()=>{ if(d.down){ d.down = false; dialSettle(d); } });
     });
-  }
+    }
+
   // the dial is a drum: drag to turn it, flick to spin; it slows down and settles on a digit
   function dialDraw(d){
     const N = DIAL_VALS.length;
@@ -3240,14 +3409,14 @@
       if(el.dataset.s && el.dataset.s!==next){ el.classList.add('moving'); clearTimeout(el._mv); el._mv = setTimeout(()=> el.classList.remove('moving'), 100); }
       el.dataset.s = next; el.querySelector('.vtThumb').textContent = on ? 'ON' : 'OFF'; el.querySelector('.vtCount').textContent = count;
     };
-    document.querySelectorAll('#vtEffect .vt').forEach(el=>{ const k = el.dataset.k; sw(el, !f.effectsNot.includes(k), String(cards.filter(c=> c.effect===k && rest(c,'e')).length)); });
-    document.querySelectorAll('#vtDigit .vt').forEach(el=>{ const k = Number(el.dataset.k); sw(el, !f.digitsNot.includes(k), String(cards.filter(c=> c.len===k && rest(c,'d')).length)); });
+    document.querySelectorAll('#vtEffect .vt').forEach(el=>{ const k = el.dataset.k; sw(el, !f.effectsNot.includes(k), String(rest.e[k]||0)); });
+    document.querySelectorAll('#vtDigit .vt').forEach(el=>{ const k = Number(el.dataset.k); sw(el, !f.digitsNot.includes(k), String(rest.d[k]||0)); });
     const pm = (el, st, count)=>{ el.querySelectorAll('.mkPos').forEach(b=> b.classList.toggle('sel', b.dataset.v===st)); el.querySelector('.vtCount').textContent = count; };
     document.querySelectorAll('#vtMark .mkCol').forEach(el=>{
       const k = el.dataset.k;
       pm(el, f.markFilter[k] ? f.markFilter[k].mode : '', String(Object.keys(f.marks).filter(v=> (f.marks[v]||[]).includes(k)).length));
     });
-    pm(document.querySelector('#vtZero .mkCol'), f.zero, String(cards.filter(c=> String(c.value).indexOf('0') >= 0 && rest(c,'z')).length));
+    pm(document.querySelector('#vtZero .mkCol'), f.zero, String(rest.z));
     const ao = document.getElementById('mkAndOr'); ao.dataset.s = f.markCombine; ao.querySelector('.andorThumb').textContent = f.markCombine==='and' ? 'AND' : 'OR';
     // with "no 0" the dials lose their 0 as well
     const want = dialListFor(f);
@@ -3297,7 +3466,7 @@
       const cur = f.markFilter[key] ? f.markFilter[key].mode : '';
       if(cur===v) delete f.markFilter[key];
       else {
-        const ids = deck4Cards().filter(c=>{ const has = (f.marks[c.value]||[]).includes(key); return v==='has' ? has : !has; }).map(c=> c.value);
+        const ids = primeDeckCards().filter(c=>{ const has = (f.marks[c.value]||[]).includes(key); return v==='has' ? has : !has; }).map(c=> c.value);
         f.markFilter[key] = { mode:v, ids };
       }
       saveModeSettings(); paint(f.markFilter[key] ? f.markFilter[key].mode : ''); renderPrimeSoon(); return;
@@ -3314,7 +3483,7 @@
     const stop = ()=>{ if(!hold) return; cancelAnimationFrame(hold.raf); hold.b.style.setProperty('--p', 0); hold.b.classList.remove('holding'); hold = null; };
     row.addEventListener('pointerdown', e=>{
       const b = e.target.closest('[data-clear]'); if(!b || b.disabled) return;
-      stop(); hold = { b, t0:performance.now(), raf:0 }; b.classList.add('holding');
+      stop(); hold = { b, t0:performance.now(), raf:0, x:e.clientX, y:e.clientY }; b.classList.add('holding');
       const step = ()=>{
         if(!hold) return;
         const p = Math.min(1, (performance.now() - hold.t0) / 5000);
@@ -3329,6 +3498,8 @@
       step();
     });
     ['pointerup','pointercancel','pointerleave'].forEach(ev=> row.addEventListener(ev, stop));
+    row.addEventListener('pointermove', e=>{ if(hold && Math.hypot(e.clientX-hold.x, e.clientY-hold.y) > 16) stop(); });   // a finger that wanders off is not a hold
+    window.addEventListener('scroll', stop, { passive:true });   // the page moved under the finger (wheel / momentum)
   })();
   // reset: a red button under a glass case that swings open sideways. The case closes 1 s after it was opened
   // (or 1 s after the button was pressed); until then a pressed button stays sunk
@@ -3358,7 +3529,7 @@
         lv.style.setProperty('--p', p < 0.8 ? 0.22 * (p/0.8) : 0.22 + 0.78 * Math.pow((p-0.8)/0.2, 3));   // slow resistance, then it drops all at once
         if(p>=1){
           hold.done = true; lv.style.setProperty('--p', 1);
-          const f = modeSettings.prime; f.dial = ['','','','']; saveModeSettings(); renderPrimeTable();
+          const f = modeSettings.prime; f.dial = new Array(primeW()).fill(''); saveModeSettings(); renderPrimeTable();
           tm = setTimeout(()=>{ lv.classList.remove('holding'); lv.style.setProperty('--p', 0); hold = null; }, 160);
           return;
         }
@@ -3366,7 +3537,8 @@
       };
       step();
     });
-    ['pointerup','pointercancel'].forEach(ev=> lv.addEventListener(ev, stop));
+    ['pointerup','pointercancel','lostpointercapture'].forEach(ev=> lv.addEventListener(ev, stop));
+    window.addEventListener('scroll', stop, { passive:true });
   })();
   // works with Japanese keyboards too: while a character is still being composed the text box is left
   // alone and the search runs on the cleaned-up copy. Two boxes: cards that match (あり) / cards to leave out (なし)
@@ -3401,7 +3573,7 @@
     if(f.effectsNot.length) parts.push(f.effectsNot.map(nm).join('+') + ' OFF');
     if(f.digitsNot.length) parts.push(f.digitsNot.map(d=> d + '桁').join('+') + ' OFF');
     const dl = (f.dial||[]).map(d=> d==='' ? '-' : d).join('');
-    if(dl && dl!=='----') parts.push('位 ' + dl);
+    if(dl && !/^-+$/.test(dl)) parts.push('位 ' + dl);
     if((f.query||'').trim()) parts.push('検索＋ ' + f.query.trim());
     if((f.queryNot||'').trim()) parts.push('検索− ' + f.queryNot.trim());
     PRIME_MARKS.forEach(m=>{ if(f.markFilter[m.key]) parts.push(m.glyph + (f.markFilter[m.key].mode==='has' ? '＋' : '－')); });
@@ -3413,14 +3585,17 @@
   const IO_MARK_KEYS = PRIME_MARKS.map(m=> m.key);
   function primeIoSanitize(src){
     const p = (src && src.prime) || {};
-    const valid = new Set(deck4Values());
+    const valid = new Set(deckValues(5));   // marks are kept by number, shared by both decks
+    const impW = p.deck===5 ? 5 : 4;
+    const out0 = null;
     const effKeys = PRIME_EFFECTS.map(e=> e[0]).filter(k=> k!=='all');
     const out = { marks:{}, markFilter:{} };
     out.effects = Array.isArray(p.effects) ? p.effects.filter(k=> effKeys.includes(k)) : [];
-    out.digitsSel = Array.isArray(p.digitsSel) ? p.digitsSel.map(Number).filter(n=> n>=1 && n<=4) : [];
+    out.digitsSel = Array.isArray(p.digitsSel) ? p.digitsSel.map(Number).filter(n=> n>=1 && n<=impW) : [];
     out.effectsNot = Array.isArray(p.effectsNot) ? p.effectsNot.filter(k=> effKeys.includes(k)) : [];
-    out.digitsNot = Array.isArray(p.digitsNot) ? p.digitsNot.map(Number).filter(n=> n>=1 && n<=4) : [];
-    out.dial = Array.isArray(p.dial) && p.dial.length===4 ? p.dial.map(d=> /^[0-9]$/.test(String(d)) ? String(d) : '') : ['','','',''];
+    out.digitsNot = Array.isArray(p.digitsNot) ? p.digitsNot.map(Number).filter(n=> n>=1 && n<=impW) : [];
+    out.deck = (p.deck===5 || p.deck===4) ? p.deck : 0;   // 0: an older export without the deck
+    out.dial = Array.isArray(p.dial) && p.dial.length===impW ? p.dial.map(d=> /^[0-9]$/.test(String(d)) ? String(d) : '') : new Array(impW).fill('');
     out.queryNot = typeof p.queryNot==='string' ? p.queryNot.slice(0,200) : '';
     out.markCombine = (p.markCombine==='and' || p.markCombine==='all') ? 'and' : 'or';
     out.zero = (p.zero==='has' || p.zero==='not') ? p.zero : '';
@@ -3450,7 +3625,7 @@
     document.getElementById('primeIoClose').addEventListener('click', ()=> modal.classList.remove('show'));
     document.getElementById('primeIoExport').addEventListener('click', ()=>{
       const f = modeSettings.prime;
-      const text = JSON.stringify({ app:'primeUno', v:1, prime:{ effects:f.effects||[], effectsNot:f.effectsNot||[], digitsSel:f.digitsSel||[], digitsNot:f.digitsNot||[], dial:f.dial||['','','',''], order:f.order, query:f.query||'', queryNot:f.queryNot||'', markCombine:f.markCombine||'or', zero:f.zero||'', marks:f.marks||{}, markFilter:f.markFilter||{} } });
+      const text = JSON.stringify({ app:'primeUno', v:1, prime:{ effects:f.effects||[], effectsNot:f.effectsNot||[], digitsSel:f.digitsSel||[], digitsNot:f.digitsNot||[], deck:primeW(), dial:f.dial||new Array(primeW()).fill(''), order:f.order, query:f.query||'', queryNot:f.queryNot||'', markCombine:f.markCombine||'or', zero:f.zero||'', marks:f.marks||{}, markFilter:f.markFilter||{} } });
       box.value = text; box.focus(); box.select();
       const n = Object.keys(f.marks||{}).filter(k=> (f.marks[k]||[]).length).length;
       const done = ()=> say('書き出しました(マークのあるカード '+n+'枚)。コピーしました。');
@@ -3466,7 +3641,7 @@
     document.getElementById('primeIoReplace').addEventListener('click', ()=>{
       const inc = read(); if(!inc) return;
       const f = modeSettings.prime;
-      f.marks = inc.marks; f.markFilter = inc.markFilter; f.effects = inc.effects; f.effectsNot = inc.effectsNot; f.digitsSel = inc.digitsSel; f.digitsNot = inc.digitsNot; f.dial = inc.dial; f.order = inc.order; f.query = inc.query; f.queryNot = inc.queryNot; f.markCombine = inc.markCombine; f.zero = inc.zero; if(f.zero==='not') f.dial = f.dial.map(d=> d==='0' ? '' : d);
+      f.marks = inc.marks; f.markFilter = inc.markFilter; f.effects = inc.effects; f.effectsNot = inc.effectsNot; f.digitsSel = inc.digitsSel; f.digitsNot = inc.digitsNot; if(inc.deck) f.deck = inc.deck; f.dial = inc.dial; f.order = inc.order; f.query = inc.query; f.queryNot = inc.queryNot; f.markCombine = inc.markCombine; f.zero = inc.zero; if(f.zero==='not') f.dial = f.dial.map(d=> d==='0' ? '' : d);
       finish('読み込みました(マークとしぼり込みの設定を置き換えました)。');
     });
   })();
@@ -3476,7 +3651,7 @@
     const rows = [['カード','数値','桁数','効果','マーク']];
     primeShown.forEach(c=>{
       const have = PRIME_MARKS.filter(m=> (f.marks[c.value]||[]).includes(m.key)).map(m=> m.name).join(' ');
-      rows.push([String(c.value).padStart(4,'0'), c.value, c.len, labels[c.effect], have]);
+      rows.push([c.padded, c.value, c.len, labels[c.effect], have]);
     });
     const csv = '\uFEFF' + rows.map(r=> r.map(v=> /[",\n]/.test(String(v)) ? '"' + String(v).replace(/"/g,'""') + '"' : v).join(',')).join('\r\n');
     downloadBlob(new Blob([csv], { type:'text/csv;charset=utf-8' }), `prime_uno_cards_${stamp()}.csv`);
@@ -3497,7 +3672,7 @@
     const g = cv.getContext('2d'); g.scale(scale, scale);
     g.fillStyle = css('--bg') || '#14231d'; g.fillRect(0,0,W,H);
     g.fillStyle = css('--ink') || '#fff'; g.textBaseline = 'alphabetic';
-    g.font = '700 20px sans-serif'; g.fillText(`素数UNO 4桁デッキ  ${primeShown.length}枚`, pad, 30);
+    g.font = '700 20px sans-serif'; g.fillText(`素数UNO ${primeW()}桁デッキ  ${primeShown.length}枚`, pad, 30);
     g.font = '500 12px sans-serif'; g.fillStyle = css('--ink-dim') || '#ddd'; g.fillText(primeFilterSummary(), pad, 50);
     const rr = (x,y,w,h,r)=>{ g.beginPath(); g.moveTo(x+r,y); g.arcTo(x+w,y,x+w,y+h,r); g.arcTo(x+w,y+h,x,y+h,r); g.arcTo(x,y+h,x,y,r); g.arcTo(x,y,x+w,y,r); g.closePath(); };
     primeShown.forEach((c,i)=>{
@@ -3507,12 +3682,12 @@
       if(c.effect!=='plain'){
         g.fillStyle = '#14110a'; g.font = '900 10px sans-serif'; g.textAlign = 'center'; g.fillText(EFFECT_TAG[c.effect], x+cw/2, y+11);
       }
-      const padded = String(c.value).padStart(4,'0');
+      const padded = c.padded, DW = primeW();
       const cls = digitColorClasses(padded.split('').map(Number));
       g.font = '700 26px "B612 Mono", "Space Mono", monospace'; g.textAlign = 'left';
-      const dw = g.measureText('0').width, startX = x + (cw - dw*4)/2;
+      const dw = g.measureText('0').width, startX = x + (cw - dw*DW)/2;
       padded.split('').forEach((d,k)=>{
-        g.globalAlpha = k < 4-c.len ? 0.45 : 1;
+        g.globalAlpha = k < DW-c.len ? 0.45 : 1;
         g.fillStyle = colors[cls[k]]; g.fillText(d, startX + k*dw, y+43);
       });
       g.globalAlpha = 1;
@@ -3563,6 +3738,7 @@
     btn.addEventListener('click', ()=>{
       modeSettings[currentMode].digits = Number(btn.dataset.d);
       syncDigitSelect();
+      if(currentMode==='free') refreshFreeUi();
       saveModeSettings();
     });
   });
@@ -3573,6 +3749,9 @@
       refreshFreeUi();
       saveModeSettings();
     });
+  });
+  document.getElementById('zeroToggle').addEventListener('change', (e)=>{
+    modeSettings.free.zero = e.target.checked; refreshFreeUi(); syncDigitSelect(); saveModeSettings();
   });
   document.getElementById('assistToggle').addEventListener('change', (e)=>{ modeSettings.free.noAssist = !e.target.checked; saveModeSettings(); });
   document.getElementById('unlimitedDrawToggle').addEventListener('change', (e)=>{
@@ -3612,7 +3791,7 @@
     document.getElementById('startScreen').style.display='none';
     document.getElementById('layout').classList.add('active');
     if(currentMode==='free'){
-      newGame(st.players-1, null, { mode:'free', handSize:st.handSize, unlimitedDraw:st.unlimitedDraw, noAssist:!!st.noAssist, digits:st.digits, lock: st.lock!==false });
+      newGame(st.players-1, null, { mode:'free', handSize:st.handSize, unlimitedDraw:st.unlimitedDraw, noAssist:!!st.noAssist, digits:st.digits, lock: st.lock!==false, zero: st.zero!==false });
     } else {
       lastNumCpu = st.cpu;
       newGame(st.cpu, null, { mode:'rate', digits:st.digits, lock: st.lock!==false });
@@ -3862,8 +4041,11 @@
     fill.style.width = '0%';
   }
   const resetHoldBtn = document.getElementById('resetHoldBtn');
-  ['mousedown','touchstart'].forEach(ev=> resetHoldBtn.addEventListener(ev, (e)=>{ e.preventDefault(); startResetHold(); }));
-  ['mouseup','mouseleave','touchend','touchcancel'].forEach(ev=> resetHoldBtn.addEventListener(ev, cancelResetHold));
+  let resetHoldPos = null;
+  resetHoldBtn.addEventListener('pointerdown', e=>{ if(e.button!==undefined && e.button!==0) return; resetHoldPos = { x:e.clientX, y:e.clientY }; startResetHold(); });
+  ['pointerup','pointercancel','pointerleave'].forEach(ev=> resetHoldBtn.addEventListener(ev, cancelResetHold));
+  resetHoldBtn.addEventListener('pointermove', e=>{ if(resetHoldTimer && resetHoldPos && Math.hypot(e.clientX-resetHoldPos.x, e.clientY-resetHoldPos.y) > 16) cancelResetHold(); });
+  window.addEventListener('scroll', cancelResetHold, { passive:true });
 
   function bindSectionToggle(btnId, bodyId){
     const btn = document.getElementById(btnId), body = document.getElementById(bodyId), head = btn.closest('.rulesHead');
@@ -3983,6 +4165,7 @@
         }
       } else if(msg.type==='matchStart' && !isOnlineHost){
         mySeat = 1;
+        fxSeen = 0;
         onlineGameActive = true;
         document.body.dataset.mode = 'online';
         setDeckWidth(3);
