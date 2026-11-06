@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="format-detection" content="telephone=no, date=no, address=no, email=no">
 <title>素数UNO</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=B612+Mono:wght@400;700&family=Space+Mono:wght@400;700&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&display=swap" rel="stylesheet">
@@ -228,7 +229,6 @@
   .strip-reverse{ background:var(--reverse); --sc:var(--reverse); }
   .strip-draw2{ background:var(--draw2); --sc:var(--draw2); }
   .strip-draw4{ background:var(--draw4); --sc:var(--draw4); }
-  .strip-both{ background:linear-gradient(90deg, var(--reverse), var(--draw2)); --sc:var(--reverse); }
 
   .card.playable{ cursor:pointer; transition:transform .12s, box-shadow .12s; }
   @media (hover: hover){
@@ -237,7 +237,7 @@
   .card.disabled{ filter:var(--dis); cursor:default; }
   .card, .pchip{ --tc:var(--plain); }
   .card.fx-skip, .pchip.pc-skip{ --tc:var(--skip); }
-  .card.fx-reverse, .card.fx-both, .pchip.pc-reverse{ --tc:var(--reverse); }
+  .card.fx-reverse, .pchip.pc-reverse{ --tc:var(--reverse); }
   .card.fx-draw2, .pchip.pc-draw2{ --tc:var(--draw2); }
   .card.fx-draw4, .pchip.pc-draw4{ --tc:var(--draw4); }
   .card:not(.back), .pchip{
@@ -323,19 +323,27 @@
   }
   .unoToast.show{ opacity:1; transform:translateX(-50%) scale(1); }
 
-  /* effect cues: a hard-shadowed pill under the UNO pill; a new play cuts the old ones short */
-  .fxStack{ position:fixed; top:66px; left:50%; transform:translateX(-50%); z-index:59; display:flex; flex-direction:column; align-items:center; gap:7px; pointer-events:none; width:max-content; max-width:94vw; }
-  .fxToast{ --fc:var(--mode-accent); display:flex; align-items:baseline; gap:10px; padding:7px 20px; border-radius:999px; background:var(--fc); color:#14110a; font-family:'B612 Mono','Space Mono',monospace; font-weight:700; font-size:18px; letter-spacing:.04em; white-space:nowrap; box-shadow:0 4px 0 rgba(0,0,0,0.55); transform-origin:50% 0; animation:fxIn .2s cubic-bezier(.2,1.5,.4,1) both; }
-  .fxToast .fxSub{ font-size:12px; opacity:.78; }
+  /* effect cues: big comic-style letters without a background, stamped over the title area (clear of the table); several at once pile up on one spot, the newest on top */
+  .fxStack{ position:fixed; top:calc(env(safe-area-inset-top, 0px) + 4px); left:0; right:0; height:112px; z-index:59; pointer-events:none; }
+  .fxToast{ --fc:var(--mode-accent); --fs:44px; --ox:0px; --oy:0px; --sc:1; --op:1; --rot:-3deg; position:absolute; left:50%; top:72px; opacity:var(--op); transform:translate(calc(-50% + var(--ox)), calc(-50% + var(--oy))) rotate(var(--rot)) scale(var(--sc)); transition:transform .18s cubic-bezier(.2,.9,.3,1), opacity .18s; display:flex; flex-direction:column; align-items:center; gap:2px; white-space:nowrap; font-family:'B612 Mono','Space Mono',monospace; font-weight:700; }
+  .fxPop{ display:flex; flex-direction:column; align-items:center; gap:2px; animation:fxStamp .22s cubic-bezier(.2,1.5,.4,1) both; }
+  .fxMain{ font-size:var(--fs); line-height:1; color:var(--fc); letter-spacing:-0.02em; transform:skewX(-8deg);
+    text-shadow:3px 0 0 #14110a, -3px 0 0 #14110a, 0 3px 0 #14110a, 0 -3px 0 #14110a, 2px 2px 0 #14110a, -2px 2px 0 #14110a, 2px -2px 0 #14110a, -2px -2px 0 #14110a, 5px 7px 0 #14110a; }
+  .fxSub{ font-size:clamp(12px, 3.4vw, 15px); line-height:1; color:#fff; letter-spacing:.06em;
+    text-shadow:2px 0 0 #14110a, -2px 0 0 #14110a, 0 2px 0 #14110a, 0 -2px 0 #14110a, 3px 4px 0 #14110a; }
   .fxToast.fxk-skip{ --fc:var(--skip); } .fxToast.fxk-reverse{ --fc:var(--reverse); } .fxToast.fxk-draw2{ --fc:var(--draw2); } .fxToast.fxk-draw4{ --fc:var(--draw4); }
   .fxToast.fxk-lock{ --fc:var(--plain); } .fxToast.fxk-combo{ --fc:var(--ink); }
-  .fxToast.lv2{ font-size:22px; padding:8px 24px; }
-  .fxToast.lv3{ font-size:27px; padding:9px 28px; animation:fxIn .2s cubic-bezier(.2,1.5,.4,1) both, fxHit .36s .06s ease-out; }
-  .fxToast.out{ animation:fxOut .26s ease-in both; }
-  .fxToast.out.fast{ animation-duration:.14s; }
-  @keyframes fxIn{ from{ opacity:0; transform:translateY(-16px) scale(.65); } 65%{ opacity:1; transform:translateY(2px) scale(1.09); } to{ opacity:1; transform:none; } }
-  @keyframes fxOut{ to{ opacity:0; transform:translateY(-10px) scale(.9); } }
-  @keyframes fxHit{ 0%,100%{ translate:0 0; } 20%{ translate:-5px 0; } 45%{ translate:5px 0; } 70%{ translate:-3px 0; } }
+  .fxToast.old .fxSub{ display:none; }
+  body.fxOn header{ opacity:0.12; }
+  header{ transition:opacity .1s; }
+  .fxToast.lv3{ animation:fxHit .34s .1s ease-out; }
+  .fxToast.out .fxPop{ animation:fxGone .22s ease-in both; }
+  .fxToast.out.fast .fxPop{ animation-duration:.12s; }
+  @keyframes fxStamp{ 0%{ opacity:0; transform:scale(2.5); } 55%{ opacity:1; transform:scale(.9); } 78%{ transform:scale(1.06); } 100%{ opacity:1; transform:none; } }
+  @keyframes fxGone{ to{ opacity:0; transform:scale(1.3); } }
+  @keyframes fxHit{ 0%,100%{ translate:0 0; } 20%{ translate:-6px 2px; } 45%{ translate:6px -2px; } 70%{ translate:-3px 1px; } }
+  a[x-apple-data-detectors]{ color:inherit !important; text-decoration:none !important; font:inherit !important; }
+  .setLocked{ pointer-events:none; opacity:0.55; }
   .controls{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; justify-content:center; }
   button.ghost{
     background:transparent; border:1.5px solid rgba(255,255,255,0.25); color:var(--ink);
@@ -950,40 +958,63 @@
   <h2 class="rulesHead">ルール <button class="ghost" id="rulesToggleBtn" style="padding:4px 12px; font-size:12px; margin-left:6px;">表示</button></h2>
   <div class="rules" id="rulesBody" style="display:none;">
     <details class="rl" open><summary>基本</summary><ul>
-      <li>カードは素数で、数字の組み合わせごとに<b>並べ替えてできる最大の素数1枚だけ</b>です(例: 113・131・311 は 311 だけ)。足りない桁は頭に0を足して表示し(例: 2→002)、その0も位の一致に数えます。</li>
+      <li>カードは素数です。数字の組み合わせごとに、並べ替えてできる<b>最大の素数1枚だけ</b>がデッキに入ります。例 113 131 311 は 311 だけです。</li>
+      <li>デッキは3桁107枚、4桁443枚、5桁1552枚です。桁が足りないカードは頭に0を足して表示し、その0も位の一致に数えます。</li>
+      <li>フリーでは、実際の桁に0を含むカードをデッキから外せます。頭に足した0は関係ありません。</li>
       <li>場のカードと<b>どれか1つの位に同じ数字</b>があれば出せます。</li>
-      <li>フリーでは<b>「0を含むカード」</b>をオフにすると、実際の桁に0を含むカード(101・307など)がデッキから除かれます。頭に足した0は関係ありません。</li>
-      <li>出せても山札から引けます。引いたあとは出さずにパスできます(1ターンに最低1回は引くか出す)。</li>
+      <li>出せるカードがあっても山札から引けます。引いたあとは、出さずにパスできます。1ターンに引くか出すかを最低1回します。</li>
       <li><b>最後の1枚は通常カード</b>でしか上がれません。</li>
-      <li><b>色</b>: 種類は 通常=紫 / スキップ=青 / リバース=緑 / ドロー2=赤 / ドロー4=黄。数字は 0=紫、2・4・5・6・8=赤、1・3・7・9=青で、同じ数字が被ると赤→黄、青→緑(0は紫のまま)。</li>
-      <li><b>モード</b>: レート(CPU戦・レートに反映) / フリー(人数・初手枚数・ドロー制限・桁数(3〜5桁)を設定) / オンライン(2人・P2P) / プライム(4桁・5桁デッキの全カード表)。設定はモードごとに保存されます。</li>
     </ul></details>
-    <details class="rl"><summary>カードの種類と積み</summary><ul>
-      <li>種類は<b>実際の桁だけ</b>で決まります(頭の0・ゼロ埋めは数えません)。1・3・7・9を「奇数系」と呼び、上から順に判定します。</li>
-      <li><span class="eff-tag tag-d4">ドロー4</span> 1桁のカード(2・3・5・7)</li>
-      <li><span class="eff-tag tag-d2">ドロー2</span> 2桁で奇数系が1個以下(23・29・41など)</li>
-      <li>3桁以上で、奇数系が1個以下かつ同じ数字が被るカード: 2つ被りは<span class="eff-tag tag-d2">ドロー2</span>(8863)、3つ以上の被りは<span class="eff-tag tag-d4">ドロー4</span>(2221)</li>
-      <li><span class="eff-tag tag-skip">スキップ</span> 2桁以上で両端の数字が同じ(131・7127など)</li>
-      <li><span class="eff-tag tag-rev">リバース</span> 全部奇数系で、同じ数字が被る(311・3331など。スキップが優先)</li>
+    <details class="rl"><summary>カードの種類</summary><ul>
+      <li>種類は<b>実際の桁だけ</b>で決まります。頭に足した0は数えません。1 3 7 9 を奇数系と呼び、次の順に判定します。</li>
+      <li><span class="eff-tag tag-d4">ドロー4</span> 1桁のカード。2 3 5 7</li>
+      <li><span class="eff-tag tag-d2">ドロー2</span> 2桁で奇数系が1個以下。23 29 41など</li>
+      <li>3桁以上で奇数系が1個以下、かつ同じ数字が被るカード。2つ被りは<span class="eff-tag tag-d2">ドロー2</span> 例 8863、3つ以上の被りは<span class="eff-tag tag-d4">ドロー4</span> 例 2221</li>
+      <li><span class="eff-tag tag-skip">スキップ</span> 2桁以上で両端の数字が同じ。131 7127など</li>
+      <li><span class="eff-tag tag-rev">リバース</span> 全部の数字が奇数系で、同じ数字が被る。311 3331など</li>
       <li>それ以外は<b>通常</b>です。</li>
-      <li><b>積み</b>: ドロー2/4は場と合わなくても重ねられ、枚数は加算されます(+2に+4で6枚)。<b>ドロー4はドロー4でしか返せません</b>。積まずに引き受けると番が終わります。</li>
+    </ul></details>
+    <details class="rl"><summary>積み</summary><ul>
+      <li>ドロー2とドロー4は、場と合わなくても重ねられます。枚数は足し算で、+2に+4なら合計6枚です。</li>
+      <li><b>ドロー4はドロー4でしか返せません</b>。</li>
+      <li>積まずに引き受けると、そのターンは終わります。</li>
     </ul></details>
     <details class="rl"><summary>重ね出し</summary><ul>
-      <li>同じ種類のカードで、<b>2つの位が全員一致</b>し、そのうち1つが場と合っていれば出せます(積み中は場との一致は不要)。</li>
-      <li>誰かが<b>残り1枚</b>の間は、一致は1つの位でOKです。</li>
-      <li>効果は枚数分そのまま重なります(+2を3枚で+6、スキップ2枚で2人飛ばす)。2人対戦では何枚でも飛ばされるのは相手だけです。</li>
-      <li>手札は最低1枚残す必要があり、重ね出しだけでは上がれません(設定でオフ可)。</li>
-    </ul></details>
-    <details class="rl"><summary>2人対戦 / 3人以上</summary><ul>
-      <li><b>2人</b>: リバースはスキップ扱い。飛ばされる側は、手札のリバースを捨てて<b>打ち消し</b>、番を取り戻せます(設定でオフ可)。</li>
-      <li><b>3人以上</b>: リバースは向きを変えます。</li>
+      <li>同じ種類のカードを、一度に何枚でもまとめて出せます。</li>
+      <li>条件は、カード同士で<b>2つの位が全員同じ数字</b>で、そのうち1つが場と合っていることです。積み中は場と合う必要がありません。</li>
+      <li>選んだカードの中に、場と<b>2つ以上の位で一致</b>するカードがあるときは、カード同士の一致は1つの位でOKです。</li>
+      <li>出す順番はゲームが並べるので、どの順番で選んでも構いません。</li>
+      <li>誰かが<b>残り1枚</b>の間も、カード同士の一致は1つの位でOKです。</li>
+      <li>効果は枚数分そのまま重なります。+2を3枚で+6、スキップ2枚で2人飛ばします。2人対戦で飛ばされるのは相手だけです。</li>
+      <li>手札は最低1枚残します。重ね出しだけでは上がれません。</li>
+      <li>設定でオフにできます。</li>
     </ul></details>
     <details class="rl"><summary>桁ロック</summary><ul>
-      <li><b>桁ロック</b>(全モード。設定でオン/オフできます): デッキの桁数(3桁デッキは3、4桁デッキは4、5桁デッキは5)より短いカードが出ると(特殊カードも)その桁数が上限になり、上限より桁数が多い特殊カードは出せません(通常カードは出せる。積みでは上限を無視)。最大桁数の通常カードで解除されます。重ね出しは順番も効き、特殊カードは桁の多い順、通常カードは最大桁数を最後にすると解除できます。</li>
+      <li>特殊カードは、場のカードの実際の桁数より桁数が多いと出せません。頭に足した0は数えません。</li>
+      <li>通常カードはいつでも出せます。積みでは桁ロックを無視します。</li>
+      <li>出したカードの桁数が、次の上限になります。最大桁数のカードが場にあれば制限はありません。</li>
+      <li>重ね出しでは、1枚ずつ上限が更新されます。特殊カードは桁の多い順に、通常カードは最大桁数を最後に出すと、上限が上がります。</li>
+      <li>設定でオフにできます。</li>
+    </ul></details>
+    <details class="rl"><summary>2人対戦と3人以上</summary><ul>
+      <li><b>2人</b> リバースはスキップ扱いです。飛ばされる側は、手札のリバースを1枚捨てて<b>打ち消し</b>、番を取り戻せます。設定でオフにできます。</li>
+      <li><b>3人以上</b> リバースで向きが変わります。</li>
+    </ul></details>
+    <details class="rl"><summary>表示</summary><ul>
+      <li><b>色</b> カードの種類は 通常=紫 スキップ=青 リバース=緑 ドロー2=赤 ドロー4=黄。数字は 0=紫、2 4 5 6 8=赤、1 3 7 9=青です。同じ数字が被ると、赤は黄、青は緑になります。0は紫のままです。</li>
+      <li>効果が働くと、画面の上に大きな文字が出ます。スキップ、リバース、ドローの枚数、桁ロック、打ち消しが対象です。</li>
+      <li><b>COMBO</b> は、同じ人が続けて出したカードの枚数です。1枚出し、積み、重ね出しのどれでも数えます。他の人がカードを出すと、数え直しになります。</li>
+    </ul></details>
+    <details class="rl"><summary>モード</summary><ul>
+      <li><b>レート</b> CPU戦で、結果がレートに反映されます。</li>
+      <li><b>フリー</b> 人数、初手枚数、ドロー制限、桁数、アシスト、0を含むカードを設定できます。</li>
+      <li><b>オンライン</b> 2人のP2P対戦で、CPUを足せます。桁数も選べます。レートには反映されません。</li>
+      <li><b>プライム</b> 4桁デッキと5桁デッキの全カード表です。</li>
+      <li>設定はモードごとに保存されます。</li>
     </ul></details>
     <details class="rl" data-modes="rate"><summary>レートの変動幅</summary>
       <div id="rateDeltaBox"></div>
-      <div style="font-size:11.5px; margin-top:4px;">変動幅は人数と桁数で決まります。4桁デッキは3桁デッキの約1.2倍です。</div>
+      <div style="font-size:11.5px; margin-top:4px;">変動幅は人数と桁数で決まります。4桁デッキは3桁デッキの約1.2倍、5桁デッキは約1.4倍です。</div>
     </details>
   </div>
 </div>
@@ -1023,15 +1054,22 @@
     <p class="settingTitle">2人対戦だけのルール設定</p>
     <div class="settingGroup">
       <label class="swRow" id="interruptRow"><span>リバース打ち消し</span><span class="sw"><input type="checkbox" id="interruptToggle" checked><span class="swSlider"></span></span></label>
-      <label class="swRow" id="bothCancelRow" style="display:none;"><span>リバース+ドロー2で打ち消した時、ドロー2も発動する</span><span class="sw"><input type="checkbox" id="bothCancelDrawToggle" checked><span class="swSlider"></span></span></label>
     </div>
   </div>
-  <div data-modes="rate free">
+  <div data-modes="rate free online">
     <p class="settingTitle">カードの桁数</p>
     <div class="cpu-select" id="digitSelect" style="margin-bottom:14px;">
       <div class="cpu-btn selected" data-d="3"><span class="mono">3</span>桁<span class="cpuSub"><span class="mono">107</span>枚</span></div>
       <div class="cpu-btn" data-d="4"><span class="mono">4</span>桁<span class="cpuSub"><span class="mono">443</span>枚</span></div>
-      <div class="cpu-btn" data-d="5" id="digit5Btn" hidden><span class="mono">5</span>桁<span class="cpuSub"><span class="mono">1552</span>枚</span></div>
+      <div class="cpu-btn" data-d="5" id="digit5Btn"><span class="mono">5</span>桁<span class="cpuSub"><span class="mono">1552</span>枚</span></div>
+    </div>
+  </div>
+  <div data-modes="online">
+    <p class="settingTitle">CPUの追加</p>
+    <div class="cpu-select" id="onlineCpuSelect" style="margin-bottom:14px;">
+      <div class="cpu-btn selected" data-n="0">CPUなし<span class="cpuSub"><span class="mono">2</span>人対戦</span></div>
+      <div class="cpu-btn" data-n="1">CPU<span class="cpuX">+1</span><span class="cpuSub"><span class="mono">3</span>人対戦</span></div>
+      <div class="cpu-btn" data-n="2">CPU<span class="cpuX">+2</span><span class="cpuSub"><span class="mono">4</span>人対戦</span></div>
     </div>
   </div>
   <div data-modes="rate">
@@ -1169,12 +1207,7 @@
     <p id="onlineStatus" style="font-size:12.5px; color:var(--ink-dim); margin-top:8px; min-height:1.4em;"></p>
 
     <div id="onlineLobbyBox" style="display:none; margin-top:14px; padding-top:14px; border-top:1px solid rgba(255,255,255,0.08);">
-      <p style="font-size:12.5px;color:var(--ink-dim);margin-bottom:8px;">対戦の準備(ホストのみ設定できます)</p>
-      <div class="cpu-select" id="onlineCpuSelect" style="max-width:280px; margin:0 auto 10px;">
-        <div class="cpu-btn selected" data-n="0">CPUなし<span class="cpuSub"><span class="mono">2</span>人対戦</span></div>
-        <div class="cpu-btn" data-n="1">CPU<span class="cpuX">+1</span><span class="cpuSub"><span class="mono">3</span>人対戦</span></div>
-        <div class="cpu-btn" data-n="2">CPU<span class="cpuX">+2</span><span class="cpuSub"><span class="mono">4</span>人対戦</span></div>
-      </div>
+      <p style="font-size:12.5px;color:var(--ink-dim);margin-bottom:8px;">上の設定で対戦を始めます。設定を変えられるのはホストだけです。</p>
       <button class="primary" id="onlineStartMatchBtn" style="font-size:14px; padding:10px 24px;">対戦を開始する</button>
     </div>
   </div>
@@ -1402,12 +1435,11 @@
   function deckValuesFor(W, withZero){ const all = deckValues(W); return withZero ? all : all.filter(n=> !String(n).includes('0')); }
   function deck4Values(){ return deckValues(4); }   // the prime-mode table
 
-  const EFFECT_LABEL = { skip:'スキップ', reverse:'リバース', draw2:'ドロー2', draw4:'ドロー4', both:'リバース+ドロー2' };
-  const EFFECT_TAG = { skip:'SKIP', reverse:'REV', draw2:'+2', draw4:'+4', both:'REV+2' };
-  // for multi-card combos, draw2 and "both" (reverse+draw2) count as the same
-  // kind of card and can be mixed together; everything else must match exactly.
-  const COMBO_GROUP = { plain:'plain', skip:'skip', reverse:'reverse', draw2:'draw2+', both:'draw2+', draw4:'draw4' };
-  const EFFECT_SORT_ORDER = { plain:0, skip:1, reverse:2, draw2:3, draw4:4, both:5 };
+  const EFFECT_LABEL = { skip:'スキップ', reverse:'リバース', draw2:'ドロー2', draw4:'ドロー4' };
+  const EFFECT_TAG = { skip:'SKIP', reverse:'REV', draw2:'+2', draw4:'+4' };
+  // for multi-card combos only cards of the same kind can be put together
+  const COMBO_GROUP = { plain:'plain', skip:'skip', reverse:'reverse', draw2:'draw2', draw4:'draw4' };
+  const EFFECT_SORT_ORDER = { plain:0, skip:1, reverse:2, draw2:3, draw4:4 };
   function sortHand(hand){
     hand.sort((a,b)=> (EFFECT_SORT_ORDER[a.effect]-EFFECT_SORT_ORDER[b.effect]) || (a.value-b.value));
   }
@@ -1416,17 +1448,16 @@
     skip:'<div class="strip strip-skip">SKIP</div>',
     reverse:'<div class="strip strip-reverse">REV</div>',
     draw2:'<div class="strip strip-draw2">+2</div>',
-    draw4:'<div class="strip strip-draw4">+4</div>',
-    both:'<div class="strip strip-both">REV+2</div>'
+    draw4:'<div class="strip strip-draw4">+4</div>'
   };
-  const DRAW_AMOUNT = { draw2:2, draw4:4, both:2 };
-  const HAS_REVERSE = { reverse:true, both:true };
-  const IS_STACK_TYPE = t => t==='draw2' || t==='draw4' || t==='both';
+  const DRAW_AMOUNT = { draw2:2, draw4:4 };
+  const HAS_REVERSE = { reverse:true };
+  const IS_STACK_TYPE = t => t==='draw2' || t==='draw4';
   // stacking strength: a bigger draw can only be answered by the same or a bigger
-  // draw (+4 only by +4); draw2 and "both" are always equal strength.
+  // draw (+4 only by +4).
   function stackLevel(effect){
     if(effect==='draw4') return 4;
-    return 2; // draw2 and both
+    return 2; // draw2
   }
 
   function buildDeck(){
@@ -1454,7 +1485,7 @@
     const mode = opts.mode || (onlineGuestName ? 'online' : 'rate');
     const seats = 1 + (onlineGuestName ? 1 : 0) + numCpu;
     // keep the starting hands within what the 168-card deck can supply
-    const gameWidth = (opts.digits===5 && mode==='free') ? 5 : (opts.digits===4 || opts.digits===5) ? 4 : 3;   // 5 digits: free mode only for now
+    const gameWidth = [3,4,5].includes(opts.digits) ? opts.digits : 3;
     ZERO_ON = mode==='free' ? opts.zero!==false : true;
     const deckSize = deckValuesFor(gameWidth, ZERO_ON).length;
     const handSize = Math.max(1, Math.min(opts.handSize || 7, Math.floor((deckSize - 6)/seats)));
@@ -1473,11 +1504,10 @@
     state = {
       players, drawPile: deck, discardPile: [start],
       current: 0, direction: 1, over:false,
-      turnDrawn:false, pendingDraw:0, pendingLevel:0, skipInterrupt:null, pendingCancelBonus:null,
+      turnDrawn:false, pendingDraw:0, pendingLevel:0, skipInterrupt:null, streak:null,
       interruptEnabled: document.getElementById('interruptToggle').checked,
-      bothCancelDrawEnabled: document.getElementById('bothCancelDrawToggle').checked,
       multiDumpEnabled: document.getElementById('multiDumpToggle').checked,
-      mode, unlimitedDraw: !!opts.unlimitedDraw, noAssist: !!opts.noAssist, played: [], digitCeiling: DECK_WIDTH,
+      mode, unlimitedDraw: !!opts.unlimitedDraw, noAssist: !!opts.noAssist, played: [], digitCeiling: LOCK_ON ? realDigits(start) : DECK_WIDTH,
       multiSelection: [],
       multiMode: false
     };
@@ -1504,9 +1534,7 @@
   }
   function ceilingAfterPlay(card, ceiling){
     if(!lockEnabled()) return ceiling;
-    const L = realDigits(card);
-    if(L<DECK_WIDTH) return Math.min(ceiling, L);
-    return card.effect==='plain' ? DECK_WIDTH : ceiling;
+    return realDigits(card);   // no memory: the card on top sets the ceiling (it used to be the lowest of all the short cards played since the last full-width plain card, which looked random)
   }
   // log "LOCK（n）" whenever the ceiling changes
   function applyLock(card){
@@ -1535,6 +1563,13 @@
   function requiredMatchCount(){
     return anyoneAtUno() ? 1 : 2;
   }
+  // all modes: the more digits the first card shares with the card on the table, the fewer digits the dumped cards have to share with each other
+  function requiredFor(first, top){
+    const base = requiredMatchCount();
+    if(base<2) return base;
+    const m = first.digits.reduce((t, d, i)=> t + (d===top.digits[i] ? 1 : 0), 0);
+    return m>=2 ? 1 : 2;
+  }
   function canStackOnPending(card){
     return IS_STACK_TYPE(card.effect) && stackLevel(card.effect) >= state.pendingLevel;
   }
@@ -1551,31 +1586,39 @@
   function sharedPositions(cards){
     return cards[0].digits.map((_,i)=>i).filter(i=> cards.every(c=> c.digits[i]===cards[0].digits[i]));
   }
-  // given the cards already selected, can `card` be added? returns the resulting
-  // shared-position set if so (non-empty array = yes), or [] if not addable.
-  function comboPositionsIfAdded(card, selected, top){
-    const group = selected.length>0 ? COMBO_GROUP[selected[0].effect] : COMBO_GROUP[card.effect];
-    if(COMBO_GROUP[card.effect]!==group) return [];
-    // while a draw is pending, only cards strong enough to stack can be dumped,
-    // and (as with single stacking) they don't need to match the top card
+  // the cards are put down in the best order the game can find, so they can be tapped in any order
+  function comboOrderOk(order, top){
     const stacking = state.pendingDraw>0;
-    if(stacking && !canStackOnPending(card)) return [];
-    const candidate = selected.concat([card]);
+    const kind = COMBO_GROUP[order[0].effect];
+    if(order.some(c=> COMBO_GROUP[c.effect]!==kind)) return false;
+    // while a draw is pending, only cards strong enough to stack can be dumped and they don't need to match the top card
+    if(stacking && order.some(c=> !canStackOnPending(c))) return false;
     if(!stacking && lockEnabled()){
-      // cards are played in this order, each one lowering (or lifting) the ceiling for the next
+      // each card lowers (or lifts) the ceiling for the next one
       let c = ceilingNow();
-      for(const x of candidate){
-        if(blockedByLock(x, c)) return [];
-        c = ceilingAfterPlay(x, c);
-      }
+      for(const x of order){ if(blockedByLock(x, c)) return false; c = ceilingAfterPlay(x, c); }
     }
-    const shared = sharedPositions(candidate);
-    if(shared.length < requiredMatchCount()) return [];
+    const shared = sharedPositions(order);
+    const need = stacking ? requiredMatchCount() : requiredFor(order[0], top);
+    if(shared.length < need) return false;
     if(!stacking){
-      const matchesTop = shared.some(i=> candidate[0].digits[i]===top.digits[i]);
-      if(!matchesTop) return [];
+      const ok = need>=2 ? shared.some(i=> order[0].digits[i]===top.digits[i]) : matches(order[0], top);
+      if(!ok) return false;
     }
-    return shared;
+    return true;
+  }
+  // a valid play order for these cards, or null. The lock-friendly order is tried first, then every card as the first one.
+  function comboOrder(cards, top){
+    const plain = cards[0].effect==='plain';
+    const lockSorted = arr=> lockEnabled() ? arr.slice().sort((a,b)=> plain ? realDigits(a)-realDigits(b) : realDigits(b)-realDigits(a)) : arr.slice();
+    const tries = [lockSorted(cards)];
+    cards.forEach(f=> tries.push([f].concat(lockSorted(cards.filter(c=> c!==f)))));
+    return tries.find(o=> comboOrderOk(o, top)) || null;
+  }
+  // can `card` be added to the cards already selected? returns the shared positions if so, [] if not
+  function comboPositionsIfAdded(card, selected, top){
+    const cand = selected.concat([card]);
+    return comboOrder(cand, top) ? sharedPositions(cand) : [];
   }
   // whether `card` could be the start of SOME valid 2+ card combo in this hand
   // (used to avoid highlighting cards that would be a dead-end pick)
@@ -1601,13 +1644,42 @@
   let fxSeq = 0, fxSeen = 0;
   function fxShow(ev){
     const box = document.getElementById('fxStack'); if(!box) return;
-    const el = document.createElement('div');
     const lv = Math.max(1, ev.level||1);
-    el.className = 'fxToast fxk-' + ev.kind + (lv>=5 ? ' lv3' : lv>=3 ? ' lv2' : '');
-    el.innerHTML = `<span class="fxMain">${monoDigits(escHtml(ev.main))}</span>` + (ev.sub ? `<span class="fxSub">${monoDigits(escHtml(ev.sub))}</span>` : '');
+    // up to 4 cues pile up: the newest is stamped in front, the older ones sit behind it, a little higher, smaller and fainter
+    const live = Array.prototype.filter.call(box.children, k=> !k.classList.contains('out'));
+    while(live.length>=4) fxOutEl(live.shift());
+    const vw = window.innerWidth || 390;
+    const grow = lv>=5 ? 1.3 : lv>=3 ? 1.14 : 1;
+    const size = Math.round(Math.max(26, Math.min(Math.min(vw*0.125, 54)*grow, (vw*0.9) / (Math.max(ev.main.length, 4)*0.66))));
+    const el = document.createElement('div');
+    el.className = 'fxToast fxk-' + ev.kind + (lv>=5 ? ' lv3' : '');
+    el.dataset.fs = size;
+    el.innerHTML = `<div class="fxPop"><span class="fxMain">${monoDigits(escHtml(ev.main))}</span>` + (ev.sub ? `<span class="fxSub">${monoDigits(escHtml(ev.sub))}</span>` : '') + '</div>';
     box.appendChild(el);
-    while(box.children.length > 4) box.removeChild(box.firstChild);
-    setTimeout(()=>{ el.classList.add('out'); setTimeout(()=> el.remove(), 280); }, 1500 + Math.min(lv, 6)*100);
+    fxLayout(box);
+    setTimeout(()=> fxOutEl(el), 1500 + Math.min(lv, 6)*100);
+  }
+  function fxLayout(box){
+    const live = Array.prototype.filter.call(box.children, k=> !k.classList.contains('out'));
+    live.forEach((el, i)=>{
+      const r = live.length - 1 - i;   // 0 = the newest
+      el.style.cssText = `--fs:${el.dataset.fs}px; --ox:${r ? (r%2 ? 1 : -1) * r * 9 : 0}px; --oy:${-r*19}px; --sc:${[1, 0.86, 0.74, 0.64][Math.min(r,3)]}; --op:${[1, 0.8, 0.6, 0.45][Math.min(r,3)]}; --rot:${[-3, 2.5, -4, 3][Math.min(r,3)]}deg;`;
+      el.classList.toggle('old', r>0);
+    });
+    document.body.classList.toggle('fxOn', live.length>0);   // the title behind the letters fades while they are up
+  }
+  function fxOutEl(el){
+    if(el.classList.contains('out')) return;
+    el.classList.add('out');
+    const box = el.parentNode;
+    if(box) fxLayout(box);
+    setTimeout(()=> el.remove(), 260);
+  }
+  // COMBO: cards put down one after another by the same player, however they were played; passes, skips and draws by the others do not break it
+  function fxStreak(idx, n){
+    const total = (state.streak && state.streak.idx===idx ? state.streak.n : 0) + n;
+    state.streak = { idx, n: total };
+    if(total>=2) fxCue('combo', 'COMBO ×' + total, state.players[idx].name, total);
   }
   function fxCue(kind, main, sub, level){
     const ev = { id:++fxSeq, kind, main, sub:sub||'', level:level||1 };
@@ -1617,6 +1689,7 @@
   // the next move cuts the cues of the last one short (the cut-off itself is quick)
   function fxFlush(){
     document.querySelectorAll('#fxStack .fxToast:not(.out)').forEach(el=>{ el.classList.add('out','fast'); setTimeout(()=> el.remove(), 160); });
+    document.body.classList.remove('fxOn');
   }
   let unoToastTimer = null;
   function announceUno(name){
@@ -1640,7 +1713,7 @@
     if(isWin){
       body += ` <span class="fx fx-win">（WIN）</span>`;
     } else if(card.effect!=='plain'){
-      body += ` <span class="fx fx-${card.effect==='both'?'reverse':card.effect}">（${EFFECT_TAG[card.effect]}）</span>`;
+      body += ` <span class="fx fx-${card.effect}">（${EFFECT_TAG[card.effect]}）</span>`;
     }
     logRow(prefix, body);
   }
@@ -1665,7 +1738,7 @@
     if(isWin){
       body += ` <span class="fx fx-win">（WIN）</span>`;
     } else if(cards[0].effect!=='plain'){
-      body += ` <span class="fx fx-${cards[0].effect==='both'?'reverse':cards[0].effect}">（${comboEffectTag(cards)}）</span>`;
+      body += ` <span class="fx fx-${cards[0].effect}">（${comboEffectTag(cards)}）</span>`;
     }
     logRow(prefix, body);
   }
@@ -1741,6 +1814,7 @@
   }
   function playCard(playerIdx, card){
     markPlayFrom(playerIdx);
+    fxStreak(playerIdx, 1);
     const p = state.players[playerIdx];
     p.hand = p.hand.filter(c=>c.id!==card.id);
     pushDiscard(card);
@@ -1770,7 +1844,7 @@
       if(isDuel){
         const skipped = nextIndexFrom(playerIdx);
         const victim = state.players[skipped];
-        const hasCancelCard = state.interruptEnabled && victim.hand.some(c=>c.effect==='reverse'||c.effect==='both');
+        const hasCancelCard = state.interruptEnabled && victim.hand.some(c=>c.effect==='reverse');
         if(hasCancelCard){
           offerSkipInterrupt(skipped, playerIdx);
           return;
@@ -1804,7 +1878,7 @@
         // smaller hands have less to lose from spending a card, so interrupt more eagerly
         const chance = victim.hand.length<=4 ? 0.75 : victim.hand.length>=9 ? 0.3 : 0.5;
         if(Math.random() < chance){
-          const options = victim.hand.filter(c=>c.effect==='reverse'||c.effect==='both');
+          const options = victim.hand.filter(c=>c.effect==='reverse');
           interruptSkip(victimIdx, options[Math.floor(Math.random()*options.length)]);
         } else {
           acceptSkip(victimIdx);
@@ -1814,27 +1888,19 @@
   }
   function interruptSkip(victimIdx, chosenCard){
     const victim = state.players[victimIdx];
-    const originIdx = state.skipInterrupt ? state.skipInterrupt.origin : null;
     let spent = null;
-    if(chosenCard && (chosenCard.effect==='reverse'||chosenCard.effect==='both')){
+    if(chosenCard && chosenCard.effect==='reverse'){
       victim.hand = victim.hand.filter(c=>c.id!==chosenCard.id);
       spent = chosenCard;
     } else {
-      const idx = victim.hand.findIndex(c=>c.effect==='reverse'||c.effect==='both');
+      const idx = victim.hand.findIndex(c=>c.effect==='reverse');
       if(idx>=0) spent = victim.hand.splice(idx,1)[0];
     }
     if(spent){
       pushDiscard(spent);
-      const bonusDraw = spent.effect==='both' && state.bothCancelDrawEnabled;
-      const tag = bonusDraw ? 'CANCEL+2' : 'CANCEL';
+      const tag = 'CANCEL';
       logRow(`${victim.name}（${victim.hand.length}）：`, `<b class="logNum">${pad3(spent.value)}</b> <span class="fx fx-reverse">（${tag}）</span>`);
       fxCue('reverse', tag, victim.name, 1);
-      if(bonusDraw && originIdx!=null){
-        // don't touch pendingDraw yet -- victim is about to keep their own turn,
-        // and pendingDraw is always resolved against whoever state.current is.
-        // queue it so it activates once it's actually the attacker's turn.
-        state.pendingCancelBonus = { targetIdx: originIdx, amount: 2 };
-      }
     }
     state.skipInterrupt = null;
     state.current = victimIdx;
@@ -1854,6 +1920,7 @@
 
   function stackCard(playerIdx, card){
     markPlayFrom(playerIdx);
+    fxStreak(playerIdx, 1);
     const p = state.players[playerIdx];
     p.hand = p.hand.filter(c=>c.id!==card.id);
     pushDiscard(card);
@@ -1917,16 +1984,11 @@
     const hand = state.players[playerIdx].hand;
     if(!cards.every(c=> hand.includes(c))) return false;
     const top = state.discardPile[state.discardPile.length-1];
-    const sel = [];
-    for(const c of cards){
-      if(comboPositionsIfAdded(c, sel, top).length===0) return false;
-      sel.push(c);
-    }
-    return true;
+    return !!comboOrder(cards, top);
   }
   function playMultiDump(playerIdx, selectedCards){
     const p = state.players[playerIdx];
-    const selected = selectedCards;
+    let selected = selectedCards;
     if(!selected || selected.length===0) return false;
     const remaining = p.hand.filter(c=> !selected.includes(c));
     if(remaining.length===0){
@@ -1934,13 +1996,14 @@
       return false;
     }
     if(!isValidCombo(playerIdx, selected)) return false;
+    selected = comboOrder(selected, state.discardPile[state.discardPile.length-1]);   // the order they are actually put down in
     markPlayFrom(playerIdx);
     p.hand = remaining;
     selected.forEach(c=> pushDiscard(c));
     const lockBefore = ceilingNow();
     selected.forEach(c=>{ if(lockEnabled()) state.digitCeiling = ceilingAfterPlay(c, ceilingNow()); });
     logMultiPlay(p.name, selected, p.hand.length);
-    if(selected.length>=2) fxCue('combo', 'COMBO ×' + selected.length, p.name, selected.length);
+    fxStreak(playerIdx, selected.length);
     if(lockEnabled() && state.digitCeiling!==lockBefore){ logSystem('LOCK', String(state.digitCeiling)); fxLockCue(); }
     if(playerIdx===mySeat){ state.multiMode = false; state.multiSelection = []; }
 
@@ -1984,7 +2047,7 @@
       if(isDuel){
         const from = nextIndexFrom(playerIdx);
         const victim = state.players[from];
-        const hasCancelCard = state.interruptEnabled && victim.hand.some(c=>c.effect==='reverse'||c.effect==='both');
+        const hasCancelCard = state.interruptEnabled && victim.hand.some(c=>c.effect==='reverse');
         if(hasCancelCard){ offerSkipInterrupt(from, playerIdx); return true; }
         logSystem('SKIP', victim.name);
         fxCue('skip', 'SKIP', victim.name, 1);
@@ -1996,8 +2059,7 @@
       state.current = nextIndexFrom(playerIdx);
       return false;
     }
-    // draw2 / draw4 / both: draws add up, each "both" card also flips the direction
-    // (the reverse part is dropped in a duel, same as a single card)
+    // draw2 / draw4: the draws add up
     const totalDraw = selected.reduce((t,c)=> t + DRAW_AMOUNT[c.effect], 0);
     const reverseCount = selected.filter(c=> HAS_REVERSE[c.effect]).length;
     if(!isDuel) for(let i=0;i<reverseCount;i++) state.direction *= -1;
@@ -2010,45 +2072,32 @@
   }
 
   // find the largest same-group combo a CPU could dump at once, respecting the
-  // "keep 1 card" rule (draw2/both share a group and can be mixed together)
+  // "keep 1 card" rule (cards of the same kind only)
+  // the CPU's search for a dump: try every group of one-or-two shared positions and keep the longest one the real validity check accepts
   function findMultiDumpGroup(hand, top){
-    const k = requiredMatchCount();
-    const W = DECK_WIDTH;
-    const positionSets = [];
-    for(let i=0;i<W;i++){
-      if(k<2) positionSets.push([i]);
-      else for(let j=i+1;j<W;j++) positionSets.push([i,j]);
-    }
+    const W = DECK_WIDTH, stacking = state.pendingDraw>0;
+    const sets = [];
+    for(let i=0;i<W;i++){ sets.push([i]); for(let j=i+1;j<W;j++) sets.push([i,j]); }
     let best = null;
-    const stacking = state.pendingDraw>0;
-    const groups = [...new Set(hand.map(c=>COMBO_GROUP[c.effect]))];
-    groups.forEach(comboGroup=>{
-      positionSets.forEach(posSet=>{
+    [...new Set(hand.map(c=> COMBO_GROUP[c.effect]))].forEach(cg=>{
+      sets.forEach(ps=>{
         const buckets = {};
         hand.forEach(c=>{
-          if(COMBO_GROUP[c.effect]!==comboGroup) return;
+          if(COMBO_GROUP[c.effect]!==cg) return;
           if(stacking && !canStackOnPending(c)) return;
           if(!stacking && blockedByLock(c, ceilingNow())) return;
-          const key = posSet.map(i=>c.digits[i]).join(',');
+          const key = ps.map(i=> c.digits[i]).join(',');
           (buckets[key] = buckets[key] || []).push(c);
         });
-        Object.values(buckets).forEach(group=>{
-          if(group.length<2) return;
-          const matchesTop = stacking || posSet.some(i=> group[0].digits[i]===top.digits[i]);
-          if(!matchesTop) return;
-          const remaining = hand.filter(c=> !group.includes(c));
-          const okLeftover = remaining.length>0;
-          if(!okLeftover) return;
-          if(!best || group.length>best.length) best = group;
+        Object.values(buckets).forEach(g=>{
+          if(g.length<2 || hand.length-g.length<1) return;
+          const ordered = g.slice();
+          if(lockEnabled()) ordered.sort((a,b)=> ordered[0].effect==='plain' ? realDigits(a)-realDigits(b) : realDigits(b)-realDigits(a));
+          if(!isValidCombo(state.current, ordered)) return;
+          if(!best || ordered.length>best.length) best = ordered;
         });
       });
     });
-    if(best && lockEnabled()){
-      // special cards: biggest first (each short card lowers the ceiling);
-      // plain cards: smallest first so a 4-digit plain card comes last and lifts the lock
-      best = best.slice().sort((a,b)=> best[0].effect==='plain'
-        ? realDigits(a)-realDigits(b) : realDigits(b)-realDigits(a));
-    }
     return best;
   }
 
@@ -2112,7 +2161,7 @@
         }
         const stackOpt = pl.hand.filter(c=> canPlay(c, pl.hand, null));
         if(stackOpt.length>0){
-          // prefer the strongest stack card available (draw4 > both > draw2) to
+          // prefer the strongest stack card available (draw4 > draw2) to
           // pressure the human rather than always matching minimally
           const byLevel = stackOpt.slice().sort((a,b)=> stackLevel(b.effect)-stackLevel(a.effect));
           stackCard(idx, byLevel[0]);
@@ -2184,16 +2233,16 @@
   // changes how long a game is, so the swing follows it (CPU-only simulations, game length ~ number
   // of decisions, square-root damped): 4-digit deck 0.85x, digit lock 1.2x (so 4-digit + lock = 1.0x).
   const RATE_BASE = { win:{ 1:15, 2:20, 3:25 }, loss:{ 1:10, 2:13, 3:16 } };   // by number of CPU opponents (3-digit deck)
-  const RATE_FACTOR = { 3:1.0, 4:1.2 };                                           // 4-digit deck swings more
+  const RATE_FACTOR = { 3:1.0, 4:1.2, 5:1.4 };                                    // the bigger the deck, the more the points swing
   function rateDelta(won, cpu, digits){
-    const f = RATE_FACTOR[digits===4 ? 4 : 3];
+    const f = RATE_FACTOR[[4,5].includes(digits) ? digits : 3];
     const base = (won ? RATE_BASE.win : RATE_BASE.loss)[cpu] || (won ? 15 : 10);
     return Math.round(base * f);
   }
   function renderRateTable(){
     const box = document.getElementById('rateDeltaBox');
     if(!box) return;
-    const cols = [[3,'3桁'],[4,'4桁']];
+    const cols = [[3,'3桁'],[4,'4桁'],[5,'5桁']];
     let h = '<table><tr style="border-bottom:1px solid rgba(255,255,255,0.12);"><th style="text-align:left;">人数</th>' +
       cols.map(c=> `<th style="text-align:center;">${c[1]}</th>`).join('') + '</tr>';
     [1,2,3].forEach(n=>{
@@ -2381,13 +2430,6 @@
     if(!state) return;
     document.getElementById('gameXBtn').style.display = (state.mode==='free' && !state.over && !onlineGameActive) ? 'block' : 'none';
 
-    if(state.pendingCancelBonus && state.current===state.pendingCancelBonus.targetIdx && !state.skipInterrupt){
-      // added on top of any draw already pending (the bonus used to wait for pendingDraw===0 and then fire at a random later turn)
-      state.pendingDraw += state.pendingCancelBonus.amount;
-      state.pendingLevel = Math.max(state.pendingLevel, stackLevel('draw2'));
-      state.pendingCancelBonus = null;
-    }
-
     document.getElementById('drawCount').textContent = state.drawPile.length;
     const lockEl = document.getElementById('lockBadge');
     if(lockEnabled()){
@@ -2424,15 +2466,16 @@
 
     if(iAmVictim){
       human.hand.forEach(card=>{
-        const isCancelCard = card.effect==='reverse' || card.effect==='both';
+        const isCancelCard = card.effect==='reverse';
         const el = cardEl(card, { playable:isCancelCard, multiFaded:!isCancelCard, stackable:isCancelCard });
         if(isCancelCard) el.addEventListener('click', ()=> requestInterrupt(card));
         handWrap.appendChild(el);
       });
     } else if(state.noAssist){
       human.hand.forEach(card=>{
-        const el = cardEl(card, { playable: myTurn, multiSelected: state.multiSelection.includes(card) });
-        attachHandDrag(el, card, myTurn);
+        const grey = myTurn && state.pendingDraw>0 && !IS_STACK_TYPE(card.effect);   // only draw cards can answer a draw (draw2 vs draw4 strength stays unmarked)
+        const el = cardEl(card, { playable: myTurn && !grey, disabled: grey, multiSelected: state.multiSelection.includes(card) });
+        attachHandDrag(el, card, myTurn && !grey);
         handWrap.appendChild(el);
       });
     } else if(state.multiMode){
@@ -2562,7 +2605,7 @@
       current: state.current, direction: state.direction, over: state.over,
       turnDrawn: state.turnDrawn, pendingDraw: state.pendingDraw, pendingLevel: state.pendingLevel,
       skipInterrupt: state.skipInterrupt,
-      interruptEnabled: state.interruptEnabled, bothCancelDrawEnabled: state.bothCancelDrawEnabled,
+      interruptEnabled: state.interruptEnabled,
       multiDumpEnabled: state.multiDumpEnabled,
       lockOn: LOCK_ON, digitCeiling: state.digitCeiling, deckWidth: DECK_WIDTH,
       fx: (state.fxEvents||[]).slice(-6)
@@ -2592,7 +2635,7 @@
       current: view.current, direction: view.direction, over: view.over,
       turnDrawn: view.turnDrawn, pendingDraw: view.pendingDraw, pendingLevel: view.pendingLevel,
       skipInterrupt: view.skipInterrupt,
-      interruptEnabled: view.interruptEnabled, bothCancelDrawEnabled: view.bothCancelDrawEnabled,
+      interruptEnabled: view.interruptEnabled,
       multiDumpEnabled: view.multiDumpEnabled,
       multiSelection: [], multiMode: false,
       digitCeiling: view.digitCeiling
@@ -2715,13 +2758,13 @@
     resultTweetBtn.style.display = 'none';
     lastResult = null;
     if(window.PrimeUnoRating && !onlineGameActive && state.mode==='rate'){
-      const gameDigits = (lastGameCfg.opts && lastGameCfg.opts.digits===4) ? 4 : 3;
+      const gameDigits = [4,5].includes(lastGameCfg.opts && lastGameCfg.opts.digits) ? lastGameCfg.opts.digits : 3;
       const swing = rateDelta(won, lastNumCpu, gameDigits);
       window.PrimeUnoRating.recordResult(won, swing).then(res=>{
         const sign = res.delta>=0 ? '+' : '';
         ratingText.innerHTML = `レート <span class="rateHighlight">${res.rating}</span> (${sign}${res.delta}, 最高 <span class="statNumber">${res.maxRating}</span>) ・ <span class="statNumber">${res.games}</span>戦 <span class="statNumber">${res.wins}</span>勝`;
         ratingText.style.display = 'block';
-        lastResult = { won, rating: res.rating, delta: res.delta, mode: (MODE_NAME[lastNumCpu] || '対戦') + (gameDigits===4 ? '(4桁)' : '') };
+        lastResult = { won, rating: res.rating, delta: res.delta, mode: (MODE_NAME[lastNumCpu] || '対戦') + (gameDigits>3 ? '(' + gameDigits + '桁)' : '') };
         resultTweetBtn.style.display = 'inline-block';
       }).catch(()=>{});
     }
@@ -2811,9 +2854,9 @@
     prime: '4桁・5桁デッキの全カードを一覧で見られます'
   };
   const SETTING_DEFAULTS = {
-    rate:   { multiDump:true, interrupt:true, bothCancel:true, cpu:2, digits:3, lock:true },
-    free:   { multiDump:true, interrupt:true, bothCancel:true, players:3, handSize:7, unlimitedDraw:false, noAssist:false, digits:3, lock:true, zero:true },
-    online: { multiDump:true, interrupt:true, bothCancel:true, cpu:0, lock:true },
+    rate:   { multiDump:true, interrupt:true, cpu:2, digits:3, lock:true },
+    free:   { multiDump:true, interrupt:true, players:3, handSize:7, unlimitedDraw:false, noAssist:false, digits:3, lock:true, zero:true },
+    online: { multiDump:true, interrupt:true, cpu:0, digits:3, lock:true },
     prime:  { deck:4, effects:[], digitsSel:[], order:'asc', query:'', brush:'', marks:{}, markFilter:{} }
   };
   function loadModeSettings(){
@@ -2822,8 +2865,7 @@
     // first run after the modes were added: carry the old single set of settings into every mode
     const legacy = {
       multiDump: localStorage.getItem('primeUnoMultiDump') !== '0',
-      interrupt: localStorage.getItem('primeUnoInterrupt') !== '0',
-      bothCancel: localStorage.getItem('primeUnoBothCancelDraw') !== '0'
+      interrupt: localStorage.getItem('primeUnoInterrupt') !== '0'
     };
     const legacyCpu = Math.min(3, Math.max(1, Number(localStorage.getItem('primeUnoNumCpu')) || 2));
     const out = {};
@@ -2843,7 +2885,38 @@
   let currentMode = MODE_ORDER.includes(localStorage.getItem('primeUnoMode')) ? localStorage.getItem('primeUnoMode') : 'rate';
   let lastNumCpu = 2;
   function saveModeSettings(){
+    // while a guest follows the host, the host's choices must not end up in the guest's own saved settings
+    const keep = onlineGuestBackup ? modeSettings.online : null;
+    if(keep) modeSettings.online = onlineGuestBackup;
     try{ localStorage.setItem('primeUnoModeSettings', JSON.stringify(modeSettings)); }catch(e){}
+    if(keep) modeSettings.online = keep;
+  }
+  // ---- online settings: everyone sees them from the start; once connected only the host can change them, and the guest follows ----
+  let onlineGuestBackup = null;
+  function onlineSettingsPayload(){
+    const o = modeSettings.online;
+    return { multiDump:!!o.multiDump, interrupt:!!o.interrupt, lock:o.lock!==false, digits:[3,4,5].includes(o.digits) ? o.digits : 3, cpu:Math.max(0, Math.min(2, o.cpu|0)) };
+  }
+  function sendOnlineSettings(){
+    if(isOnlineHost && onlineConn && onlineRoomState==='connected'){ try{ onlineConn.send({ type:'settings', s:onlineSettingsPayload() }); }catch(e){} }
+  }
+  function setOnlineSettingsLocked(locked){
+    ['multiDumpToggle','lockToggle','interruptToggle'].forEach(id=>{
+      const el = document.getElementById(id); el.disabled = locked;
+      const row = el.closest('.swRow'); if(row) row.classList.toggle('disabled', locked);
+    });
+    ['digitSelect','onlineCpuSelect'].forEach(id=> document.getElementById(id).classList.toggle('setLocked', locked));
+  }
+  function applyOnlineSettingsFromHost(s){
+    if(!onlineGuestBackup) onlineGuestBackup = JSON.parse(JSON.stringify(modeSettings.online));
+    Object.assign(modeSettings.online, s);
+    setOnlineSettingsLocked(true);
+    if(currentMode==='online') applyMode('online');
+  }
+  function releaseOnlineSettings(){
+    if(onlineGuestBackup){ modeSettings.online = onlineGuestBackup; onlineGuestBackup = null; }
+    setOnlineSettingsLocked(false);
+    if(currentMode==='online') applyMode('online');
   }
   function maxHandFor(players){
     const total = deckValuesFor([3,4,5].includes(modeSettings.free.digits) ? modeSettings.free.digits : 3, modeSettings.free.zero!==false).length - 6;
@@ -2866,19 +2939,12 @@
   // the card-digit choice (3 / 4) exists in rate and free mode
   function syncDigitSelect(){
     const st = modeSettings[currentMode];
-    const can5 = currentMode==='free';
-    st.digits = (st.digits===5 && can5) ? 5 : st.digits===4 ? 4 : 3;
-    document.getElementById('digit5Btn').hidden = !can5;
+    st.digits = [4,5].includes(st.digits) ? st.digits : 3;
     document.querySelectorAll('#digitSelect .cpu-btn').forEach(b=>{
       const n = deckValuesFor(Number(b.dataset.d), currentMode==='free' ? st.zero!==false : true).length;
       const m = b.querySelector('.cpuSub .mono'); if(m) m.textContent = n;
     });
     document.querySelectorAll('#digitSelect .cpu-btn').forEach(b=> b.classList.toggle('selected', Number(b.dataset.d)===st.digits));
-  }
-  function syncBothCancelRow(){
-    const on = document.getElementById('interruptToggle').checked;
-    document.getElementById('bothCancelDrawToggle').disabled = !on;
-    document.getElementById('bothCancelRow').classList.toggle('disabled', !on);
   }
   function selectCpuButtons(sel, n){
     document.querySelectorAll(sel+' .cpu-btn').forEach(b=> b.classList.toggle('selected', Number(b.dataset.n)===n));
@@ -2899,12 +2965,10 @@
     if(mode==='prime'){ renderPrimeTable(true); return; }
     document.getElementById('multiDumpToggle').checked = !!st.multiDump;
     document.getElementById('interruptToggle').checked = !!st.interrupt;
-    document.getElementById('bothCancelDrawToggle').checked = !!st.bothCancel;
     document.getElementById('lockToggle').checked = st.lock!==false;
-    syncBothCancelRow();
     if(mode==='rate'){ selectCpuButtons('#cpuSelect', st.cpu); syncDigitSelect(); }
     if(mode==='free'){ refreshFreeUi(); syncDigitSelect(); }
-    if(mode==='online'){ onlineExtraCpu = st.cpu; selectCpuButtons('#onlineCpuSelect', st.cpu); }
+    if(mode==='online'){ onlineExtraCpu = st.cpu; selectCpuButtons('#onlineCpuSelect', st.cpu); syncDigitSelect(); }
   }
   // ---- prime mode: browse every card of the 4-digit deck ----
   const PRIME_EFFECTS = [['all','すべて'],['plain','通常'],['draw2','ドロー2'],['draw4','ドロー4'],['skip','スキップ'],['reverse','リバース']];
@@ -3731,7 +3795,7 @@
       onlineExtraCpu = Number(btn.dataset.n);
       modeSettings.online.cpu = onlineExtraCpu;
       selectCpuButtons('#onlineCpuSelect', onlineExtraCpu);
-      saveModeSettings();
+      saveModeSettings(); sendOnlineSettings();
     });
   });
   document.querySelectorAll('#digitSelect .cpu-btn').forEach(btn=>{
@@ -3739,7 +3803,7 @@
       modeSettings[currentMode].digits = Number(btn.dataset.d);
       syncDigitSelect();
       if(currentMode==='free') refreshFreeUi();
-      saveModeSettings();
+      saveModeSettings(); if(currentMode==='online') sendOnlineSettings();
     });
   });
   document.querySelectorAll('.stepBtn').forEach(btn=>{
@@ -3758,17 +3822,13 @@
     modeSettings.free.unlimitedDraw = !e.target.checked; saveModeSettings();
   });
   document.getElementById('lockToggle').addEventListener('change', (e)=>{
-    modeSettings[currentMode].lock = e.target.checked; saveModeSettings();
+    modeSettings[currentMode].lock = e.target.checked; saveModeSettings(); if(currentMode==='online') sendOnlineSettings();
   });
   document.getElementById('multiDumpToggle').addEventListener('change', (e)=>{
-    modeSettings[currentMode].multiDump = e.target.checked; saveModeSettings();
+    modeSettings[currentMode].multiDump = e.target.checked; saveModeSettings(); if(currentMode==='online') sendOnlineSettings();
   });
   document.getElementById('interruptToggle').addEventListener('change', (e)=>{
-    modeSettings[currentMode].interrupt = e.target.checked; saveModeSettings();
-    syncBothCancelRow();
-  });
-  document.getElementById('bothCancelDrawToggle').addEventListener('change', (e)=>{
-    modeSettings[currentMode].bothCancel = e.target.checked; saveModeSettings();
+    modeSettings[currentMode].interrupt = e.target.checked; saveModeSettings(); if(currentMode==='online') sendOnlineSettings();
   });
 
   document.getElementById('onlineStartMatchBtn').addEventListener('click', ()=>{
@@ -3777,7 +3837,7 @@
     mySeat = 0;
     onlineGameActive = true;
     enterGameLayout();
-    newGame(onlineExtraCpu, pendingGuestName, { mode:'online', lock: modeSettings.online.lock!==false });
+    newGame(modeSettings.online.cpu|0, pendingGuestName, { mode:'online', digits: modeSettings.online.digits, lock: modeSettings.online.lock!==false });
   });
   document.getElementById('startBtn').addEventListener('click', ()=>{
     if(currentMode==='online') return;
@@ -4132,6 +4192,7 @@
     onlineRoomState = 'idle';
     pendingGuestName = null;
     document.getElementById('onlineLobbyBox').style.display = 'none';
+    releaseOnlineSettings();
     if(onlineGameActive || document.getElementById('winBox').classList.contains('show')){
       returnToStartScreen();
     }
@@ -4150,6 +4211,7 @@
     onlineConn.on('open', ()=>{
       onlineRoomState = 'connected';
       updateOnlineButtonsUI();
+      if(!isOnlineHost) setOnlineSettingsLocked(true);
       setOnlineStatus('接続しました。あいさつを送っています...');
       onlineConn.send({ type:'hello', name: myDisplayName() });
     });
@@ -4160,9 +4222,12 @@
           pendingGuestName = msg.name;
           setOnlineStatus(`${msg.name} さんと接続できました。対戦の準備をしてください。`);
           document.getElementById('onlineLobbyBox').style.display = 'block';
+          sendOnlineSettings();
         } else {
-          setOnlineStatus(`${msg.name} さんと接続できました。ホストの開始を待っています...`);
+          setOnlineStatus(`${msg.name} さんと接続できました。設定はホストに合わせます。ホストの開始を待っています...`);
         }
+      } else if(msg.type==='settings' && !isOnlineHost){
+        applyOnlineSettingsFromHost(msg.s || {});
       } else if(msg.type==='matchStart' && !isOnlineHost){
         mySeat = 1;
         fxSeen = 0;
