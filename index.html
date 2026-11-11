@@ -215,9 +215,9 @@
   body.deck4 .card .digits{ font-size:var(--ds4); }
   body.deck4 .card .digits span{ padding:0; }
   /* 5-digit cards (free mode only) */
-  body.deck5 .card .digits{ font-size:17px; }
+  body.deck5 .card .digits{ font-size:19px; }
   body.deck5 .tableCenter .digits{ font-size:17.5px; }
-  body.deck5 #discardTop .pchip .pnum{ font-size:18px; }
+  body.deck5 #discardTop .pchip .pnum{ font-size:21px; }
 
   .card .strip{
     position:absolute; top:0; left:0; right:0; height:19px;
@@ -344,6 +344,8 @@
   @keyframes fxHit{ 0%,100%{ translate:0 0; } 20%{ translate:-6px 2px; } 45%{ translate:6px -2px; } 70%{ translate:-3px 1px; } }
   a[x-apple-data-detectors]{ color:inherit !important; text-decoration:none !important; font:inherit !important; }
   .setLocked{ pointer-events:none; opacity:0.55; }
+  @media (pointer:coarse){ input[type=text], textarea{ font-size:16px !important; } }
+  .vt.locked{ opacity:0.55; }
   .controls{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; justify-content:center; }
   button.ghost{
     background:transparent; border:1.5px solid rgba(255,255,255,0.25); color:var(--ink);
@@ -469,8 +471,8 @@
     border-radius:7px; padding:15px 1px 12px; text-align:center;
   }
   .primeGrid.brushing .pchip{ cursor:pointer; }
-  .primeGrid.w5 .pchip .pnum{ font-size:18px; }
-  @media (min-width:600px){ .primeGrid.w5{ grid-template-columns:repeat(auto-fill, minmax(88px, 1fr)); } }
+  .primeGrid.w5 .pchip .pnum{ font-size:21px; }
+  .primeGrid .pchip{ content-visibility:auto; contain-intrinsic-height:auto 24px; }   /* chips off the screen are not laid out: a redraw of 1500 cards stays cheap */
   #primeDials.w5{ gap:6px; }
   #primeDials.w5 .dial{ width:40px; }
   .pchip .pstrip{
@@ -739,6 +741,7 @@
   .crtX{ width:36px; height:36px; margin:0; padding:0; border:2px solid #ff9d2e; border-radius:8px; background:#2a1608; color:#ff9d2e; font-family:inherit; font-size:22px; font-weight:700; line-height:1; box-shadow:0 4px 0 #6b3a0d; cursor:pointer; }
   .crtScore{ font-size:22px; font-weight:700; color:#ffb24a; letter-spacing:0.05em; }
   .crtCaption{ margin:2px 0 14px; font-size:13px; color:#c26a14; }
+  #quizQueue:empty{ display:none; }
   .quizRow{ display:flex; justify-content:center; gap:8px; margin:0 0 12px; min-height:62px; }
   .qTile, .qSlot{ box-sizing:border-box; width:54px; height:62px; margin:0; padding:0; border-radius:10px; font-family:'B612 Mono','Space Mono',monospace; font-size:32px; font-weight:700; line-height:58px; touch-action:none; -webkit-user-select:none; user-select:none; }
   .qTile{ border:2px solid #ff9d2e; background:#2a1608; color:#ffb24a; box-shadow:0 4px 0 #6b3a0d; cursor:grab; }
@@ -981,11 +984,14 @@
     </ul></details>
     <details class="rl"><summary>重ね出し</summary><ul>
       <li>同じ種類のカードを、一度に何枚でもまとめて出せます。</li>
-      <li>条件は、カード同士で<b>2つの位が全員同じ数字</b>で、そのうち1つが場と合っていることです。積み中は場と合う必要がありません。</li>
-      <li>選んだカードの中に、場と<b>2つ以上の位で一致</b>するカードがあるときは、カード同士の一致は1つの位でOKです。</li>
-      <li>出す順番はゲームが並べるので、どの順番で選んでも構いません。</li>
-      <li>誰かが<b>残り1枚</b>の間も、カード同士の一致は1つの位でOKです。</li>
+      <li>通常は、次の2つを両方満たします。<b>場を含まず2桁一致</b>は、重ねるカード同士で、同じ数字の位が2つあること。<b>場を含めて1桁一致</b>は、そのうち1つの位で、場のカードも同じ数字であること。</li>
+      <li>1枚目が場と<b>2つ以上の位で一致</b>しているときは、条件が<b>場を含めて1桁一致</b>だけになります。重ねるカード全部と場のカードが、同じ数字の位を1つ持っていれば出せます。</li>
+      <li>例 場が 7759 のとき、3229 と 6029 は、2と9が共通で、9が場と同じなので出せます。</li>
+      <li>例 7669 は場と2つの位で一致します。7669 と 3229 は共通が9だけですが、9が場と同じなので出せます。7669 と 9601 は共通が6で、場は7なので出せません。</li>
+      <li>誰かが<b>残り1枚</b>の間は、カード同士の一致は1つの位でOKです。場との一致は1枚目だけ見ます。</li>
+      <li>積み中は、場と合う必要がありません。出せるのは積めるカードだけです。</li>
       <li>効果は枚数分そのまま重なります。+2を3枚で+6、スキップ2枚で2人飛ばします。2人対戦で飛ばされるのは相手だけです。</li>
+      <li>出す順番はゲームが並べるので、どの順番で選んでも構いません。</li>
       <li>手札は最低1枚残します。重ね出しだけでは上がれません。</li>
       <li>設定でオフにできます。</li>
     </ul></details>
@@ -1009,7 +1015,7 @@
       <li><b>レート</b> CPU戦で、結果がレートに反映されます。</li>
       <li><b>フリー</b> 人数、初手枚数、ドロー制限、桁数、アシスト、0を含むカードを設定できます。</li>
       <li><b>オンライン</b> 2人のP2P対戦で、CPUを足せます。桁数も選べます。レートには反映されません。</li>
-      <li><b>プライム</b> 4桁デッキと5桁デッキの全カード表です。</li>
+      <li><b>プライム</b> 4桁デッキと5桁デッキの全カード表です。4桁デッキでは、1〜3桁がすべてオフのとき4桁が自動でオンになります。</li>
       <li>設定はモードごとに保存されます。</li>
     </ul></details>
     <details class="rl" data-modes="rate"><summary>レートの変動幅</summary>
@@ -1022,23 +1028,54 @@
 <div class="rulesWrap usageWrap" data-modes="prime">
   <h2 class="rulesHead">使い方 <button class="ghost" id="usageToggleBtn" style="padding:4px 12px; font-size:12px; margin-left:6px;">表示</button></h2>
   <div class="rules" id="usageBody" style="display:none;">
-    <details class="rl" open><summary>見る・並べる</summary><ul>
-      <li>4桁デッキ(全443枚)と5桁デッキ(全1552枚)の一覧です。一番上の切り替えで選びます(5桁デッキは4桁デッキのカードを全部含み、マークは両方で共通です)。<b>効果</b>と<b>桁数</b>のボタンで絞り込み(「すべて」以外は<b>複数選べます</b>)、<b>昇順/降順</b>で並べ替えます。ボタンの数字は、他の条件と合わせたときの枚数です。</li>
-      <li>桁数の少ないカードは頭に0を足してデッキの桁数で表示し、薄い0は桁数に数えません。桁一致ダイヤルは5桁デッキでは5つになります。</li>
+    <details class="rl" open><summary>デッキ</summary><ul>
+      <li>一番上の切り替えで、4桁デッキ443枚と5桁デッキ1552枚を選びます。5桁デッキは4桁デッキのカードをすべて含み、マークは両方で共通です。</li>
+      <li>桁が足りないカードは、頭に0を足してデッキの桁数で表示します。足した0は薄く表示します。</li>
     </ul></details>
-    <details class="rl" open><summary>検索の書き方</summary><ul>
-      <li><b>1,2,7,9</b> のようにカンマで区切ると、順番は問わず全部含むカード(9721など)。続けて書いた数字は並びのまま探します(<b>97</b> は 9 の次が 7)。</li>
-      <li><b>(1,3,7,9)</b> は「この中のどれか<b>1つの数字</b>」として扱います。数字と続けて書けるので、<b>148(1,3,7,9)</b> は 1481・1483・1487・1489(4つ子素数)を探せます。</li>
-      <li><b>x・y・z</b> は「何でもよい1桁」。同じ文字は同じ数字です。<b>9xy1</b> は千の位9・一の位1(位置を指定)、<b>x,x</b> は同じ数字が2つ、<b>x,x,x</b> は3つ。</li>
-      <li><b>t=10・j=11・q=12・k=13</b> として読み取ります(<b>k9</b> は 139)。大文字・小文字・全角は区別しません。</li>
-      <li>書き方は組み合わせられます(例: <b>(1,3),x,x</b>)。検索欄の下に「読み取り」が出ます。入力は保存されます。</li>
+    <details class="rl" open><summary>フィルターパネル</summary><ul>
+      <li><b>種類</b>のスイッチで、通常 スキップ リバース ドロー2 ドロー4 をそれぞれ入り切りします。スイッチの数字は、他の条件と合わせたときの枚数です。</li>
+      <li><b>桁数</b>のスイッチで、1〜4桁のカードを入り切りします。実際の桁数で数え、足した0は数えません。</li>
+      <li>4桁デッキで1〜3桁がすべてオフのとき、4桁は自動でオンになり、切れなくなります。5桁デッキでは4桁もオフにできます。4桁がオフの状態から4桁デッキに替えたときは、5桁デッキに戻すとオフに戻ります。</li>
+      <li><b>0</b>のスイッチは、数字に0を含むカードだけ、または含まないカードだけに絞ります。足した0は関係ありません。</li>
+      <li><b>マーク</b>のスイッチは、＋でそのマークがあるカードだけ、−でないカードだけに絞ります。同じボタンをもう一度押すと解除です。押した時点のマークで一覧を固定し、押し直すまで変わりません。複数あるときは、ANDとORで組み合わせを選びます。</li>
+      <li><b>リセット</b>は、ガラスのカバーを押して開けてから、赤いボタンを押します。パネルだけが初期に戻り、ダイヤル・検索・並び順はそのままです。</li>
     </ul></details>
-    <details class="rl"><summary>マーク</summary><ul>
-      <li>「マークをつける」を押すと下からパネルが出ます。✔★♥◆を選んでカードをタップすると付け外しできます(1枚に複数OK)。</li>
-      <li>「しぼる」は押すたびに ー → あり → なし → ー。<b>押した時点のマークで判定して一覧を固定</b>します(後からマークを変えても、押し直すまで変わりません)。</li>
+    <details class="rl"><summary>桁一致ダイヤル</summary><ul>
+      <li>桁ごとのダイヤルで、その位の数字を指定します。ー は指定なしです。4桁デッキは4つ、5桁デッキは5つあります。</li>
+      <li>頭に足した0も指定できます。0のスイッチを「−」にすると、ダイヤルから0が消えます。</li>
+      <li>レバーを0.5秒押し続けると、すべてのダイヤルが ー に戻ります。</li>
     </ul></details>
-    <details class="rl"><summary>保存</summary><ul>
-      <li>「画像で保存」「表(CSV)で保存」で、今表示している一覧をファイルにできます(画像にはマークも入ります)。</li>
+    <details class="rl" open><summary>数値検索</summary><ul>
+      <li>「＋」に合うカードを残し、「−」に合うカードを除きます。他の絞り込みとは、すべてに合うカードだけが表示されます。</li>
+      <li>カンマか空白で区切った項は、順番を問わず全部を含むカードを探します。項ごとに別々の桁を使います。例 <b>1,2,7,9</b> は4つとも含むカード。<b>1,1</b> は 1 が2個以上、<b>x,x</b> は同じ数字が2個以上。</li>
+      <li><b>^</b> <b>-</b> <b>=</b> を使った項は、桁を使わない条件です。ほかの項と、すべて同時に満たすカードを探します。</li>
+      <li>続けて書いた数字は、並びのまま探します。例 <b>97</b> は 9 の次が 7。</li>
+      <li>かっこは、中のどれか<b>1つの数字</b>を表します。例 <b>148(1,3,7,9)</b> は 1481 1483 1487 1489 を探します。</li>
+      <li><b>x y z w v a b c d e</b> は何でもよい1桁です。同じ文字は同じ数字です。x y z w v は、違う文字が同じ数字でも構いません。a b c d e は、違う文字が必ず違う数字です。例 <b>a,b,c</b> は3種類の数字を含むカード。</li>
+      <li>デッキの桁数と同じ長さで書いた項は、<b>位置を指定</b>します。4桁デッキの <b>9xy1</b> は千の位が9で一の位が1。5桁デッキなら <b>9xyz1</b> のように桁数ぶん書きます。それより短い項は、並びがどこにあっても探します。</li>
+      <li><b>^n</b> は<b>n個以上</b>、<b>^^n</b> は<b>ちょうどn個</b>です。数字・文字・かっこの後ろに付けます。例 <b>1^2</b> は 1 が2個以上。<b>x^3</b> は、どれかの数字が3個以上。<b>(1,3,7,9)^3</b> は、中の数字が重複を数えて合わせて3個以上。</li>
+      <li>かっこの後ろの <b>-n</b> は中の数字が<b>n種類以上</b>、<b>--n</b> は<b>ちょうどn種類</b>です。例 <b>(1,3,7,9)-3</b>。同じ数字は1種類と数えます。</li>
+      <li><b>=</b> は文字の条件です。左右を入れ替えても同じです。<b>(1,3,7,9)=x</b> と <b>x=(1,3,7,9)</b> は、x が中の数字のどれかになります。数字とも文字どうしとも使えます。例 <b>x=7</b> <b>x=y</b>。例 <b>(1,3,7,9)=x,x^3</b> は、1 3 7 9 のどれか1つが3個以上。= だけで書いた文字は、カードに1つはあることが条件です。</li>
+      <li><b>t=10 j=11 q=12 k=13</b> として読みます。例 <b>k9</b> は 139。大文字・小文字・全角は区別しません。</li>
+      <li>頭に足した0も、すべての検索で数に入れます。</li>
+      <li>書き方に合わないものは、検索欄の下に理由が出て、その欄では絞り込みません。書けるのは、数字・文字・かっこ・カンマ・空白と、^ - = です。</li>
+    </ul></details>
+    <details class="rl"><summary>並べ替えとマーク</summary><ul>
+      <li>昇順・降順のボタンで、一覧の並びを替えます。</li>
+      <li>「マークをつける」を押すと、下からパネルが出ます。✔ ★ ♥ ◆ を選んでカードをタップすると、付け外しできます。1枚に複数つけられます。</li>
+      <li>「まとめて消去」は、5秒押し続けると、今表示しているカードのマークをすべて消します。</li>
+    </ul></details>
+    <details class="rl"><summary>保存と引き継ぎ</summary><ul>
+      <li>「画像で保存」「表(CSV)で保存」で、今表示している一覧をファイルにできます。画像にはマークも入ります。</li>
+      <li>「マークの引き継ぎ」で、マークと絞り込みの設定を文字にして書き出し、別の端末で読み込めます。読み込みは、足すか置き換えるかを選べます。</li>
+    </ul></details>
+    <details class="rl"><summary>素数MEMO</summary><ul>
+      <li>パネルの「素数MEMO」から始めると、今一覧に表示しているカードから出題されます。パネル・ダイヤル・検索・マークの絞り込みがすべて反映され、2桁以上のカードが対象です。</li>
+      <li>リザルト画面から始めると、そのゲームで出たカードを、パネルの絞り込みだけを反映して、出し切るまで出題します。そのあとは、一覧に表示しているカードから出題します。パネルが1枚も通さないときは、そのゲームのカードをそのまま出題します。</li>
+      <li>数字のタイルを並べて、そのタイルでできる最大の素数を作ります。「判定」で答え合わせ、「スキップ」で答えが出ます。</li>
+          <li>MEMOの画面の「素数UNO」のロゴは、どこからMEMOを開いたかで変わります。プライムの一覧から開いたときは、<b>一覧に表示しているカードだけをデッキにした</b>フリー対戦が始まります。パネル・ダイヤル・検索・マークがすべて反映され、人数や初手枚数などはフリーの設定のままです。カードが足りないときは始まりません。</li>
+      <li>UNOのリザルト画面から開いたときは、ロゴで<b>同じ設定のUNOをもう一度</b>始めます。UNOを一覧のカードで始めていた場合は、そこから開いたMEMOでも、ロゴは一覧のカードのデッキで始めます。こうして、UNOとMEMOを行き来して続けられます。</li>
+      <li>リザルト画面から開いたMEMOでは、「UNOのカード 3/12　残り9」のように、そのゲームのカードのうち何問目か、あと何問かが出ます。出し切ると、一覧からの出題に変わります。</li>
     </ul></details>
   </div>
 </div>
@@ -1173,12 +1210,12 @@
     <div class="dialCap" style="margin:2px 0 6px 2px;">数値検索</div>
     <div class="primeSearch">
       <span class="sLabel yes">＋</span>
-      <input type="text" inputmode="text" id="primeSearchInput" placeholder="例: 1,2,7,9 / 9xy1 / 148(1,3,7,9)" maxlength="40" autocapitalize="none" autocorrect="off" spellcheck="false" enterkeyhint="search">
+      <input type="text" inputmode="text" id="primeSearchInput" placeholder="例: 1,2,7,9 / 9xy1 / x^3" maxlength="40" autocapitalize="none" autocorrect="off" spellcheck="false" enterkeyhint="search">
       <button class="ghost" id="primeSearchClear" style="padding:7px 12px; font-size:12.5px; flex:none;">クリア</button>
     </div>
     <div class="primeSearch" style="margin-top:0;">
       <span class="sLabel no">−</span>
-      <input type="text" inputmode="text" id="primeSearchNotInput" placeholder="例: 5,5 / 0 (これに合うカードを除く)" maxlength="40" autocapitalize="none" autocorrect="off" spellcheck="false" enterkeyhint="search">
+      <input type="text" inputmode="text" id="primeSearchNotInput" placeholder="除く 例: 5,5 / 0" maxlength="40" autocapitalize="none" autocorrect="off" spellcheck="false" enterkeyhint="search">
       <button class="ghost" id="primeSearchNotClear" style="padding:7px 12px; font-size:12.5px; flex:none;">クリア</button>
     </div>
     <div class="primeSearchResult" id="primeSearchResult" style="margin:-4px 0 8px; min-height:1.2em;"></div>
@@ -1307,8 +1344,9 @@
 <div class="winbox" id="quizModal">
   <div class="crt">
     <div class="crtScreen">
-      <div class="crtTop"><button class="crtX" id="quizClose" aria-label="閉じる">×</button><button class="crtLogo" id="quizLogo" aria-label="フリーを始める"><span>素数</span><span class="u">UNO</span></button><span class="crtScore" id="quizScore">0/0</span></div>
+      <div class="crtTop"><button class="crtX" id="quizClose" aria-label="閉じる">×</button><button class="crtLogo" id="quizLogo" aria-label="一覧のカードでフリーを始める"><span>素数</span><span class="u">UNO</span></button><span class="crtScore" id="quizScore">0/0</span></div>
       <div class="crtCaption">並べて最大の素数をつくれ</div>
+      <div class="crtCaption" id="quizQueue" style="margin:-8px 0 12px; color:var(--ink);"></div>
       <div class="quizRow" id="quizSlots"></div>
       <div class="quizRow" id="quizTiles"></div>
       <div class="quizVerdict" id="quizVerdict"></div>
@@ -1460,8 +1498,10 @@
     return 2; // draw2
   }
 
+  // set when a game is started from the MEMO logo: the deck is exactly the cards the list shows
+  let CUSTOM_DECK = null;
   function buildDeck(){
-    const values = deckValuesFor(DECK_WIDTH, ZERO_ON);
+    const values = CUSTOM_DECK || deckValuesFor(DECK_WIDTH, ZERO_ON);
     const deck = values.map(n=>({
       id: Math.random().toString(36).slice(2), value:n, digits:digitsOf(n),
       effect: classifyCard(n)
@@ -1487,7 +1527,8 @@
     // keep the starting hands within what the 168-card deck can supply
     const gameWidth = [3,4,5].includes(opts.digits) ? opts.digits : 3;
     ZERO_ON = mode==='free' ? opts.zero!==false : true;
-    const deckSize = deckValuesFor(gameWidth, ZERO_ON).length;
+    CUSTOM_DECK = (mode==='free' && Array.isArray(opts.customDeck) && opts.customDeck.length) ? opts.customDeck : null;
+    const deckSize = CUSTOM_DECK ? CUSTOM_DECK.length : deckValuesFor(gameWidth, ZERO_ON).length;
     const handSize = Math.max(1, Math.min(opts.handSize || 7, Math.floor((deckSize - 6)/seats)));
     document.body.dataset.mode = mode;
     setDeckWidth(gameWidth);
@@ -1512,6 +1553,7 @@
       multiMode: false
     };
     logSystem(`<b class="logNum">${pad3(start.value)}</b>`, 'START');
+    if(CUSTOM_DECK) logSystem(CUSTOM_DECK.length + '枚', 'LIST DECK');
     render();
     if(onlineGuestName){
       broadcastMatchStart();
@@ -1563,7 +1605,8 @@
   function requiredMatchCount(){
     return anyoneAtUno() ? 1 : 2;
   }
-  // all modes: the more digits the first card shares with the card on the table, the fewer digits the dumped cards have to share with each other
+  // normal: the cards share 2 positions among themselves (table not counted) and one of them also holds the table card's digit.
+  // when the first card matches the table in 2+ positions, only the second part is left: all cards and the table card share 1 position.
   function requiredFor(first, top){
     const base = requiredMatchCount();
     if(base<2) return base;
@@ -1600,9 +1643,12 @@
     }
     const shared = sharedPositions(order);
     const need = stacking ? requiredMatchCount() : requiredFor(order[0], top);
-    if(shared.length < need) return false;
+    if(shared.length < need) return false;   // the cards among themselves, the table card not counted
     if(!stacking){
-      const ok = need>=2 ? shared.some(i=> order[0].digits[i]===top.digits[i]) : matches(order[0], top);
+      // the table counts as one more card: one of the shared positions must hold the table card's digit as well.
+      // Only while someone is at one card is it enough that the first card matches the table somewhere.
+      const touch = shared.some(i=> order[0].digits[i]===top.digits[i]);
+      const ok = (need>=2 || !anyoneAtUno()) ? touch : matches(order[0], top);
       if(!ok) return false;
     }
     return true;
@@ -3045,75 +3091,236 @@
     if(i<shown.length) later(next);
   }
   // ---- search language ----
-  //  1,2,7,9      each comma-separated term can sit anywhere, in any order (9721 ...)
-  //  97 / 23,1    digits written together stay together
-  //  (1,3,7,9)    any ONE of these digits
-  //  x y z        any digit; the same letter is always the same digit (9xy1, x,x = a repeated digit)
+  //  terms are separated by commas or spaces. Pattern terms (digits, letters, groups) each sit on their own digits of the card: 1,1 = two 1s, x,x = a digit twice.
+  //  Condition terms (1^2  (..)^n  (..)-n  x=(..)) use no digits of their own and just have to hold together with all the others (AND).
+  //  97 / 9xy1     digits and letters written together stay together; a pattern as long as the card is pinned to its positions
+  //  (1,3,7,9)     any ONE of these digits (inside a pattern)
+  //  1^2  x^3  (1,3,7,9)^3     that digit / that letter's digit / the group's digits (repeats counted) at least n times;  ^^n = exactly n
+  //  (1,3,7,9)-2   at least 2 DIFFERENT digits of the group;  --2 = exactly 2 different
+  //  x=(1,3,7,9)  x=7  x=y     a condition on a letter (either side first); a letter named only here must occur on the card
+  //  x y z w v     any digit, different letters may be the same digit;  a b c d e   any digit, different letters are always different digits
+  //  the zeros added to fill the width count as digits everywhere
   const RANK_DIGITS = { t:'10', j:'11', q:'12', k:'13' };   // like card ranks
+  const SEARCH_LETTER = /[xyzwvabcde]/;
+  // -> { terms } or { error:'message' }. Nothing the box accepts is dropped silently: what cannot be read gives a message.
   function parsePrimeQuery(raw){
-    const q = String(raw||'').normalize('NFKC').replace(/[、，]/g,',').toLowerCase();
-    const terms = []; let cur = [], depth = 0, alt = '', alts = null;
-    const flush = ()=>{ if(cur.length){ terms.push(cur); cur = []; } };
-    for(const ch of q){
-      if(depth>0){
-        if(ch===')'){
-          depth = 0; if(alt) alts.push(alt); alt = '';
-          if(alts.length) cur.push({ t:'any', alts }); alts = null;
-        } else if(/[0-9]/.test(ch)) alt += ch;
-        else if(ch in RANK_DIGITS) alt += RANK_DIGITS[ch];
-        else if(ch===',' || /\s/.test(ch)){ if(alt){ alts.push(alt); alt = ''; } }
-      } else if(ch==='('){ depth = 1; alt = ''; alts = []; }
-      else if(ch===')') return { error:true };
-      else if(/[0-9]/.test(ch)) cur.push({ t:'d', v:ch });
-      else if(ch in RANK_DIGITS) RANK_DIGITS[ch].split('').forEach(d=> cur.push({ t:'d', v:d }));
-      else if(/[xyz]/.test(ch)) cur.push({ t:'v', n:ch });
-      else if(ch===',' || /\s/.test(ch)) flush();
+    const q = String(raw||'').normalize('NFKC').replace(/[、，]/g,',').replace(/[−ー‐‑–—]/g,'-').toLowerCase();
+    const chars = Array.from(q), terms = [];
+    let i = 0;
+    const isSep = c=> c===',' || /\s/.test(c);
+    const readNum = ()=>{ let num = ''; while(i<chars.length && /[0-9]/.test(chars[i])){ num += chars[i]; i++; } return num; };
+    const readGroup = ()=>{
+      i++;   // the "("
+      const alts = []; let alt = '';
+      while(i<chars.length){
+        const c = chars[i];
+        if(c===')'){ i++; if(alt) alts.push(alt); return alts.length ? { alts } : { error:'かっこの中が空です' }; }
+        if(/[0-9]/.test(c)) alt += c;
+        else if(c in RANK_DIGITS) alt += RANK_DIGITS[c];
+        else if(isSep(c)){ if(alt){ alts.push(alt); alt = ''; } }
+        else if(c==='(') return { error:'かっこの中にかっこは書けません' };
+        else return { error:'かっこの中には数字だけ書けます' };
+        i++;
+      }
+      return { error:'かっこが閉じていません' };
+    };
+    const buildTerm = items=>{
+      const eqAt = items.map((x,k)=> x.k==='eq' ? k : -1).filter(k=> k>=0);
+      const posts = items.filter(x=> x.k==='post');
+      if(eqAt.length){
+        if(posts.length) return { error:'= と ^ - は同じ項に書けません' };
+        const segs = [[]];
+        items.forEach(x=>{ if(x.k==='eq') segs.push([]); else segs[segs.length-1].push(x); });
+        if(segs.some(sg=> sg.length!==1 || sg[0].rank)) return { error:'= の両側には、数字・文字・かっこを1つずつ書きます' };
+        const out = segs.map(sg=> sg[0].k==='d' ? { t:'d', v:sg[0].v } : sg[0].k==='v' ? { t:'v', n:sg[0].n } : { t:'g', alts: sg[0].alts.filter(a=> a.length===1) });
+        if(out.some(o=> o.t==='g' && !o.alts.length)) return { error:'= のかっこの中は、1桁の数字にしてください' };
+        const lets = out.filter(o=> o.t==='v');
+        if(!lets.length) return { error:'= には文字が必要です。例 x=(1,3,7,9)' };
+        if(lets.filter(o=> /[abcde]/.test(o.n)).length>1) return { error:'a b c d e の文字どうしは = でつなげません' };
+        return { term:{ k:'eq', segs:out } };
+      }
+      if(posts.length){
+        if(items[0].k==='post') return { error:'^ や - の前に、数字・文字・かっこを書いてください' };
+        if(items.length!==2 || items[1].k!=='post' || items[0].rank) return { error:'^n と -n は、1つの数字・文字・かっこに付けます。ほかの項とはカンマで区切ります' };
+        const it = items[0], po = items[1];
+        if(po.op==='kinds' && it.k!=='g') return { error:'-n と --n は、かっこの後ろに付けます' };
+        const target = it.k==='d' ? { t:'d', v:it.v } : it.k==='v' ? { t:'v', n:it.n } : { t:'g', alts:it.alts };
+        return { term:{ k:'cnt', target, op:po.op, exact:po.exact, n:po.n } };
+      }
+      return { term:{ k:'pat', atoms: items.map(x=> x.k==='d' ? { t:'d', v:x.v } : x.k==='v' ? { t:'v', n:x.n } : { t:'any', alts:x.alts }) } };
+    };
+    while(i<chars.length){
+      if(isSep(chars[i])){ i++; continue; }
+      const items = [];
+      while(i<chars.length && !isSep(chars[i])){
+        const c = chars[i];
+        if(/[0-9]/.test(c)){ items.push({ k:'d', v:c }); i++; }
+        else if(c in RANK_DIGITS){ RANK_DIGITS[c].split('').forEach(d=> items.push({ k:'d', v:d, rank:true })); i++; }
+        else if(SEARCH_LETTER.test(c)){ items.push({ k:'v', n:c }); i++; }
+        else if(c==='('){ const g = readGroup(); if(g.error) return g; items.push({ k:'g', alts:g.alts }); }
+        else if(c===')') return { error:'かっこが開いていません' };
+        else if(c==='='){ items.push({ k:'eq' }); i++; }
+        else if(c==='^'){
+          i++; let exact = false; if(chars[i]==='^'){ exact = true; i++; }
+          const num = readNum(); if(!num) return { error:'^ の後ろに個数を書いてください。例 1^2' };
+          items.push({ k:'post', op:'occ', exact, n:Number(num) });
+        } else if(c==='-'){
+          i++; let exact = false; if(chars[i]==='-'){ exact = true; i++; }
+          const num = readNum(); if(!num) return { error:'- の後ろに種類の数を書いてください。例 (1,3)-2' };
+          items.push({ k:'post', op:'kinds', exact, n:Number(num) });
+        } else i++;
+      }
+      const r = buildTerm(items); if(r.error) return r;
+      terms.push(r.term);
     }
-    if(depth>0) return { error:true };
-    flush();
     return { terms };
   }
   function primeQueryText(terms){
-    return terms.map(t=> t.map(a=> a.t==='d' ? a.v : a.t==='v' ? a.n : '(' + a.alts.join('|') + ')').join('')).join(' ・ ');
+    const alt = a=> '(' + a.join('|') + ')';
+    const one = t=> t.t==='d' ? t.v : t.t==='v' ? t.n : alt(t.alts || []);
+    return terms.map(t=>
+      t.k==='pat' ? t.atoms.map(a=> a.t==='any' ? alt(a.alts) : one(a)).join('')
+      : t.k==='cnt' ? one(t.target) + (t.op==='occ' ? (t.exact ? '^^' : '^') : (t.exact ? '--' : '-')) + t.n
+      : t.segs.map(sg=> sg.t==='g' ? alt(sg.alts) : one(sg)).join('=')
+    ).join(' ・ ');
   }
-  // every term must be placed on its own, unused, consecutive digits of the card
+  // what a query means once its letters are tied together: each class of letters has at most one fixed digit and one set of allowed digits
+  function compileQuery(terms){
+    const parent = {}, fixed = {}, dom = {};
+    let impossible = false;
+    const add = x=>{ if(!(x in parent)) parent[x] = x; };
+    const find = x=>{ while(parent[x]!==x) x = parent[x]; return x; };
+    terms.forEach(t=>{
+      if(t.k==='pat') t.atoms.forEach(a=>{ if(a.t==='v') add(a.n); });
+      else if(t.k==='cnt' && t.target.t==='v') add(t.target.n);
+      else if(t.k==='eq') t.segs.forEach(sg=>{ if(sg.t==='v') add(sg.n); });
+    });
+    terms.forEach(t=>{
+      if(t.k!=='eq') return;
+      const ls = t.segs.filter(sg=> sg.t==='v');
+      for(let k=1; k<ls.length; k++){ const ra = find(ls[0].n), rb = find(ls[k].n); if(ra!==rb) parent[rb] = ra; }
+    });
+    terms.forEach(t=>{
+      if(t.k!=='eq') return;
+      const L = find(t.segs.find(sg=> sg.t==='v').n);
+      t.segs.forEach(sg=>{
+        if(sg.t==='d'){ if(L in fixed && fixed[L]!==sg.v) impossible = true; fixed[L] = sg.v; }
+        else if(sg.t==='g'){ dom[L] = (L in dom) ? dom[L].filter(d=> sg.alts.includes(d)) : sg.alts.slice(); if(!dom[L].length) impossible = true; }
+      });
+    });
+    Object.keys(fixed).forEach(L=>{ if(dom[L] && !dom[L].includes(fixed[L])) impossible = true; });
+    const isSet = {}; Object.keys(parent).forEach(L=>{ if(/[abcde]/.test(L)) isSet[find(L)] = true; });
+    const termLen = atoms=>{
+      let n = 0;
+      for(const a of atoms){
+        if(a.t==='any'){ const l = a.alts[0].length; if(a.alts.some(x=> x.length!==l)) return -1; n += l; } else n++;
+      }
+      return n;
+    };
+    const pats = [], cnts = [], needs = {}, inPat = new Set();
+    terms.forEach(t=>{
+      if(t.k==='pat'){
+        const atoms = t.atoms.map(a=> a.t==='v' ? { t:'v', n:find(a.n) } : a);
+        atoms.forEach(a=>{ if(a.t==='v') inPat.add(a.n); });
+        pats.push({ atoms, len:termLen(atoms) });
+      } else if(t.k==='cnt'){
+        if(t.target.t==='v'){
+          const L = find(t.target.n);
+          (needs[L] = needs[L] || { L, cons:[], exist:false }).cons.push({ n:t.n, exact:t.exact });
+        } else cnts.push({ alts: t.target.t==='d' ? [t.target.v] : t.target.alts, op:t.op, exact:t.exact, n:t.n });
+      }
+    });
+    terms.forEach(t=>{
+      if(t.k!=='eq') return;
+      const L = find(t.segs.find(sg=> sg.t==='v').n);
+      if(!inPat.has(L) && !needs[L]) needs[L] = { L, cons:[], exist:true };
+    });
+    return { impossible, fixed, dom, isSet, setCount:Object.keys(isSet).length, pats, cnts, needList:Object.values(needs) };
+  }
+  // does a card (its digits, zeros added to fill the width included) satisfy every term?
   function primeMatchQuery(str, terms){
-    const n = str.length, used = new Array(n).fill(false), bind = {};
-    const runTerm = ti=>{
-      if(ti===terms.length) return true;
-      for(let s0=0; s0<n; s0++) if(consume(ti, 0, s0)) return true;
+    const plan = terms.plan || (terms.plan = compileQuery(terms));
+    if(plan.impossible) return false;
+    const n = str.length, bind = {}, used = new Array(n).fill(false);   // pattern terms never share a digit of the card
+    const countOf = d=> str.split(d).length - 1;
+    for(const c of plan.cnts){
+      const alts = new Set(c.alts);
+      let v = 0;
+      if(c.op==='kinds'){ alts.forEach(a=>{ if(str.indexOf(a)>=0) v++; }); }
+      else alts.forEach(a=>{ v += str.split(a).length - 1; });   // repeats count
+      if(c.exact ? v!==c.n : v<c.n) return false;
+    }
+    const okBind = (L, d)=>{
+      if(plan.fixed[L]!==undefined && plan.fixed[L]!==d) return false;
+      if(plan.dom[L] && !plan.dom[L].includes(d)) return false;
+      if(plan.isSet[L]){ for(const k in bind) if(k!==L && plan.isSet[k] && bind[k]===d) return false; }
+      return true;
+    };
+    const consOk = (x, d)=>{
+      const c = countOf(d);
+      if(x.exist && c<1) return false;
+      return x.cons.every(k=> k.exact ? c===k.n : c>=k.n);
+    };
+    // letters that are counted (x^3) or only named in an = term: bound letters are checked, free ones may take any digit that works
+    const finish = j=>{
+      if(j===plan.needList.length) return true;
+      const x = plan.needList[j];
+      if(x.L in bind) return consOk(x, bind[x.L]) && finish(j+1);
+      for(const d of '0123456789'){
+        if(!okBind(x.L, d) || !consOk(x, d)) continue;
+        bind[x.L] = d;
+        if(finish(j+1)) return true;
+        delete bind[x.L];
+      }
       return false;
     };
     const consume = (ti, ai, pos)=>{
-      const term = terms[ti];
-      if(ai===term.length) return runTerm(ti+1);
+      const P = plan.pats[ti];
+      if(ai===P.atoms.length) return runPat(ti+1);
+      const a = P.atoms[ai];
+      if(a.t==='any'){
+        for(const alt of a.alts){
+          const L = alt.length;
+          if(pos+L>n || str.substr(pos, L)!==alt) continue;
+          let free = true; for(let k=pos; k<pos+L; k++) if(used[k]) free = false;
+          if(!free) continue;
+          for(let k=pos; k<pos+L; k++) used[k] = true;
+          if(consume(ti, ai+1, pos+L)) return true;
+          for(let k=pos; k<pos+L; k++) used[k] = false;
+        }
+        return false;
+      }
       if(pos>=n || used[pos]) return false;
-      const atom = term[ai];
-      if(atom.t==='d'){
-        if(str[pos]!==atom.v) return false;
-        used[pos] = true; const r = consume(ti, ai+1, pos+1); used[pos] = false; return r;
+      const d = str[pos];
+      if(a.t==='d'){
+        if(d!==a.v) return false;
+        used[pos] = true;
+        if(consume(ti, ai+1, pos+1)) return true;
+        used[pos] = false; return false;
       }
-      if(atom.t==='v'){
-        const had = atom.n in bind;
-        if(had && str[pos]!==bind[atom.n]) return false;
-        if(!had) bind[atom.n] = str[pos];
-        used[pos] = true; const r = consume(ti, ai+1, pos+1); used[pos] = false;
-        if(!r && !had) delete bind[atom.n];
-        return r;
+      if(a.n in bind){
+        if(bind[a.n]!==d) return false;
+        used[pos] = true;
+        if(consume(ti, ai+1, pos+1)) return true;
+        used[pos] = false; return false;
       }
-      for(const alt of atom.alts){
-        if(pos+alt.length>n || str.substr(pos, alt.length)!==alt) continue;
-        let free = true;
-        for(let k=pos;k<pos+alt.length;k++) if(used[k]){ free = false; break; }
-        if(!free) continue;
-        for(let k=pos;k<pos+alt.length;k++) used[k] = true;
-        const r = consume(ti, ai+1, pos+alt.length);
-        for(let k=pos;k<pos+alt.length;k++) used[k] = false;
-        if(r) return true;
-      }
+      if(!okBind(a.n, d)) return false;
+      bind[a.n] = d; used[pos] = true;
+      if(consume(ti, ai+1, pos+1)) return true;
+      used[pos] = false; delete bind[a.n];
       return false;
     };
-    return runTerm(0);
+    const present = Array.from(new Set(str));   // the different digits on the card
+    if(present.length < plan.setCount) return false;   // a..e need that many different digits
+    const runPat = ti=>{
+      if(ti===plan.pats.length) return finish(0);
+      const P = plan.pats[ti];
+      // a pattern as long as the card is pinned to the card's own positions
+      const last = plan.pats[ti].len===n ? 1 : n;
+      for(let s0=0; s0<last; s0++) if(consume(ti, 0, s0)) return true;
+      return false;
+    };
+    return runPat(0);
   }
   function renderPrimeTable(syncInput){
     const f = modeSettings.prime;
@@ -3131,6 +3338,10 @@
     const ALL_EFF = ['plain','draw2','draw4','skip','reverse'];
     if(f.effects.length){ f.effectsNot = ALL_EFF.filter(k=> !f.effects.includes(k)); f.effects = []; }
     if(f.digitsSel.length){ f.digitsNot = [1,2,3,4].filter(d=> !f.digitsSel.includes(d)); f.digitsSel = []; }
+    // on the 4-digit deck, with 1-3 digits all off, 4 digits would leave nothing: it comes on by itself and the game remembers that it was off
+    if(W===4 && [1,2,3].every(d=> f.digitsNot.includes(d)) && f.digitsNot.includes(4)){
+      f.digitsNot = f.digitsNot.filter(d=> d!==4); f.d4Auto = true;
+    }
     f.markCombine = (f.markCombine==='and' || f.markCombine==='all') ? 'and' : 'or';
     if(f.zero!=='has' && f.zero!=='not') f.zero = '';
     if(typeof f.queryNot!=='string') f.queryNot = '';
@@ -3170,7 +3381,7 @@
     document.getElementById('vtSum').textContent = primePanelPool.length + '枚';
     if(f.order==='desc') shown.reverse();
     primeShown = shown;
-    document.getElementById('primeSearchResult').textContent = (parsed.error || parsedNot.error) ? '( ) の対応を確認してください' : [match ? '＋: ' + primeQueryText(parsed.terms) : '', matchNot ? '−: ' + primeQueryText(parsedNot.terms) : ''].filter(Boolean).join(' ／ ');
+    document.getElementById('primeSearchResult').textContent = (parsed.error || parsedNot.error) ? [parsed.error ? '＋: ' + parsed.error : '', parsedNot.error ? '−: ' + parsedNot.error : ''].filter(Boolean).join(' ／ ') : [match ? '＋: ' + primeQueryText(parsed.terms) : '', matchNot ? '−: ' + primeQueryText(parsedNot.terms) : ''].filter(Boolean).join(' ／ ');
     document.querySelectorAll('#primeDeckSelect .cpu-btn').forEach(b=> b.classList.toggle('selected', Number(b.dataset.w)===W));
     document.getElementById('primeCount').innerHTML = `<span class="mono">${shown.length}</span>枚を表示(全<span class="mono">${cards.length}</span>枚)`;
     paintPrimeGrid(shown);
@@ -3199,6 +3410,7 @@
     const w = Number(b.dataset.w), f = modeSettings.prime, was = primeW();
     if(w===was) return;
     f.deck = w;
+    if(w===5 && f.d4Auto){ if(!f.digitsNot.includes(4)) f.digitsNot.push(4); f.d4Auto = false; }   // back on the 5-digit deck: 4 digits was off before it was switched on for the 4-digit deck
     f.dial = w>was ? [''].concat(f.dial) : f.dial.slice(1);   // the places keep their meaning: the right end is always the ones
     const cards = primeDeckCards();   // + / - mark filters are lists taken when they were set: take them again for this deck
     Object.keys(f.markFilter).forEach(key=>{
@@ -3221,6 +3433,21 @@
   // started from the panel: questions come from the panel's range. Started from a result: the cards played in that game come first, then the panel's range
   const quiz = { pool:[], queue:[], order:[], i:0, card:null, digits:[], slots:[], locked:false, ok:0, total:0, drag:null };
   const quizShuffle = a=>{ const r = a.slice(); for(let i=r.length-1;i>0;i--){ const j = Math.floor(Math.random()*(i+1)); [r[i], r[j]] = [r[j], r[i]]; } return r; };
+  // the cards the list shows right now: panel, dial, search and marks all applied (the same filters as renderPrimeTable)
+  function shownCardsNow(){
+    const f = modeSettings.prime, W = primeW();
+    const eN = f.effectsNot || [], dN = f.digitsNot || [], dial = (Array.isArray(f.dial) && f.dial.length===W) ? f.dial : [];
+    const pq = parsePrimeQuery(f.query || ''), pn = parsePrimeQuery(f.queryNot || '');
+    const match = (pq.terms && pq.terms.length) ? (str=> primeMatchQuery(str, pq.terms)) : null;
+    const matchNot = (pn.terms && pn.terms.length) ? (str=> primeMatchQuery(str, pn.terms)) : null;
+    const sets = Object.values(f.markFilter || {}).map(x=> new Set(x.ids)), and = f.markCombine==='and' || f.markCombine==='all';
+    return primeDeckCards().filter(c=> !eN.includes(c.effect) && !dN.includes(c.len)
+      && (!f.zero || (String(c.value).indexOf('0') >= 0) === (f.zero==='has'))
+      && (!sets.length || (and ? sets.every(x=> x.has(c.value)) : sets.some(x=> x.has(c.value))))
+      && dial.every((d,i)=> d==='' || c.padded[i]===d)
+      && (!match || match(c.padded)) && (!matchNot || !matchNot(c.padded)));
+  }
+  // the cards the panel alone lets through (kinds, digits, zero, marks) - the dial and the search do not count here
   function panelPoolNow(){
     const f = modeSettings.prime, eN = f.effectsNot || [], dN = f.digitsNot || [];
     const sets = Object.values(f.markFilter || {}).map(x=> new Set(x.ids)), and = f.markCombine==='and' || f.markCombine==='all';
@@ -3246,6 +3473,10 @@
     document.getElementById('quizTiles').innerHTML = d.map((x,i)=> placed.has(i) ? '<span class="qTile used"></span>' : `<button class="qTile" data-i="${i}">${x}</button>`).join('');
     document.getElementById('quizSlots').innerHTML = quiz.slots.map((t,s)=> t===null ? `<span class="qSlot" data-s="${s}"></span>` : `<button class="qSlot filled" data-s="${s}" data-t="${t}">${d[t]}</button>`).join('');
     document.getElementById('quizScore').textContent = quiz.ok + '/' + quiz.total;
+    // opened from the result screen: how many of the game's cards are still to come
+    document.getElementById('quizQueue').textContent = !quiz.fromGame ? '' : quiz.inQueue
+      ? 'UNOのカード ' + (quiz.qTotal - quiz.queue.length) + '/' + quiz.qTotal + '　残り' + quiz.queue.length
+      : 'UNOのカードは出し切りました。一覧から出題中';
     document.getElementById('quizJudge').textContent = quiz.locked ? '次へ' : '判定';
     document.getElementById('quizSkip').disabled = quiz.locked;
     const v = document.getElementById('quizVerdict'); v.innerHTML = verdictHtml || ''; v.className = 'quizVerdict' + (kind ? ' ' + kind : '');
@@ -3270,18 +3501,35 @@
     });
   }
   function quizNew(){
+    quiz.inQueue = quiz.queue.length > 0;
     if(quiz.queue.length) quiz.card = quiz.queue.shift();
-    else { if(quiz.i >= quiz.order.length){ quiz.order = quizShuffle(quiz.pool); quiz.i = 0; } quiz.card = quiz.order[quiz.i++]; }
+    else {
+      // the list is empty (the panel lets nothing through): keep going round the game's own cards
+      const src = quiz.pool.length ? quiz.pool : (quiz.backup || []);
+      if(quiz.i >= quiz.order.length){ quiz.order = quizShuffle(src); quiz.i = 0; }
+      quiz.card = quiz.order[quiz.i++];
+    }
     const ds = String(quiz.card.value).split('').map(Number);
     const sh = ds.slice().sort((x, y)=> y - x);   // the tiles start in descending order
     quiz.digits = sh; quiz.slots = sh.map(()=> null); quiz.locked = false; quizRender('', '', '', true);
   }
-  function openQuiz(first){
-    const all = panelPoolNow();
+  function openQuiz(first, origin){
+    // after the queue is used up the questions come from the cards the list shows (every filter applied)
+    const all = shownCardsNow();
     quiz.pool = all.filter(c=> c.len >= 2); if(!quiz.pool.length) quiz.pool = all;
     const seen = new Set(); quiz.queue = [];
-    const allowed = new Set(all.map(c=> c.value));   // only what the panel's filter lets through
+    // the game's own cards come first, and only the panel's filters apply to them, until every one of them has been asked
+    const allowed = new Set(panelPoolNow().map(c=> c.value));
     quizShuffle(first || []).forEach(c=>{ if(String(c.value).length >= 2 && allowed.has(c.value) && !seen.has(c.value)){ seen.add(c.value); quiz.queue.push(c); } });
+    // from the result screen: if the panel lets none of the game's cards through, ask about the game's own cards anyway
+    if(!quiz.queue.length && first && first.length){
+      quizShuffle(first).forEach(c=>{ if(String(c.value).length >= 2 && !seen.has(c.value)){ seen.add(c.value); quiz.queue.push(c); } });
+    }
+    quiz.backup = quiz.queue.slice();
+    quiz.fromGame = !!(first && first.length); quiz.qTotal = quiz.queue.length;
+    // where the player came from decides what the logo does: back to the same UNO, or a UNO made from the list
+    quiz.origin = origin || 'memo';
+    document.getElementById('quizLogo').setAttribute('aria-label', quiz.origin==='uno' ? '同じ設定でUNOをもう一度' : '一覧のカードでフリーを始める');
     if(!quiz.queue.length && !quiz.pool.length) return false;
     quiz.ok = 0; quiz.total = 0; quiz.order = []; quiz.i = 0; quizNew();
     document.getElementById('quizModal').classList.add('show');
@@ -3304,15 +3552,33 @@
     quiz.slots = ans; quiz.locked = true;   // a skip is not counted; the answer is shown and "次へ" moves on
     quizRender('', 'スキップ：' + quiz.card.value, 'skip');
   }
-  document.getElementById('quizBtn').addEventListener('click', ()=>{ if(!openQuiz([])) flashPrimeMsg('パネルの条件に合うカードがありません'); });
-  document.getElementById('memoFromResult').addEventListener('click', ()=> openQuiz(state && state.played ? state.played : []));
+  document.getElementById('quizBtn').addEventListener('click', ()=>{ if(!openQuiz([], 'memo')) flashPrimeMsg('表示中のカードがありません'); });
+  document.getElementById('memoFromResult').addEventListener('click', ()=>{
+    // a UNO that was itself started from the list belongs to the MEMO side of the loop
+    const fromList = !!(lastGameCfg && lastGameCfg.opts && lastGameCfg.opts.customDeck);
+    openQuiz(state && state.played ? state.played : [], fromList ? 'memo' : 'uno');
+  });
   document.getElementById('quizJudge').addEventListener('click', quizJudge);
   document.getElementById('quizSkip').addEventListener('click', quizSkip);
   document.getElementById('quizClose').addEventListener('click', ()=> document.getElementById('quizModal').classList.remove('show'));
   document.getElementById('quizLogo').addEventListener('click', ()=>{
     if(typeof onlineGameActive !== 'undefined' && onlineGameActive) return;   // not while an online match is open
+    if(quiz.origin==='uno' && state){
+      // came here from a UNO result screen: the logo goes straight back to the same game, same settings
+      document.getElementById('quizModal').classList.remove('show');
+      document.getElementById('rematchBtn').click();
+      return;
+    }
+    // a free game whose deck is exactly the cards the list shows (panel, dial, search and marks all applied)
+    const list = shownCardsNow(), seats = modeSettings.free.players, plainN = list.filter(c=> c.effect==='plain').length;
+    if(list.length < seats + 4 || plainN < 2){
+      quizRender('一覧のカードが足りません。表示中 ' + list.length + '枚(通常 ' + plainN + '枚)。' + (seats + 4) + '枚以上、通常カード2枚以上が必要です');
+      return;
+    }
+    pendingListDeck = { values: list.map(c=> c.value), width: primeW() };
     document.getElementById('quizModal').classList.remove('show');
     document.getElementById('winBox').classList.remove('show');
+    document.getElementById('log').innerHTML = '';   // a new game from the result screen starts with a clean log
     if(currentMode!=='free') applyMode('free');
     document.getElementById('startBtn').click();
   });
@@ -3387,7 +3653,8 @@
   function buildVtWidth(){
     const W = primeW(); vtBuiltW = W;
     document.getElementById('primeDials').classList.toggle('w5', W===5);
-    document.getElementById('vtDigit').innerHTML = [1,2,3,4].map(d=> vtSw('digit', d, '<span class="hd">'+d+'</span>桁', '', 'ON', 'OFF', 'on')).join('');
+    const vtd = document.getElementById('vtDigit');
+    if(!vtd.children.length) vtd.innerHTML = [1,2,3,4].map(d=> vtSw('digit', d, '<span class="hd">'+d+'</span>桁', '', 'ON', 'OFF', 'on')).join('');
     document.getElementById('primeDials').innerHTML = ['万','千','百','十','一'].slice(5-W).map((n,i)=>
       `<div class="dial" data-i="${i}"><small>${n}</small><button class="dialBtn" data-step="1" aria-label="${n}の位を進める">▲</button><div class="dialWin" data-i="${i}">${DIAL_VALS.map(t=> `<span class="dv">${t==='' ? '－' : t}</span>`).join('')}<div class="dialMark"></div></div><button class="dialBtn" data-step="-1" aria-label="${n}の位を戻す">▼</button></div>`).join('');
     dialSt.length = 0;
@@ -3474,7 +3741,8 @@
       el.dataset.s = next; el.querySelector('.vtThumb').textContent = on ? 'ON' : 'OFF'; el.querySelector('.vtCount').textContent = count;
     };
     document.querySelectorAll('#vtEffect .vt').forEach(el=>{ const k = el.dataset.k; sw(el, !f.effectsNot.includes(k), String(rest.e[k]||0)); });
-    document.querySelectorAll('#vtDigit .vt').forEach(el=>{ const k = Number(el.dataset.k); sw(el, !f.digitsNot.includes(k), String(rest.d[k]||0)); });
+    const lock4 = primeW()===4 && [1,2,3].every(x=> f.digitsNot.includes(x));
+    document.querySelectorAll('#vtDigit .vt').forEach(el=>{ const k = Number(el.dataset.k); sw(el, !f.digitsNot.includes(k), String(rest.d[k]||0)); el.classList.toggle('locked', k===4 && lock4); });
     const pm = (el, st, count)=>{ el.querySelectorAll('.mkPos').forEach(b=> b.classList.toggle('sel', b.dataset.v===st)); el.querySelector('.vtCount').textContent = count; };
     document.querySelectorAll('#vtMark .mkCol').forEach(el=>{
       const k = el.dataset.k;
@@ -3512,7 +3780,7 @@
   }
   // the table redraw is heavy: wait until the key's own press-and-release (about 0.2s) has been seen
   let primeSoonTimer = 0;
-  function renderPrimeSoon(){ clearTimeout(primeSoonTimer); primeSoonTimer = setTimeout(()=>{ primeSoonTimer = 0; renderPrimeTable(); }, 220); }
+  function renderPrimeSoon(){ clearTimeout(primeSoonTimer); primeSoonTimer = setTimeout(()=>{ primeSoonTimer = 0; saveModeSettings(); renderPrimeTable(); }, 160); }
   document.getElementById('primeVt').addEventListener('click', e=>{
     const f = modeSettings.prime;
     if(e.target.closest('#vtBar')){ f.panelOpen = !(f.panelOpen!==false); saveModeSettings(); renderPrimeTable(); return; }
@@ -3538,7 +3806,13 @@
     const vt = e.target.closest('.vt'); if(!vt) return;
     const g = vt.dataset.g, k = vt.dataset.k;
     if(g==='effect') f.effectsNot = f.effectsNot.includes(k) ? f.effectsNot.filter(x=> x!==k) : f.effectsNot.concat([k]);
-    else if(g==='digit'){ const d = Number(k); f.digitsNot = f.digitsNot.includes(d) ? f.digitsNot.filter(x=> x!==d) : f.digitsNot.concat([d]); }
+    else if(g==='digit'){
+      const d = Number(k);
+      // the 4-digit switch is fixed ON on the 4-digit deck while 1-3 digits are all off
+      if(d===4 && primeW()===4 && [1,2,3].every(x=> f.digitsNot.includes(x)) && !f.digitsNot.includes(4)) return;
+      if(d===4) f.d4Auto = false;   // the player set it by hand: nothing to restore
+      f.digitsNot = f.digitsNot.includes(d) ? f.digitsNot.filter(x=> x!==d) : f.digitsNot.concat([d]);
+    }
     saveModeSettings(); renderPrimeTable();
   });
   // hold the button 5 seconds: the marks on the cards shown right now are erased
@@ -3606,13 +3880,13 @@
   })();
   // works with Japanese keyboards too: while a character is still being composed the text box is left
   // alone and the search runs on the cleaned-up copy. Two boxes: cards that match (あり) / cards to leave out (なし)
-  function cleanQuery(raw){ return raw.normalize('NFKC').replace(/、/g,',').toLowerCase().replace(/[^0-9,\s()xyztjqk]/g,''); }
+  function cleanQuery(raw){ return raw.normalize('NFKC').replace(/、/g,',').toLowerCase().replace(/[−ー‐‑–—]/g,'-').toLowerCase().replace(/[^0-9,\s()\-^=xyzwvabcdetjqk]/g,''); }
   [['primeSearchInput','query','primeSearchClear'],['primeSearchNotInput','queryNot','primeSearchNotClear']].forEach(([id,key,clearId])=>{
     const box = document.getElementById(id);
     const apply = commit=>{
       const raw = box.value, clean = cleanQuery(raw);
       if(commit && clean!==raw) box.value = clean;
-      modeSettings.prime[key] = clean; saveModeSettings(); renderPrimeTable();
+      modeSettings.prime[key] = clean; renderPrimeSoon();   // the list is redrawn when the typing pauses
     };
     box.addEventListener('input', e=> apply(!e.isComposing));
     box.addEventListener('compositionend', ()=> apply(true));
@@ -3839,6 +4113,7 @@
     enterGameLayout();
     newGame(modeSettings.online.cpu|0, pendingGuestName, { mode:'online', digits: modeSettings.online.digits, lock: modeSettings.online.lock!==false });
   });
+  let pendingListDeck = null;
   document.getElementById('startBtn').addEventListener('click', ()=>{
     if(currentMode==='online') return;
     if(window.PrimeUnoRating){
@@ -3851,7 +4126,9 @@
     document.getElementById('startScreen').style.display='none';
     document.getElementById('layout').classList.add('active');
     if(currentMode==='free'){
-      newGame(st.players-1, null, { mode:'free', handSize:st.handSize, unlimitedDraw:st.unlimitedDraw, noAssist:!!st.noAssist, digits:st.digits, lock: st.lock!==false, zero: st.zero!==false });
+      const fo = { mode:'free', handSize:st.handSize, unlimitedDraw:st.unlimitedDraw, noAssist:!!st.noAssist, digits:st.digits, lock: st.lock!==false, zero: st.zero!==false };
+      if(pendingListDeck){ fo.customDeck = pendingListDeck.values; fo.digits = pendingListDeck.width; pendingListDeck = null; }   // started from the MEMO logo
+      newGame(st.players-1, null, fo);
     } else {
       lastNumCpu = st.cpu;
       newGame(st.cpu, null, { mode:'rate', digits:st.digits, lock: st.lock!==false });
